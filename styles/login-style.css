@@ -6,13 +6,15 @@ html, body{
     overflow-x: hidden;
     font-size: large;
     font-family: 'Montserrat', sans-serif;
-    background-color: #1B37B2;
-
+    background-color:#192B4A;
 }
 
 .navbar-brand img{
-    height: 6.8rem;
-    
+    height: 6.8rem;    
+}
+
+.navbar-brand{
+    margin-right: 0px;
 }
 
 #form-div{
@@ -84,4 +86,27 @@ html, body{
     background-color: #e9ecef;
     border: 1px solid #ced4da;
     border-radius: .25rem;
+}
+
+#page-content-wrapper{
+    background-color: #192B4A;
+}
+
+.footer{
+    border-top: 5px solid #FDB400;
+    background-color:#F4F6F7
+}
+
+.bottom-footer{
+    border-top: 1px solid #7A8896
+}
+
+.footer-body-sm{
+    font-size: 0.8rem;
+    color: #465058; 
+}
+
+.footer-caption-sm{
+    font-size: 0.6rem;
+    color: #465058;
 }
