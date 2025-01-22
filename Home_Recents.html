@@ -109,60 +109,68 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .recent-tab .map {
-            width: 100%;
-            height: 100px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-
-        .recent-tab .info {
+        .recent-tab .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
+            padding: 0 10px;
+            margin-bottom: 10px;
         }
 
         .recent-tab .date {
             background-color: white;
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 5px 10px;
             font-weight: bold;
             font-size: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .recent-tab .duration {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
         }
 
         .recent-tab .details {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
         }
 
-        .recent-tab .details .time {
-            font-size: 12px;
-            color: #333;
+        .recent-tab .route {
+            display: flex;
+            align-items: center;
         }
 
-        .recent-tab .details .duration {
-            font-size: 10px;
-            color: #666;
+        .recent-tab .route .time {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .recent-tab .route .dot {
+            width: 8px;
+            height: 8px;
+            background-color: orange;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .recent-tab .route .dot.end {
+            background-color: green;
         }
     </style>
     <script>
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    document.getElementById('location-coordinates').textContent = `Lat: ${latitude}, Lon: ${longitude}`;
-                }, (error) => {
-                    document.getElementById('location-coordinates').textContent = "Unable to fetch location.";
-                });
-            } else {
-                document.getElementById('location-coordinates').textContent = "Geolocation is not supported by your browser.";
-            }
-        }
 
         function updateNotificationCount(count) {
             const notificationElement = document.querySelector('.notification-count');
@@ -170,7 +178,6 @@
         }
 
         window.onload = function() {
-            getCurrentLocation();
             updateNotificationCount(3); // Example: Set notification count to 3
         };
     </script>
@@ -183,32 +190,35 @@
                 <div class="notification-count">3</div>
             </div>
         </div>
-        <input type="text" class="search-bar" placeholder="Search for Bus Number">
-        <div class="location-label">CURRENT LOCATION</div>
-        <div class="current-location" id="location-coordinates">Fetching location...</div>
 
         <div class="recent-title">RECENT</div>
 
         <div class="recent-tab">
-            <div class="map"></div>
-            <div class="info">
+            <div class="header-row">
                 <div class="date">DATE</div>
-                <div class="details">
-                    <div class="time">ALB 10:30 AM</div>
-                    <div class="duration">00h 15m</div>
-                    <div class="time">SCT 10:45 AM</div>
+                <div class="duration">00h 15m</div>
+            </div>
+            <div class="details">
+                <div class="route">
+                    <span class="dot"></span>
+                    <span class="time">ALB 10:30 AM</span>
+                    <span class="dot end"></span>
+                    <span class="time">SCT 10:45 AM</span>
                 </div>
             </div>
         </div>
 
         <div class="recent-tab">
-            <div class="map"></div>
-            <div class="info">
+            <div class="header-row">
                 <div class="date">DATE</div>
-                <div class="details">
-                    <div class="time">BTN 12:30 PM</div>
-                    <div class="duration">02h 15m</div>
-                    <div class="time">AYL 02:45 PM</div>
+                <div class="duration">02h 15m</div>
+            </div>
+            <div class="details">
+                <div class="route">
+                    <span class="dot"></span>
+                    <span class="time">BTN 12:30 PM</span>
+                    <span class="dot end"></span>
+                    <span class="time">AYL 02:45 PM</span>
                 </div>
             </div>
         </div>
