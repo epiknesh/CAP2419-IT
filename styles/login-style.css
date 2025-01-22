@@ -110,3 +110,8 @@ html, body{
     font-size: 0.6rem;
     color: #465058;
 }
+
+#error_message{
+    color: red;
+    font-size: .9rem;
+}
