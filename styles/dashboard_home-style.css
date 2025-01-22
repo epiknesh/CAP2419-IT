@@ -1,0 +1,76 @@
+/* Navbar and Footer */
+.navbar, footer {
+    background-color: #0DB7B6;
+}
+
+.navbar .nav-link, footer p {
+    color: white !important;
+}
+
+.navbar .nav-link:hover {
+    color: #E5E5E5 !important;
+}
+
+/* Page Background */
+body {
+    background-color: #119A99;
+    color: white;
+}
+
+/* Tab Box Colors */
+.card {
+    background-color: #D9D9D9;
+    color: #333;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+.card .btn {
+    color: white;
+}
+
+.card .btn-primary {
+    background-color: #0DB7B6;
+    border: none;
+}
+
+.card .btn-primary:hover {
+    background-color: #119A99;
+}
+
+.card .btn-success {
+    background-color: #119A99;
+    border: none;
+}
+
+.card .btn-success:hover {
+    background-color: #0DB7B6;
+}
+
+.card .btn-warning {
+    background-color: #0DB7B6;
+    border: none;
+    color: white;
+}
+
+.card .btn-warning:hover {
+    background-color: #119A99;
+}
+
+.card .btn-danger {
+    background-color: #119A99;
+    border: none;
+}
+
+.card .btn-danger:hover {
+    background-color: #0DB7B6;
+}
+
+/* Footer Text */
+footer p {
+    margin: 0;
+    padding: 0.5rem;
+    font-size: 14px;
+}
