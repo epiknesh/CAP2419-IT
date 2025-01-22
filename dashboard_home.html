@@ -45,68 +45,168 @@
         <!-- Home Page (Overview) -->
         <div class="row">
             <!-- Box 1: Your Fleet -->
-            <div class="col-md-6 mb-2">
-                <div class="card">
-                    <div class="card-header" id="fleetHeader" data-bs-toggle="collapse" data-bs-target="#fleetContent" aria-expanded="false" aria-controls="fleetContent">
-                        Your Fleet
+    <div class="col-md-6 mb-2">
+        <div class="card">
+            <div class="card-header" id="fleetHeader" data-bs-toggle="collapse" data-bs-target="#fleetContent" aria-expanded="false" aria-controls="fleetContent">
+                Your Fleet
+            </div>
+            <div id="fleetContent" class="collapse">
+                <div class="card-body">
+                    <div class="text-center">
+                        <!-- Large Percentage Holder -->
+                        <div class="display-4 text-success" id="fleetPercentage"><b>75%</b></div>
+                        <p class="mb-3"><b>Buses Operating</b></p>
                     </div>
-                    <div id="fleetContent" class="collapse">
-                        <div class="card-body">
-                            <h5 class="card-title">Manage Your Fleet</h5>
-                            <p class="card-text">View and manage the list of buses in your fleet, including their current status and locations.</p>
-                            <a href="fleet.html" class="btn">Go to Fleet</a>
+                    
+                    <!-- Lists for Operative and Inoperative Buses -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Operative Buses</h6>
+                            <ul id="operativeBuses" class="list-group">
+                                <li class="list-group-item">Bus 1</li>
+                                <li class="list-group-item">Bus 2</li>
+                                <li class="list-group-item">Bus 3</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Inoperative Buses</h6>
+                            <ul id="inoperativeBuses" class="list-group">
+                                <li class="list-group-item">Bus 4</li>
+                                <li class="list-group-item">Bus 5</li>
+                            </ul>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Box 2: Bus Maintenance -->
-            <div class="col-md-6 mb-2">
-                <div class="card">
-                    <div class="card-header" id="maintenanceHeader" data-bs-toggle="collapse" data-bs-target="#maintenanceContent" aria-expanded="false" aria-controls="maintenanceContent">
-                        Bus Maintenance
-                    </div>
-                    <div id="maintenanceContent" class="collapse">
-                        <div class="card-body">
-                            <h5 class="card-title">Track Maintenance</h5>
-                            <p class="card-text">Monitor maintenance schedules and view the history of repairs for each bus in your fleet.</p>
-                            <a href="maintenance.html" class="btn">Go to Maintenance</a>
-                        </div>
-                    </div>
+                    <!-- Redirect Button -->
+                    <a href="fleet.html" class="btn btn-primary mt-3">Go to Fleet</a>
                 </div>
             </div>
+        </div>
+    </div>
+
+           <!-- Box 2: Bus Maintenance -->
+<div class="col-md-6 mb-2">
+    <div class="card">
+        <div class="card-header" id="maintenanceHeader" data-bs-toggle="collapse" data-bs-target="#maintenanceContent" aria-expanded="false" aria-controls="maintenanceContent">
+            Bus Maintenance
+        </div>
+        <div id="maintenanceContent" class="collapse">
+            <div class="card-body">
+                <!-- Maintenance Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Bus</th>
+                                <th>Issue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenanceTableBody">
+                            <tr>
+                                <td>Bus 1</td>
+                                <td>Engine overheating</td>
+                            </tr>
+                            <tr>
+                                <td>Bus 2</td>
+                                <td>Brake system malfunction</td>
+                            </tr>
+                            <tr>
+                                <td>Bus 3</td>
+                                <td>Air conditioning not working</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Redirect Button -->
+                <a href="maintenance.html" class="btn btn-primary mt-3">Go to Maintenance</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 
             <!-- Box 3: Bus Dispatch -->
-            <div class="col-md-6 mb-2">
-                <div class="card">
-                    <div class="card-header" id="dispatchHeader" data-bs-toggle="collapse" data-bs-target="#dispatchContent" aria-expanded="false" aria-controls="dispatchContent">
-                        Bus Dispatch
-                    </div>
-                    <div id="dispatchContent" class="collapse">
-                        <div class="card-body">
-                            <h5 class="card-title">Manage Dispatch</h5>
-                            <p class="card-text">Organize and schedule bus dispatches for efficient operations.</p>
-                            <a href="dispatch.html" class="btn">Go to Dispatch</a>
-                        </div>
-                    </div>
-                </div>
+<div class="col-md-6 mb-2">
+    <div class="card">
+        <div class="card-header" id="dispatchHeader" data-bs-toggle="collapse" data-bs-target="#dispatchContent" aria-expanded="false" aria-controls="dispatchContent">
+            Bus Dispatch
+        </div>
+        <div id="dispatchContent" class="collapse">
+            <div class="card-body">  
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Bus</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Next Dispatch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Bus 1</td>
+                            <td>In Terminal</td>
+                            <td>10:00 AM</td>
+                        </tr>
+                        <tr>
+                            <td>Bus 2</td>
+                            <td>In Transit</td>
+                            <td>~11:15 AM</td>
+                        </tr>
+                        <tr>
+                            <td>Bus 3</td>
+                            <td>Inoperative</td>
+                            <td>N/A</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="dispatch.html" class="btn">Go to Dispatch</a>
             </div>
+        </div>
+    </div>
+</div>
+
 
             <!-- Box 4: Bus Income -->
-            <div class="col-md-6 mb-2">
-                <div class="card">
-                    <div class="card-header" id="incomeHeader" data-bs-toggle="collapse" data-bs-target="#incomeContent" aria-expanded="false" aria-controls="incomeContent">
-                        Bus Income
-                    </div>
-                    <div id="incomeContent" class="collapse">
-                        <div class="card-body">
-                            <h5 class="card-title">Analyze Income</h5>
-                            <p class="card-text">Review revenue reports and monitor income trends for your operations.</p>
-                            <a href="income.html" class="btn">Go to Income</a>
-                        </div>
-                    </div>
-                </div>
+<div class="col-md-6 mb-2">
+    <div class="card">
+        <div class="card-header" id="incomeHeader" data-bs-toggle="collapse" data-bs-target="#incomeContent" aria-expanded="false" aria-controls="incomeContent">
+            Bus Income
+        </div>
+        <div id="incomeContent" class="collapse">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Bus</th>
+                            <th scope="col">Income Today</th>
+                            <th scope="col">Income This Week</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Bus 1</td>
+                            <td>₱1200</td>
+                            <td>₱8500</td>
+                        </tr>
+                        <tr>
+                            <td>Bus 2</td>
+                            <td>₱900</td>
+                            <td>₱6000</td>
+                        </tr>
+                        <tr>
+                            <td>Bus 3</td>
+                            <td>₱750</td>
+                            <td>₱5500</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="income.html" class="btn">Go to Income</a>
             </div>
+        </div>
+    </div>
+</div>
+
         </div>
     </div>
 

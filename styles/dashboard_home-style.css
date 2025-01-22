@@ -23,6 +23,7 @@ body, .navbar, .footer, .card {
 body {
     background-color: #119A99;
     color: white;
+    margin: 0; /* Remove default body margin */
 }
 
 /* Tab Box Colors */
@@ -30,7 +31,7 @@ body {
     background-color: #D9D9D9;
     color: #333;
     border: 2px solid #007473 !important; /* Ensuring the border color is #007473 */
-    margin: 0.5rem 0; /* Adjusting margin to lessen space between cards */
+    margin: 0.25rem 0; /* Reduced margin between cards */
     border-radius: 0.5rem; /* Optional: to add rounded corners */
 }
 
@@ -39,26 +40,26 @@ body {
     color: white;
     font-weight: bold;
     cursor: pointer; /* Making header clickable */
-    padding: 1rem; /* Adjusted padding for header */
+    padding: 0.75rem 1rem; /* Adjusted padding for header */
 }
 
 .card-body {
     background-color: white; /* Ensuring body is white */
-    padding: 1.5rem;
+    padding: 0.75rem; /* Reduced padding for compact content */
     transition: max-height 0.3s ease-out, padding 0.3s ease-out;
     overflow: hidden;
 }
 
 /* Card Text and Button Spacing */
 .card-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem; /* Slightly smaller title font size */
     font-weight: 500;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem; /* Reduced space between title and text */
 }
 
 .card-text {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.95rem; /* Slightly smaller text size */
+    margin-bottom: 1.25rem; /* Reduced space between text and button */
 }
 
 /* Card Button */
@@ -78,8 +79,8 @@ body {
 /* Footer Text */
 footer p {
     margin: 0;
-    padding: 0.5rem;
-    font-size: 14px;
+    padding: 0.25rem; /* Reduced padding for footer text */
+    font-size: 13px; /* Slightly smaller font size */
 }
 
 /* Apply flexbox to the body and ensure it stretches to fill the viewport */
@@ -93,7 +94,7 @@ html, body {
 /* The main container (content area) should grow to push the footer down */
 .container {
     flex: 1; /* Ensures the container takes up all available space between navbar and footer */
-    padding: 2rem; /* Add your desired padding */
+    padding: 1rem; /* Reduced padding inside the container */
 }
 
 /* Footer remains at the bottom but doesn't overlap content */
@@ -101,5 +102,5 @@ footer {
     background-color: #0DB7B6;
     color: black;
     text-align: center;
-    padding: 1rem 0;
+    padding: 0.75rem 0; /* Adjusted footer padding */
 }
