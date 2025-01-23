@@ -58,3 +58,9 @@ document.querySelector('.toggle-input_password').addEventListener('click', funct
   this.classList.toggle('bi-eye-slash-fill');
   this.classList.toggle('bi-eye-fill');
 });
+
+
+// TO DO HERE:
+// 1. Add the function to check if the email is valid or not through database
+// 2, Add the function to check if the password is correct or not through database
+// 3. Add the function to redirect to the dashboard page if the login is successful
