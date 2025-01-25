@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bus Camera Monitoring</title>
+  <link rel="stylesheet" href="open-cv.css">
+</head>
+<body>
+  <header>
+    <h1>Bus Camera Monitoring System</h1>
+  </header>
+
+  <main>
+    <div id="camera-container">
+      <h2>Live Camera Feed</h2>
+      <img id="camera-feed" src="http://127.0.0.1:5000/video_feed" alt="Camera Feed">
+      <button id="capture-button" onclick="captureImage()">Capture Image</button>
+    </div>
+    <div id="captured-container">
+      <h2>Captured Image</h2>
+      <img id="captured-image" src="" alt="Captured Image">
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Bus Monitoring System</p>
+  </footer>
+
+  <script>
+    function captureImage() {
+      fetch("http://127.0.0.1:5000/capture")
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('captured-image').src = `data:image/jpeg;base64,${data.image}`;
+        })
+        .catch(error => console.error("Error capturing image:", error));
+    }
+  </script>
+</body>
+</html>
