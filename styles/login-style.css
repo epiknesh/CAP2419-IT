@@ -110,3 +110,15 @@ html, body{
     font-size: 0.6rem;
     color: #465058;
 }
+
+#error_message{
+    color: red;
+    font-size: .9rem;
+}
+
+.caption-text{
+    margin-left: 20px;
+    margin-top: 7.5rem;
+    color: #F4F6F7;
+}
+
