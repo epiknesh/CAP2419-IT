@@ -1,64 +1,96 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #f4f4f9;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Header */
 header {
-    background-color: #004d80;
+    background-color: #010F47;
     color: white;
-    padding: 20px;
     text-align: center;
+    padding: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+    text-transform: uppercase;
+}
+
+/* Main Content */
 main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 20px;
+    padding: 2rem;
+    gap: 2rem;
+    flex-grow: 1;
 }
 
 .camera-container {
-    margin: 20px 0;
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border: 2px solid #010F47;
+    border-radius: 12px;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-}
-
-.camera-container h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-#camera-feed {
-    border: 5px solid #004d80;
-    border-radius: 10px;
-    width: 80%;
+    width: 90%;
     max-width: 700px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.camera-container img {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 1rem;
 }
 
 .info-panel {
-    background: #e9f4ff;
-    border: 2px solid #004d80;
-    border-radius: 10px;
-    padding: 20px;
-    width: 300px;
+    background-color: #eef3fc;
+    padding: 1.5rem;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #010F47;
 }
 
 .info-panel h3 {
-    margin: 0;
-    font-size: 20px;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
+.info-panel p {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #010F47;
+}
+
+/* Footer */
 footer {
-    background-color: #004d80;
-    color: white;
     text-align: center;
-    padding: 10px 0;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+    padding: 1rem;
+    background-color: #333;
+    color: white;
+    margin-top: auto;
+}
+
+footer p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
 }
