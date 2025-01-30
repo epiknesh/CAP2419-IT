@@ -1,0 +1,106 @@
+/* Import Inter Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+/* Global Font */
+body, .navbar, .footer, .card {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Navbar and Footer */
+.navbar, footer {
+    background-color: #0DB7B6;
+}
+
+.navbar .nav-link, footer p {
+    color: black !important;
+}
+
+.navbar .nav-link:hover {
+    color: #E5E5E5 !important;
+}
+
+/* Page Background */
+body {
+    background-color: #119A99;
+    color: white;
+    margin: 0; /* Remove default body margin */
+}
+
+/* Tab Box Colors */
+.card {
+    background-color: #D9D9D9;
+    color: #333;
+    border: 2px solid #007473 !important; /* Ensuring the border color is #007473 */
+    margin: 0.25rem 0; /* Reduced margin between cards */
+    border-radius: 0.5rem; /* Optional: to add rounded corners */
+}
+
+.card-header {
+    background-color: #007473;
+    color: white;
+    font-weight: bold;
+    cursor: pointer; /* Making header clickable */
+    padding: 0.75rem 1rem; /* Adjusted padding for header */
+}
+
+.card-body {
+    background-color: white; /* Ensuring body is white */
+    padding: 0.75rem; /* Reduced padding for compact content */
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    overflow: hidden;
+}
+
+/* Card Text and Button Spacing */
+.card-title {
+    font-size: 1.1rem; /* Slightly smaller title font size */
+    font-weight: 500;
+    margin-bottom: 0.75rem; /* Reduced space between title and text */
+}
+
+.card-text {
+    font-size: 0.95rem; /* Slightly smaller text size */
+    margin-bottom: 1.25rem; /* Reduced space between text and button */
+}
+
+/* Card Button */
+.card .btn {
+    color: white;
+    background-color: #007473; /* Button background color */
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s ease;
+}
+
+.card .btn:hover {
+    background-color: #119A99; /* Hover effect for the buttons */
+}
+
+/* Footer Text */
+footer p {
+    margin: 0;
+    padding: 0.25rem; /* Reduced padding for footer text */
+    font-size: 13px; /* Slightly smaller font size */
+}
+
+/* Apply flexbox to the body and ensure it stretches to fill the viewport */
+html, body {
+    height: 100%; /* Ensures the body fills the entire height of the viewport */
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The main container (content area) should grow to push the footer down */
+.container {
+    flex: 1; /* Ensures the container takes up all available space between navbar and footer */
+    padding: 1rem; /* Reduced padding inside the container */
+}
+
+/* Footer remains at the bottom but doesn't overlap content */
+footer {
+    background-color: #0DB7B6;
+    color: black;
+    text-align: center;
+    padding: 0.75rem 0; /* Adjusted footer padding */
+}

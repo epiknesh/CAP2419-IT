@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Passenger Load Monitoring</title>
+    <link rel="stylesheet" href="styles/open-cv.css">
+    <script>
+        // JavaScript function to update the passenger count dynamically
+        async function updatePassengerCount() {
+            // Fetch the passenger count from the server (Flask endpoint)
+            const response = await fetch('/passenger_count');
+            const data = await response.json();
+            
+            // Update the content of the passenger count on the page
+            document.getElementById('passenger-count').textContent = data.count;
+        }
+
+        // Set an interval to update the passenger count every 2 seconds
+        setInterval(updatePassengerCount, 2000); // Update count every 2 seconds
+    </script>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>Bus Passenger Load Monitoring</h1>
+        </header>
+        <main>
+            <!-- Camera container with a heading and live camera image -->
+            <div class="camera-container">
+                <h2>Live Camera Feed</h2>
+                <!-- Embedding the live camera feed from the Flask server -->
+                <img id="camera-feed" src="http://localhost:5000/video_feed" alt="Live Camera Feed">
+            </div>
+            
+            <!-- Info panel displaying the live passenger count -->
+            <div class="info-panel">
+                <h3>Passenger Count:</h3>
+                <p id="passenger-count">Loading...</p>
+            </div>
+        </main>
+        <footer>
+            <p>This website is still in beta version</p>
+            <p>© 2024 JST Business Solutions. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
