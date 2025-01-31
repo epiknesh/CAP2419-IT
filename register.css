@@ -1,0 +1,67 @@
+/* Import Inter Font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* Global Font */
+body, .navbar, .footer, .card {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Navbar and Footer */
+.navbar, footer {
+    background-color: #0DB7B6;
+}
+
+.navbar .nav-link, footer p {
+    color: black !important;
+}
+
+.navbar .nav-link:hover {
+    color: #E5E5E5 !important;
+}
+
+#navbarNav{
+    flex-grow: 0;
+}
+
+/* Page Background */
+body {
+    background-color: #119A99;
+    color: white;
+    margin: 0; /* Remove default body margin */
+}
+
+
+/* Footer Text */
+footer p {
+  margin: 0;
+  padding: 0.25rem; /* Reduced padding for footer text */
+  font-size: 13px; /* Slightly smaller font size */
+}
+
+/* Apply flexbox to the body and ensure it stretches to fill the viewport */
+html, body {
+  height: 100%; /* Ensures the body fills the entire height of the viewport */
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The main container (content area) should grow to push the footer down */
+.container {
+  flex: 1; /* Ensures the container takes up all available space between navbar and footer */
+  padding: 1rem; /* Reduced padding inside the container */
+}
+
+#form-div{
+  border-radius: 36px;
+  background-color: #F4F6F7;
+}
+
+
+/* Footer remains at the bottom but doesn't overlap content */
+footer {
+  background-color: #0DB7B6;
+  color: black;
+  text-align: center;
+  padding: 0.75rem 0; /* Adjusted footer padding */
+}
