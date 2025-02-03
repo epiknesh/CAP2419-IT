@@ -6,6 +6,10 @@ body, .navbar, .footer, .card {
   font-family: 'Montserrat', sans-serif;
 }
 
+a{
+  text-decoration: none;
+}
+
 /* Navbar and Footer */
 .navbar, footer {
     background-color: #0DB7B6;
@@ -27,9 +31,68 @@ body, .navbar, .footer, .card {
 body {
     background-color: #119A99;
     color: white;
-    margin: 0; /* Remove default body margin */
+    margin: 0; 
 }
 
+#back_button{
+    background-color: #119A99;
+    margin: 0; 
+    color: rgb(187, 183, 183);
+    cursor: pointer;
+
+}
+
+.form-group label{
+  margin-bottom: .5rem;
+  color: black;
+}
+
+.form-group input{
+  padding: 10px;
+}
+
+.form-select{
+  padding: 10px;
+}
+
+#heading{
+  color: rgb(134, 131, 131);
+}
+
+.btn-med {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 24px;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 8px;
+  height: 56px;
+}
+
+.btn-primary{
+  background-color: #6e7a7e;
+  color: #F4F6F7;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.btn-primary:hover{
+  background-color: #046b04;
+}
+
+.btn-secondary{
+  background-color:#fff;
+  border-color: red;
+  color: red;
+}
+
+.btn-secondary:hover{
+  background-color: rgb(226, 69, 69);
+  color: #fff;
+}
 
 /* Footer Text */
 footer p {
@@ -55,7 +118,9 @@ html, body {
 #form-div{
   border-radius: 36px;
   background-color: #F4F6F7;
+  width: 100%;
 }
+
 
 
 /* Footer remains at the bottom but doesn't overlap content */
@@ -63,5 +128,41 @@ footer {
   background-color: #0DB7B6;
   color: black;
   text-align: center;
-  padding: 0.75rem 0; /* Adjusted footer padding */
+  padding: 0.75rem 0; 
 }
+
+
+/* Confirmation Model Design */
+.btn-no-border {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.modal-dialog {
+  max-width: 40%;
+}
+
+.modal-dialog-centered {
+  display: flex;
+  align-items: center;
+  min-height: calc(100% - 1rem);
+}
+
+.modal-body{
+  background-color: #F4F6F7;
+  margin-bottom: 30px;
+  font-size: 1.2rem;
+}
+.modal-header{
+  background-color: #066e06;
+  color: #F4F6F7;
+}
+
+.modal-title{
+  font-size: 1.6rem;
+}
+
+.modal-footer button{
+  padding: 10px 24px;
+  border-radius: 8px;
+} 
