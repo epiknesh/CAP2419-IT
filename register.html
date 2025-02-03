@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+      <!-- Bootstrap CSS -->
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <link rel="stylesheet" href="register.css">
+
+</head>
+<body>
+<!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">JST Kidlat's BusMate</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#fleet">Your Fleet</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#maintenance">Bus Maintenance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dispatch">Bus Dispatch</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#income">Bus Income</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Register Form -->
+     <!-- Back Button -->
+    <div class="p-3"> 
+        <a href="dashboard_home.html"><div class="h5 p-3" id="back_button"> <span><i class="bi bi-arrow-left"></i></span> Go Back</div></a>
+    </div>
+    <div class="container mt-5">
+        <div class="display-1">Add a Team Member...</div>
+
+        <!-- White Form Container -->
+        <div class="col-xxl-5 col-xl-6 col-lg-7 col-md-10 col-sm-12 p-5 mt-5 shadow-lg" id="form-div">
+        <h2 class="h2 mb-4 text-start" id="heading">Personal Details</h2>
+            <!-- First Row -->
+          <div class="row d-block d-lg-flex">
+            <div class="form-group mb-3 col-12 col-lg-4">
+              <label for="input_firstname"><span class="text-danger">*</span> First Name</label>
+              <input type="text" class="form-control" id="input_firstname" name="input_username" placeholder="Enter First Name" required>
+            </div>
+            <div class="form-group mb-3 col-12 col-lg-4">
+              <label for="input_lastname"><span class="text-danger">*</span> Last Name</label>
+              <input type="text" class="form-control" id="input_lastename" name="input_username" placeholder="Enter Last Name" required>
+            </div>
+            <div class="form-group mb-3 col-12 col-lg-4">
+                <label for="input_birthdate"><span class="text-danger">*</span> Birthdate</label>
+                <input type="date" class="form-control" id="input_birthdate" name="input_birthdate" placeholder="Select Birthdate" required>
+            </div>
+            <div class="form-group mb-3 col-12 col-lg-4">
+                <label for="input_mobile"><span class="text-danger">*</span> Mobile Number</label>
+                <input type="text" class="form-control" id="input_mobile" name="input_mobile" placeholder="Enter Mobile Number" maxlength="11">
+            </div>
+          </div>
+          <h2 class="h2 mb-4 mt-4 text-start" id="heading">Login Credentials</h2>
+            <!-- Second Row -->
+            <div class="row d-block d-lg-flex"> 
+                <div class="form-group mb-3 col-12 col-lg-6">
+                    <label for="input_username"><span class="text-danger">*</span> Email Address</label>
+                    <input type="text" class="form-control" id="input_username" name="input_username" placeholder="sample@gmail.com" required>
+                </div>
+                <div class="form-group mb-3 col-12 col-lg-6">
+                    <label for="input_password"><span class="text-danger">*</span> Password</label>
+                    <input type="password" class="form-control" id="input_password" name="input_username" placeholder="Enter Password" required>
+                </div>
+                <div class="form-group mb-3 col-12 col-lg-6">
+                    <label for="input_confirm_password"><span class="text-danger">*</span> Confirm Password</label>
+                    <input type="password" class="form-control" id="input_confirm_password" name="input_username" placeholder="Enter Password Confirmation" required>
+                </div>
+                <div class="form-group mb-3 col-12 col-lg-6">
+                    <label for="input_role"><span class="text-danger">*</span> Role</label>
+                    <select class="form-select" id="input_role" name="input_role">
+                        <option selected>Choose...</option>
+                        <option value="1">Admin</option>
+                        <option value="2">Driver</option>
+                        <option value="3">Conductor</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-lg-12 mt-5" id="login-btn-div">
+                <div class="col-lg-12 mb-3">
+                    <button type="button" class="btn-primary btn-med login-btn btn-no-border" id="login-btn" onclick="preregister();" tabindex="0" style="width: 100%;">
+                        <i class="bi bi-check-lg"></i> REGISTER
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-12 mb-3" id="login-btn-div">
+                <div class="col-lg-12 mb-3">
+                    <a href="dashboard_home.html"><button type="button" class="btn-secondary btn-med login-btn" id="login-btn" tabindex="0" style="width: 100%;">
+                        <i class="bi bi-x-lg"></i> CANCEL
+                    </button></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="color: black;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirm Submission</h5>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to submit the form?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmSubmit">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+     <!-- Footer -->
+     <footer class="text-center py-3 mt-5">
+      <p>&copy; 2025 BusMate. All Rights Reserved.</p>
+  </footer>
+
+
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Optional: Check if Bootstrap JS is loading -->  
+  <script>
+      console.log("Bootstrap JS is loaded!");
+  </script>
+    <script src="js/register.js"></script>
+</body>
+</html>

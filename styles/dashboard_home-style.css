@@ -19,6 +19,10 @@ body, .navbar, .footer, .card {
     color: #E5E5E5 !important;
 }
 
+#navbarNav{
+    flex-grow: 0;
+}
+
 /* Page Background */
 body {
     background-color: #119A99;
