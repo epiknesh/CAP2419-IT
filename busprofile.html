@@ -217,6 +217,12 @@
             margin-top: auto;
         }
 
+        @media (min-width: 769px) {
+            .mobile-ui {
+                display: none;
+            }
+        }
+
         /* Mobile Optimized Styles */
         @media (max-width: 768px) {
             .navbar {
@@ -281,6 +287,54 @@
                 display: none !important;;
             }
 
+            .mobile-ui {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: transparent; 
+                width: 100%;
+                margin-top: auto;
+                padding: 10px 0;
+            }
+
+            .mobile-ui .container {
+                position: relative;
+                width: 100%;
+                max-width: 100%;
+                top: 30px; 
+                background: white;
+                padding: 10px 0 10px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-inline: 20px;
+            }
+
+            .mobile-ui .fab {
+                position: absolute;
+                top: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 70px;
+                height: 70px;
+                background-color: #00A8A8;
+                border-radius: 50%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            }
+
+            .mobile-ui .rating {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .mobile-ui .rating span {
+                font-size: 50px;
+                color: gold;
+                margin-right: 10px;
+                margin-left: 10px;
+            }
+
             .footer {
                 display: none;
             }
@@ -292,7 +346,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Hello,<br>BusMate!</a>
+            <a class="navbar-brand">Hello,<br>BusMate!</a>
             <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
                 <div class="notification-count">3</div>
                 <div id="dropdown-menu" class="dropdown-content">
@@ -337,6 +391,19 @@
                 <div class="arrow">&gt;</div>
             </div>
         </div>
+
+    <div class="mobile-ui">
+        <div class="container">
+            <div class="fab"></div>
+            <div class="rating">
+                <span>★</span>
+                <span>★</span>
+                <div style="width: 50px;"></div> 
+                <span>★</span>
+                <span>★</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <div class="footer">&copy; 2025 BusMate. All Rights Reserved.</div>
