@@ -40,6 +40,10 @@
             height: 40px;
             background-color: #e0e0e0;
             border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
 
         .notification-count {
@@ -92,7 +96,7 @@
             background-color: #ffd700;
             border-radius: 15px;
             padding: 15px;
-            margin: 20px auto;
+            margin: 20px auto 40px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
@@ -126,7 +130,7 @@
             background-color: #ffe65c;
             border-radius: 15px;
             padding: 15px;
-            margin: 20px auto;
+            margin: 20px auto 50px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
@@ -163,7 +167,41 @@
             padding: 15px;
             text-align: center;
             font-size: 1rem;
-            margin-top: 50px;
+            margin-top: auto;
+        }
+
+        .dropdown-content { 
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0; 
+            background-color: white; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            width: 160px; 
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        /* Dropdown links */
+        .dropdown-content a {
+            display: block;
+            padding: 12px 18px;
+            color: #0f8f7d; 
+            text-decoration: none;
+            text-align: center; 
+            font-size: 16px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #e6f7f5; 
+            border-radius: 6px;
+        }
+
+        .notification-tab:hover .dropdown-content,
+        .dropdown-content:hover {
+            display: block;
         }
 
         /* Mobile Optimized Styles */
@@ -182,6 +220,10 @@
                 text-align: left;
             }
 
+            .dropdown-content {
+                display: none !important;;
+            }
+
             .footer {
                 display: none;
             }
@@ -194,8 +236,14 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Hello,<br>BusMate!</a>
-            <div class="notification-tab">
+            <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
                 <div class="notification-count">3</div>
+                <div id="dropdown-menu" class="dropdown-content">
+                    <a href="bushome.html">Home</a>
+                    <a href="busrecents.html">Recents</a>
+                    <a href="busprofile.html">Profile</a>
+                    <a href="buses.html">Buses</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -294,6 +342,19 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map2);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const dropdown = document.getElementById("dropdown-menu");
+            const notificationTab = document.querySelector(".notification-tab");
+
+            notificationTab.addEventListener("mouseover", function () {
+                dropdown.style.display = "block";
+            });
+
+            dropdown.addEventListener("mouseleave", function () {
+                dropdown.style.display = "none";
+            });
+        });
     </script>
 </body>
 

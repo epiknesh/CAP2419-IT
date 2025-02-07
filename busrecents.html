@@ -74,7 +74,7 @@
         }
 
         .container {
-            flex: 1;
+  
             padding: 20px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -84,6 +84,8 @@
         }
 
         .recent-tab {
+            display: flex;
+            flex-direction: column;
             width: 100%;
             max-width: 500px;
             background-color: #e0f7f4;
@@ -91,8 +93,6 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
             align-items: center;
         }
 
@@ -159,7 +159,41 @@
             padding: 15px;
             text-align: center;
             font-size: 1rem;
-            margin-top: 40px;
+            margin-top: auto;
+        }
+
+        .dropdown-content { 
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0; 
+            background-color: white; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            width: 160px; 
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        /* Dropdown links */
+        .dropdown-content a {
+            display: block;
+            padding: 12px 18px;
+            color: #0f8f7d; 
+            text-decoration: none;
+            text-align: center; 
+            font-size: 16px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #e6f7f5; 
+            border-radius: 6px;
+        }
+
+        .notification-tab:hover .dropdown-content,
+        .dropdown-content:hover {
+            display: block;
         }
 
         /* Responsive Styles */
@@ -168,6 +202,7 @@
                 background: none;
                 box-shadow: none; 
             }
+
             .navbar-brand {
                 color: #3acdbf !important;
                 font-size: 28px;
@@ -176,16 +211,24 @@
                 margin-left: 0;
                 text-align: left;
             }
+
             .container {
                 padding: 10px;
             }
+
             .recent-title, .recent-tab {
                 max-width: 100%;
             }
+
             .container {
                 grid-template-columns: 1fr;
                 max-width: 500px;
             }
+
+            .dropdown-content {
+                display: none !important;;
+            }
+
             .footer {
                 display: none;
             }
@@ -198,8 +241,14 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#">Hello,<br>BusMate!</a>
-            <div class="notification-tab">
+            <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
                 <div class="notification-count">3</div>
+                <div id="dropdown-menu" class="dropdown-content">
+                    <a href="bushome.html">Home</a>
+                    <a href="busrecents.html">Recents</a>
+                    <a href="busprofile.html">Profile</a>
+                    <a href="buses.html">Buses</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -265,8 +314,20 @@
             initMap('map2');
             initMap('map3');
         });
-    </script>
 
+        document.addEventListener("DOMContentLoaded", function () {
+            const dropdown = document.getElementById("dropdown-menu");
+            const notificationTab = document.querySelector(".notification-tab");
+
+            notificationTab.addEventListener("mouseover", function () {
+                dropdown.style.display = "block";
+            });
+
+            dropdown.addEventListener("mouseleave", function () {
+                dropdown.style.display = "none";
+            });
+        });
+    </script>
 </body>
 
 </html>
