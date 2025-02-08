@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 
 <head>
@@ -72,12 +72,16 @@
 <body>
     <div class="register-container">
         <h2>BusMate Register</h2>
-        <form>
+        <form id="registerForm">
             <div class="mb-3">
                 <input type="text" class="form-control" placeholder="Full Name" required>
             </div>
             <div class="mb-3">
                 <input type="email" class="form-control" placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone Number (09XXXXXXXXX)" required 
+                    pattern="09[0-9]{9}" title="Phone number must start with '09' and be 11 digits long.">
             </div>
             <div class="mb-3">
                 <input type="password" class="form-control" placeholder="Password" required>
