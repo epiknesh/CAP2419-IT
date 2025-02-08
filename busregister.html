@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>BusMate - Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #2ec4b6, #0f8f7d);
             color: #fff;
             display: flex;
@@ -16,17 +17,20 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
 
         .register-container {
-            background: #fff;
+            background: rgba(255, 255, 255, 0.9);
             color: #333;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             text-align: center;
             width: 90%;
             max-width: 400px;
+            position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .register-container h2 {
@@ -34,8 +38,21 @@
             font-weight: bold;
         }
 
-        .form-control {
+        .input-group {
             border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .input-group-text {
+            background: #2ec4b6;
+            color: white;
+            border: none;
+        }
+
+        .form-control {
+            border: none;
+            box-shadow: none;
         }
 
         .btn-primary {
@@ -45,11 +62,12 @@
             padding: 10px;
             font-size: 16px;
             font-weight: bold;
-            transition: 0.3s;
+            transition: 0.3s ease-in-out;
         }
 
         .btn-primary:hover {
             background: #0f8f7d;
+            transform: scale(1.05);
         }
 
         .login-link {
@@ -66,27 +84,41 @@
         .login-link a:hover {
             text-decoration: underline;
         }
+
+        /* Mobile Optimized Styles */
+        @media (max-width: 768px) {
+            .register-container {
+                margin-top: 80px;
+                margin-bottom: 80px;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="register-container">
+        <i class="fas fa-bus logo" style="font-size: 60px; color: #2ec4b6;"></i>
         <h2>BusMate Register</h2>
-        <form id="registerForm">
-            <div class="mb-3">
+        <form>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
                 <input type="text" class="form-control" placeholder="Full Name" required>
             </div>
-            <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                 <input type="email" class="form-control" placeholder="Email" required>
             </div>
-            <div class="mb-3">
-                <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone Number (09XXXXXXXXX)" required 
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                <input type="text" class="form-control" placeholder="Phone Number (09XXXXXXXXX)" required 
                     pattern="09[0-9]{9}" title="Phone number must start with '09' and be 11 digits long.">
             </div>
-            <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
                 <input type="password" class="form-control" placeholder="Password" required>
             </div>
-            <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
                 <input type="password" class="form-control" placeholder="Confirm Password" required>
             </div>
             <button type="submit" class="btn btn-primary w-100">Sign Up</button>
