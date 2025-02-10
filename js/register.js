@@ -1,4 +1,4 @@
-$(document).ready(function(){
+$(document).ready(function() {
     // Validate mobile number
     $('#input_mobile').on('input', function() {
         var value = $(this).val();
@@ -14,15 +14,12 @@ $(document).ready(function(){
 
     // Handle confirmation modal submit button click
     $('#confirmSubmit').on('click', function() {
-        alert('Form submitted successfully!');
-        // You can add form submission logic here
-        $('#confirmationModal').modal('hide');
+        submitRegistration();
     });
 });
 
 function preregister() {
     clearErrorMessages();
-
     var isValid = true;
 
     // Validate required fields
@@ -52,12 +49,40 @@ function preregister() {
         isValid = false;
     }
 
-    // Add any additional validation or actions here
-
     if (isValid) {
         // If all validations pass, show confirmation modal
         $('#confirmationModal').modal('show');
     }
+}
+
+function submitRegistration() {
+    console.log($('#input_lastname').val());  // Add this line before sending the request
+
+    const accountData = {
+        firstName: $('#input_firstname').val(),
+        lastName: $('#input_lastname').val(),
+        birthdate: $('#input_birthdate').val(),
+        mobile: $('#input_mobile').val(),
+        email: $('#input_username').val(),
+        password: $('#input_password').val(),
+        role: $('#input_role').val()
+    };
+
+    $.ajax({
+        type: 'POST',
+        url: 'http://localhost:3000/register', // Change the URL if needed
+        contentType: 'application/json',
+        data: JSON.stringify(accountData),
+        success: function(response) {
+            alert(response.message);
+            window.location.href = 'dashboard_home.html'; // Redirect upon success
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Registration failed');
+        }
+    });
+
+    $('#confirmationModal').modal('hide');
 }
 
 function showError(inputId, message) {

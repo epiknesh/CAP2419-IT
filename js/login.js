@@ -1,25 +1,36 @@
-function prelogin(){
-  
-  // Clear previous error message
+async function prelogin() {
   clearErrorMessage();
 
-  // Retrieve values from login.html
   var username = document.getElementById("input_username").value;
   var password = document.getElementById("input_password").value;
 
-  
-
-  // Check if username and password are empty
-  if (username == "" && password == ""){
-    displayMessage('Email and password cannot be empty.', 'both');
-    return;
-  } else if (username == ""){
-    displayMessage('Email cannot be empty.', 'username');
-  }else if (password == ""){
-    displayMessage('Password cannot be empty.', 'password');
+  if (username === "" || password === "") {
+      displayMessage('Email and password cannot be empty.', 'both');
+      return;
   }
 
+  try {
+      const response = await fetch('http://localhost:3000/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: username, password: password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+          localStorage.setItem('token', data.token); // Store token for session
+          window.location.href = 'dashboard_home.html'; // Redirect on success
+      } else {
+          displayMessage(data.message, 'both'); // Show error message
+      }
+
+  } catch (error) {
+      console.error('Login error:', error);
+      displayMessage('Server error. Try again later.', 'both');
+  }
 }
+
 
 function displayMessage(message,type){
   // Display error message
