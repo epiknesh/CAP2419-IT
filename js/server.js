@@ -89,5 +89,31 @@ app.post('/login', async (req, res) => {
     }
 });
 
+const Maintenance = require('./models/Maintenance'); // Import Bus model
+
+app.get('/maintenance', async (req, res) => {
+    try {
+        const buses = await Maintenance.find(); // Fetch all bus data
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+const Dispatch = require('./models/Dispatch'); // Import Bus model
+
+app.get('/dispatch', async (req, res) => {
+    try {
+        const buses = await Dispatch.find(); // Fetch all bus data
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
 
 
