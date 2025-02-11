@@ -39,7 +39,10 @@ body {
     margin: 0; 
     color: rgb(187, 183, 183);
     cursor: pointer;
+}
 
+#back_button:hover{
+  color: rgb(218, 213, 213);
 }
 
 .form-group label{
