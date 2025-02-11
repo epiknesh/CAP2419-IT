@@ -1,13 +1,63 @@
 async function fetchBusData() {
     try {
-        const response = await fetch('http://localhost:3000/maintenance'); // Adjust based on your API URL
+        const response = await fetch('http://localhost:3000/maintenance'); // Fetch maintenance data
         const busData = await response.json();
         updateFleetStatus(busData);
         updateMaintenanceTable(busData);
+
+        // Fetch Dispatch Data
+        const dispatchResponse = await fetch('http://localhost:3000/dispatch');
+        let dispatchData = await dispatchResponse.json();
+
+        // Filter out inoperative buses based on maintenance status
+        const inoperativeBusIDs = new Set(busData.filter(bus => bus.status !== 1).map(bus => bus.busID));
+        dispatchData = dispatchData.filter(bus => !inoperativeBusIDs.has(bus.busID));
+
+        updateDispatchTable(dispatchData);
+
     } catch (error) {
         console.error('Error fetching bus data:', error);
     }
 }
+
+async function fetchIncomeData() {
+    try {
+        const response = await fetch('http://localhost:3000/income'); // Fetch income data
+        const incomeData = await response.json();
+
+        // Update income table with all buses
+        updateIncomeTable(incomeData);
+    } catch (error) {
+        console.error('Error fetching income data:', error);
+    }
+}
+
+function updateIncomeTable(incomeData) {
+    const incomeTableBody = document.querySelector("#incomeContent tbody");
+    incomeTableBody.innerHTML = ""; // Clear existing content
+
+    incomeData.forEach(bus => {
+        const row = document.createElement("tr");
+
+        // Bus ID
+        const busCell = document.createElement("td");
+        busCell.textContent = `Bus ${bus.busID}`;
+        row.appendChild(busCell);
+
+        // Income Today
+        const incomeTodayCell = document.createElement("td");
+        incomeTodayCell.textContent = `₱${bus.incomeToday.toLocaleString()}`;
+        row.appendChild(incomeTodayCell);
+
+        // Income This Week
+        const incomeWeekCell = document.createElement("td");
+        incomeWeekCell.textContent = `₱${bus.incomeWeek.toLocaleString()}`;
+        row.appendChild(incomeWeekCell);
+
+        incomeTableBody.appendChild(row);
+    });
+}
+
 
 function updateFleetStatus(busData) {
     const operativeBuses = document.getElementById("operativeBuses");
@@ -61,5 +111,48 @@ function updateMaintenanceTable(busData) {
     });
 }
 
+function updateDispatchTable(dispatchData) {
+    const dispatchTableBody = document.querySelector("#dispatchContent tbody");
+    dispatchTableBody.innerHTML = ""; // Clear existing content
+
+    dispatchData.forEach(bus => {
+        const row = document.createElement("tr");
+
+        // Bus ID
+        const busCell = document.createElement("td");
+        busCell.textContent = `Bus ${bus.busID}`;
+        row.appendChild(busCell);
+
+        // Status
+        const statusCell = document.createElement("td");
+        statusCell.textContent = getStatusText(bus.status);
+        row.appendChild(statusCell);
+
+        // Next Dispatch Time
+        const nextDispatchCell = document.createElement("td");
+        nextDispatchCell.textContent = formatDate(bus.nextDispatch);
+        row.appendChild(nextDispatchCell);
+
+        dispatchTableBody.appendChild(row);
+    });
+}
+
+function getStatusText(status) {
+    switch (status) {
+        case 1: return "In Terminal";
+        case 2: return "In Transit";
+        case 3: return "Inoperative";
+        default: return "Unknown";
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    if (isNaN(date)) return "N/A";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+
 // Fetch data when the page loads
 document.addEventListener("DOMContentLoaded", fetchBusData);
+document.addEventListener("DOMContentLoaded", fetchIncomeData);
