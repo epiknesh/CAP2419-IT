@@ -63,196 +63,172 @@
 
 	
 	<!-- CONTENT -->
-	<section id="content">
-		<!-- NAVBAR -->
-		<nav>
-			<i class='bx bx-menu' ></i>
-			<form action="#">
-				<div class="form-input">
-					<input type="search" placeholder="Search...">
-					<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
-				</div>
-			</form>
-			<a href="#" class="profile">
-				<img src="img/people.png">
-			</a>
-		</nav>
+<section id="content">
+	<!-- NAVBAR -->
+	<nav>
+		<i class='bx bx-menu' ></i>
+		<form action="#">
+			<div class="form-input">
+				<input type="search" placeholder="Search...">
+				<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
+			</div>
+		</form>
+		<a href="#" class="profile">
+			<img src="img/people.png">
+		</a>
+	</nav>
     <!-- End of Nav Bar -->
 
-
-		<!-- MAIN -->
-		<main>
-			<div class="head-title">
-				<div class="left">
-					<h1>Dashboard</h1>
-					<ul class="breadcrumb">
-						<li>
-							<a href="#">Dashboard</a>
-						</li>
-						<li><i class='bx bx-chevron-right' ></i></li>
-						<li>
-							<a class="active" href="#">Home</a>
-						</li>
-					</ul>
-				</div>
+	<!-- MAIN -->
+	<main>
+		<div class="head-title">
+			<div class="left">
+				<h1>Dashboard</h1>
+				<ul class="breadcrumb">
+					<li>
+						<a href="#">Dashboard</a>
+					</li>
+					<li><i class='bx bx-chevron-right' ></i></li>
+					<li>
+						<a class="active" href="#">Home</a>
+					</li>
+				</ul>
 			</div>
-    
-    
-        
-      <!-- Quick Info -->
-			<ul class="box-info">
-				<li>
-					<i class='bx bxs-dollar-circle' ></i>
-					<span class="text mt-3">
-						<h3>₱30000</h3>
-						<p>Weekly Income</p>
-					</span>
-				</li>
-        <li>
-					<i class='bx bxs-bus'></i>
-					<span class="text mt-3">
-						<h3 class="text-success">75%</h3>
-						<p>Buses Operating Today</p>
-					</span>
-				</li>
-			</ul>
+		</div>
 
-      <!-- Data -->
+		<!-- Quick Info -->
+		<ul class="box-info">
+			<li>
+				<i class='bx bxs-dollar-circle' ></i>
+				<span class="text mt-3">
+					<h3>₱30000</h3>
+					<p>Weekly Income</p>
+				</span>
+			</li>
+			<li>
+				<i class='bx bxs-bus'></i>
+				<span class="text mt-3">
+					<h3 class="text-success">75%</h3>
+					<p>Buses Operating Today</p>
+				</span>
+			</li>
+			<li>
+				<i class='bx bx-money'></i>
+				<span class="text mt-3">
+					<h3>₱500,000</h3>
+					<p>Bus Income</p>
+				</span>
+			</li>
+		</ul>
 
-      <div class="table-data">
-        <!-- BOX 1: Fleet -->
-        <div class="order" id="fleetContent">
-          <div class="head">
-            <h3>Fleet</h3>
+		<!-- Data -->
+		<div class="table-data">
+			<!-- BOX 1: Fleet -->
+			<div class="order position-relative" id="fleetContent">
+				<div class="head">
+					<h3>Fleet</h3>
+					<a href="fleet.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Fleet</a>
+				</div>
+				<table>
+					<thead>
+						<tr>
+							<th>Bus ID</th>
+							<th>Date</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>02-12-2025</td>
+							<td><span class="status operating">Operating</span></td>
+						</tr>
+						<tr>
+							<td>2</td>
+							<td>02-12-2025</td>
+							<td><span class="status maintenance">Under Maintenance</span></td>
+						</tr>
+						<tr>
+							<td>3</td>
+							<td>02-12-2025</td>
+							<td><span class="status pending">Pending</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- BOX 2: Maintenance Report -->
+			<div class="order position-relative" id="maintenanceContent">
+				<div class="head">
+					<h3>Bus Maintenance Report</h3>
+					<a href="maintenance.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Maintenance</a>
+				</div>
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Bus ID</th>
+							<th>Issue</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>2</td>
+							<td>Engine Overheating</td>
+						</tr>
+						<tr>
+							<td>7</td>
+							<td>Brake System Malfunction</td>
+						</tr>
+						<tr>
+							<td>8</td>
+							<td>Air Conditioning Not Working</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<!-- BOX 3: Bus Dispatch -->
+		<div class="table-data" id="dispatchContent">
+			<div class="order position-relative">
+				<div class="head">
+					<h3>Bus Dispatch</h3>
+					<a href="dispatch.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Dispatch</a>
+				</div>
+				<table>
+					<thead>
+						<tr>
+							<th>Bus ID</th>
+							<th>Status</th>
+							<th>Next Dispatch</th>
+						</tr>
+					</thead>
+					<tbody class="table">
+						<tr>
+							<td>1</td>
+							<td>10:00 AM</td>
+						</tr>
+						<tr>
+							<td>4</td>
+							<td>10:30 AM</td>
+						</tr>
+						<tr>
+							<td>5</td>
+							<td>11:00 AM</td>
+						</tr>
+						<tr>
+							<td>6</td>
+							<td>N/A</td>
+						</tr>
+					</tbody>
+				</table>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Bus ID</th>
-                <th>Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>02-12-2025</td>
-                <td><span class="status operating">Operating</span></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>02-12-2025</td>
-                <td><span class="status maintenance">Under Maintenance</span></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>02-12-2025</td>
-                <td><span class="status pending">Pending</span></td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>02-12-2025</td>
-                <td><span class="status operating">Operating</span></td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>02-12-2025</td>
-                <td><span class="status operating">Operating</span></td>
-              </tr>
-              <tr>
-                <td>6</td>
-                <td>02-12-2025</td>
-                <td><span class="status operating">Operating</span></td>
-              </tr>
-              <tr>
-                <td>7</td>
-                <td>02-12-2025</td>
-                <td><span class="status maintenance">Under Maintenance</span></td>
-              </tr>
-              <tr>
-                <td>8</td>
-                <td>02-12-2025</td>
-                <td><span class="status maintenance">Under Maintenance</span></td>
-              </tr>
-              <tr>
-                <td>9</td>
-                <td>02-12-2025</td>
-                <td><span class="status pending">Pending</span></td>
-              </tr>
-            </tbody>
-          </table>
-       </div>
-       <!-- BOX 2: Maintenance Report -->
-       <div class="order position-relative" id="maintenanceContent">
-        <div class="head">
-          <h3>Bus Maintenance Report</h3>
-        </div>
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Bus ID</th>
-              <th>Issue</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>2</td>
-              <td>Engine Overheating</td>
-            </tr>
-            <tr>
-              <td>7</td>
-              <td>Brake System Malfunction</td>
-            </tr>
-            <tr>
-              <td>8</td>
-              <td>Air Conditioning Not Working</td>
-            </tr>
-          </tbody>
-          </table>
-          <a href="maintenance.html" class="position-absolute bottom-0 end-0 btn btn-primary m-4">See Full Report</a>
-        </div>
-      </div>
-      <div class="table-data">
-      </div>
-      
-      <!-- BOX 3: Bus Dispatch -->
-      <div class="table-data" id="dispatchContent">
-        <div class="order position-relative">
-          <div class="head">
-            <h3>Bus Dispatch</h3>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Bus ID</th>
-                <th>Next Dispatch</th>
-              </tr>
-            </thead>
-            <tbody class="table">
-              <tr>
-                <td>1</td>
-                <td>10:00 AM</td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>10:30 AM</td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>11:00 AM</td>
-              </tr>
-              <tr>
-                <td>6</td>
-                <td>N/A</td>
-              </tr>
-            </tbody>
-            </table>
-            <a href="dispatch.html" class="position-absolute bottom-0 end-0 btn btn-primary m-4">See Full Report</a>
-          </div>
-          <!-- BOX 4 : Income  -->
+
+
           <div class="order position-relative" id="incomeContent">
             <div class="head">
-              <h3 >Bus Income</h3>
+              <h3>Bus Income</h3>
+              <a href="income.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Income</a>
             </div>
             <table>
               <thead>
@@ -262,31 +238,12 @@
                   <th>Income This Week</th>
                 </tr>
               </thead>
-              <tbody class="table">
-                <tr>
-                  <td>1</td>
-                  <td>₱1200</td>
-                  <td>₱8500</td>
-                </tr>
-                <tr>
-                  <td>4</td>
-                  <td>₱900</td>
-                  <td>₱6000</td>
-                </tr>
-                <tr>
-                  <td>5</td>
-                  <td>₱750</td>
-                  <td>₱5500</td>
-                </tr>
-                <tr>
-                  <td>6</td>
-                  <td>N/A</td>
-                  <td>N/A</td>
-                </tr>
+              <tbody class="table" id="incomeTableBody">
+                <!-- Data will be inserted here dynamically -->
               </tbody>
-              </table>
-              <a href="maintenance.html" class="position-absolute bottom-0 end-0 btn btn-primary m-4">See Full Report</a>
-            </div>
+            </table>
+            
+          </div>
       </div>
 		</main> 
 		<!-- End of MAIN -->
