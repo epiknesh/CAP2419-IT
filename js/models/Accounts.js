@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const AccountSchema = new mongoose.Schema({
+    accountID: { type: Number, unique: true },  // Auto-incrementing account ID
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     birthdate: { type: Date, required: true },
@@ -8,7 +9,7 @@ const AccountSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, required: true },
-    createdAt: { type: Date}
+    createdAt: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Accounts', AccountSchema);

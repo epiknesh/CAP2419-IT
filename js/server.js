@@ -38,8 +38,13 @@ app.post('/register', async (req, res) => {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Find the highest existing accountID and increment it
+        const lastAccount = await Account.findOne().sort({ accountID: -1 });
+        const newAccountID = lastAccount ? lastAccount.accountID + 1 : 1;
+
         // Create a new account
         const newAccount = new Account({
+            accountID: newAccountID,
             firstName,
             lastName,
             birthdate,
@@ -51,13 +56,14 @@ app.post('/register', async (req, res) => {
 
         // Save to database
         await newAccount.save();
-        res.status(201).json({ message: 'Account registered successfully' });
+        res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 app.post('/login', async (req, res) => {
     try {
@@ -147,6 +153,57 @@ app.delete('/accounts/:id', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+const Capacity = require('./models/Capacity'); 
+
+app.get('/capacity', async (req, res) => {
+    try {
+        const capacity = await Capacity.find(); 
+        res.status(200).json(capacity);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+const Buses = require('./models/Bus'); 
+
+app.get('/buses', async (req, res) => {
+    try {
+        const buses = await Buses.find(); 
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+app.get('/fleetPersonnel', async (req, res) => {
+    try {
+        const buses = await Buses.find();
+        const accounts = await Accounts.find();
+
+        const fleetPersonnel = buses.map(bus => {
+            const driver = accounts.find(account => account.accountID === bus.driverID);
+            const controller = accounts.find(account => account.accountID === bus.controllerID);
+            
+            return {
+                busID: bus.busID,
+                driver: driver ? `${driver.firstName} ${driver.lastName}` : 'Unknown',
+                controller: controller ? `${controller.firstName} ${controller.lastName}` : 'Unknown'
+            };
+        });
+
+        res.status(200).json(fleetPersonnel);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
 
 
 
