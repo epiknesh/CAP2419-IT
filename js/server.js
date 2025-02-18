@@ -105,8 +105,20 @@ const Dispatch = require('./models/Dispatch'); // Import Bus model
 
 app.get('/dispatch', async (req, res) => {
     try {
-        const buses = await Dispatch.find(); // Fetch all bus data
-        res.status(200).json(buses);
+        const dispatch = await Dispatch.find(); // Fetch all bus data
+        res.status(200).json(dispatch);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+const Income = require('./models/Income'); 
+
+app.get('/income', async (req, res) => {
+    try {
+        const income = await Income.find(); 
+        res.status(200).json(income);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

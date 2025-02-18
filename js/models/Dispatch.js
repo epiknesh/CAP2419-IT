@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const BusSchema = new mongoose.Schema({
+const DispatchSchema = new mongoose.Schema({
     busID: { type: Number, required: true, unique: true },
     status: { type: Number, required: true }, // 1 = Active, 2 = Inactive (Define as needed)
     nextDispatch: { type: Date, required: true },
@@ -10,6 +10,6 @@ const BusSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-BusSchema.index({ coordinates: '2dsphere' }); // Enables geospatial queries
+DispatchSchema.index({ coordinates: '2dsphere' },{ collection: 'dispatch' }); // Enables geospatial queries
 
-module.exports = mongoose.model('Bus', BusSchema);
+module.exports = mongoose.model('Dispatch', DispatchSchema, 'dispatch');
