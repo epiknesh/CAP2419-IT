@@ -206,7 +206,7 @@ body {
 #content nav a {
 	color: var(--dark);
 }
-#content nav .bx.bx-menu {
+#content nav .bx.bx-menu, .bx.bx-refresh {
 	cursor: pointer;
 	color: var(--dark);
 }
@@ -524,8 +524,8 @@ ul {
   padding-left: 0;
 }
 
-.btn{
-  
+.bx.bx-plus{
+  margin-right: 5px;
 }
 
 
