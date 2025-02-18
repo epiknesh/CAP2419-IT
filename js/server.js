@@ -125,6 +125,31 @@ app.get('/income', async (req, res) => {
     }
 });
 
+const Accounts = require('./models/Accounts'); 
+
+app.get('/accounts', async (req, res) => {
+    try {
+        const accounts = await Accounts.find(); 
+        res.status(200).json(accounts);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/accounts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Accounts.findByIdAndDelete(id);
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+
 
 
 

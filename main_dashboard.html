@@ -262,6 +262,19 @@
 	<script src="js/team_tab.js"></script>
   <script src="js/dashboard_tab.js"></script>
 	<script src="js/fleet_tab.js"></script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+		  const urlParams = new URLSearchParams(window.location.search);
+		  const tab = urlParams.get("tab");
+		  
+		  if (tab === "team") {
+			const teamTab = document.querySelector('.side-menu.top li:nth-child(2) a');
+			if (teamTab) {
+			  teamTab.click();
+			}
+		  }
+		});
+	  </script>
 
 </body>
 </html>
