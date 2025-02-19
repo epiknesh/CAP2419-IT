@@ -1,94 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Box Icons -->
-  <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min	.css' rel='stylesheet'>
-  <!-- Bootstrap-->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
-  integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <!-- CCS -->
-  <link rel="stylesheet" href="styles/main_dashboard.css">
-   <!-- Title -->
-  <title>Dummy Design Only</title>
-</head>
-<body>
-  
-  <!-- Side Bar -->
-  <section id="sidebar">
-		<a href="#" class="brand mt-4">
-      <i class='bx bxs-smile'></i>
-			<span class="text">JST Kidlat's BusMate</span>
-		</a>
-		<ul class="side-menu top">
-			<li class="active">
-				<a href="#">
-					<i class='bx bxs-dashboard' ></i>
-					<span class="text">Dashboard</span>
-				</a>
-			</li>
-			<li>
-				<a href="">
-					<i class='bx bxs-group' ></i>
-					<span class="text">Team</span>
-				</a>
-			</li>
-      <li>
-				<a href="#">
-					<i class='bx bxs-message-dots' ></i>
-					<span class="text">Message</span>
-				</a>
-			</li>
-			<li>
-				<a href="#">
-					<i class='bx bxs-bus'></i>
-					<span class="text">Fleet</span>
-				</a>
-			</li>
-		</ul>
-  
-		<ul class="side-menu">
-			<li>
-				<a href="#">
-					<i class='bx bxs-cog' ></i>
-					<span class="text">Settings</span>
-				</a>
-			</li>
-			<li>
-				<a href="#" class="logout">
-					<i class='bx bxs-log-out-circle' ></i>
-					<span class="text">Logout</span>
-				</a>
-			</li>
-		</ul>
-	</section>
-  <!-- End of Side Bar -->
-
-
-
-	
-	<!-- CONTENT -->
-<section id="content">
-	<!-- NAVBAR -->
-	<nav>
-		<i class='bx bx-menu' ></i>
-		<i class='bx bx-refresh'></i>
-		<form action="#">
-			<div class="form-input">
-				<input type="search" placeholder="Search...">
-				<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
-			</div>
-		</form>
-		<a href="#" class="profile">
-			<img src="img/people.png">
-		</a>
-	</nav>
-    <!-- End of Nav Bar -->
-
-	<!-- MAIN -->
-	<main>
-		<div class="head-title">
+document.addEventListener("DOMContentLoaded", function () {
+  // Ensure the DOM is fully loaded before attaching event listeners
+  const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(5) a');
+  teamTab.addEventListener('click', function (event) {
+      event.preventDefault(); // Prevent default link behavior
+      const mainContent = document.querySelector('#content main');
+      mainContent.innerHTML = `
+          <div class="head-title">
 			<div class="left">
 				<h1>Fleet</h1>
 				<ul class="breadcrumb">
@@ -211,12 +128,6 @@
 						</table>
 				</div>
     </div>
-
-		</main> 
-		<!-- End of MAIN -->
-	</section>
-	<!-- End of CONTENT -->
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-</body>
-</html>
+      `;
+  });
+});

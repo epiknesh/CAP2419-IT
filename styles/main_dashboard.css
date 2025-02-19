@@ -528,6 +528,14 @@ ul {
   margin-right: 5px;
 }
 
+#content main .table-data .order table tr td .status.in-transit {
+	background: var(--green);
+}
+
+#content main .table-data .order table tr td .status.in-terminal {
+	background: var(--dark);
+}
+
 
 
 
