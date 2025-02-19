@@ -119,6 +119,47 @@ app.get('/dispatch', async (req, res) => {
     }
 });
 
+app.put('/dispatch/:busID', async (req, res) => {
+    try {
+        const busID = Number(req.params.busID); // Convert busID to a number
+        const dispatch = await Dispatch.findOne({ busID });
+
+        if (!dispatch) {
+            return res.status(404).json({ message: 'Bus not found in dispatch records' });
+        }
+
+        // Update values as per your logic
+        dispatch.status = 1; // Change status from 2 to 1
+        dispatch.lastDispatch = dispatch.nextDispatch; // Set lastDispatch to previous nextDispatch
+        dispatch.nextDispatch = new Date().toISOString(); // Set nextDispatch to current time
+
+        await dispatch.save(); // Save updated dispatch data
+
+        res.status(200).json({ message: 'Dispatch updated successfully', dispatch });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.get('/dispatch/:busID', async (req, res) => {
+    try {
+        const busID = Number(req.params.busID);
+        const dispatch = await Dispatch.findOne({ busID });
+
+        if (!dispatch) {
+            return res.status(404).json({ message: 'Bus not found in dispatch records' });
+        }
+
+        res.status(200).json(dispatch);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
 const Income = require('./models/Income'); 
 
 app.get('/income', async (req, res) => {
