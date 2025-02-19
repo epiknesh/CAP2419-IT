@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         <div class="order position-relative" id="fleetMaintenance">
                             <div class="head">
-                                <h3>Bus Maintenance Report</h3>
+                                <h3>Fleet Maintenance Report</h3>
                             </div>
                             <table class="table table-striped">
                                 <thead>

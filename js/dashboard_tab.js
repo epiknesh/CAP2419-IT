@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                     <div class="order position-relative" id="maintenanceContent">
                         <div class="head">
-                            <h3>Bus Maintenance Report</h3>
+                            <h3>Fleet Maintenance Report</h3>
                             <a href="maintenance.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Maintenance</a>
                         </div>
                         <table class="table table-striped">

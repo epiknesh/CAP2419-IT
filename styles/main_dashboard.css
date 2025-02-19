@@ -536,6 +536,17 @@ ul {
 	background: var(--dark);
 }
 
+#content main .table-data .order table tr td .status.maintenance-major {
+	background: var(--red);
+}
+
+#content main .table-data .order table tr td .status.maintenance-moderate {
+	background: var(--orange);
+}
+
+#content main .table-data .order table tr td .status.maintenance-minor {
+	background: var(--yellow);
+}
 
 
 

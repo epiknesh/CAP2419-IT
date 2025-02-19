@@ -7,14 +7,14 @@ document.addEventListener("DOMContentLoaded", function () {
       mainContent.innerHTML = `
           <div class="head-title">
 			<div class="left">
-				<h1>Fleet</h1>
+				<h1>Dispatch</h1>
 				<ul class="breadcrumb">
 					<li>
-						<a href="#">Fleet</a>
+						<a href="#">Dispatch</a>
 					</li>
 					<li><i class='bx bx-chevron-right' ></i></li>
 					<li>
-						<a class="active" href="#">Fleet</a>
+						<a class="active" href="#">Dispatch</a>
 					</li>
 				</ul>
 			</div>
