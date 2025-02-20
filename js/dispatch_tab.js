@@ -46,13 +46,19 @@ document.addEventListener("DOMContentLoaded", async function () {
                         </ul>
                     </div>
                 </div>
-                <div class="table-data" id="dispatchContent">
             `;
 
             if (operativeDispatches.length === 0) {
                 dispatchContent += `<p>No operative buses available for dispatch.</p>`;
             } else {
-                operativeDispatches.forEach(dispatch => {
+                operativeDispatches.forEach((dispatch, index) => {
+                    if (index % 2 === 0) {
+                        if (index !== 0) {
+                            dispatchContent += `</div>`; // Close previous "table-data" div
+                        }
+                        dispatchContent += `<div class="table-data">`; // Open new "table-data" div
+                    }
+
                     dispatchContent += `
                         <div class="order position-relative">
                             <div class="head">
@@ -80,9 +86,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                         </div>
                     `;
                 });
+                dispatchContent += `</div>`; // Close the last "table-data" div
             }
-
-            dispatchContent += `</div>`;
 
             // Insert generated content into the main section
             document.querySelector('#content main').innerHTML = dispatchContent;
