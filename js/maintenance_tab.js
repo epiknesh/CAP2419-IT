@@ -48,11 +48,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 `;
 
                 // Append to Fleet Maintenance Report table (only for non-operating buses)
-                if (bus.status !== 1) {
+                if (bus.vehicle_condition !== 1) {
                     let conditionClass;
-                    if (bus.status === 2) {
+                    if (bus.vehicle_condition === 3) {
                         conditionClass = "maintenance-major";
-                    } else if (bus.status === 3) {
+                    } else if (bus.vehicle_condition === 2) {
                         conditionClass = "maintenance-moderate";
                     } else {
                         conditionClass = "maintenance-minor";

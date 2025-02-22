@@ -6,7 +6,8 @@ const maintenanceSchema = new mongoose.Schema({
     issue: { type: String, required: true },
     schedule: { type: Date, default: null }, // Allow null values
     assignedStaff: { type: String, default: null },
-    contactNumber: { type: String, default: null }
+    contactNumber: { type: String, default: null },
+    vehicle_condition: { type: Number, required: true }
 }, { collection: 'maintenance' });
 
 module.exports = mongoose.model('Maintenance', maintenanceSchema);
