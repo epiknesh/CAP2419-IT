@@ -12,7 +12,7 @@ a{
 
 /* Navbar and Footer */
 .navbar, footer {
-    background-color: #0DB7B6;
+    background-color: #F9F9F9;
 }
 
 .navbar .nav-link, footer p {
@@ -29,20 +29,20 @@ a{
 
 /* Page Background */
 body {
-    background-color: #119A99;
+    background-color: #eee;
     color: white;
     margin: 0; 
 }
 
 #back_button{
-    background-color: #119A99;
+    background-color: #eee;
     margin: 0; 
-    color: rgb(187, 183, 183);
+    color: black;
     cursor: pointer;
 }
 
 #back_button:hover{
-  color: rgb(218, 213, 213);
+  color: rgb(105, 100, 100);
 }
 
 .form-group label{
@@ -128,7 +128,7 @@ html, body {
 
 /* Footer remains at the bottom but doesn't overlap content */
 footer {
-  background-color: #0DB7B6;
+  background-color: #F9F9F9;
   color: black;
   text-align: center;
   padding: 0.75rem 0; 

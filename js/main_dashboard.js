@@ -110,12 +110,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     } catch (error) {
         console.error("Error fetching data:", error);
     }
+
+    // Refresh Button
+    const refreshButton = document.querySelector('#content nav .bx.bx-refresh');
+    refreshButton.addEventListener('click', function () {
+        location.reload();
+    });
 });
-
-
-
-
-
 
 const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
 

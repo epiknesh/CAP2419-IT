@@ -12,42 +12,13 @@
 
 </head>
 <body>
-<!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">JST Kidlat's BusMate</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#fleet">Your Fleet</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#maintenance">Bus Maintenance</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#dispatch">Bus Dispatch</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#income">Bus Income</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
     <!-- Register Form -->
      <!-- Back Button -->
     <div class="p-3"> 
-        <a href="dashboard_home.html"><div class="h5 p-3" id="back_button"> <span><i class="bi bi-arrow-left"></i></span> Go Back</div></a>
+        <a href="main_dashboard.html"><div class="h5 p-3" id="back_button"> <span><i class="bi bi-arrow-left"></i></span> Go Back</div></a>
     </div>
     <div class="container mt-5">
-        <div class="display-1">Add a Team Member...</div>
+        <div class="display-1 text-dark">Add a Team Member...</div>
 
         <!-- White Form Container -->
         <div class="col-xxl-5 col-xl-6 col-lg-7 col-md-10 col-sm-12 p-5 mt-5 shadow-lg" id="form-div">
@@ -91,11 +62,13 @@
                     <select class="form-select" id="input_role" name="input_role">
                         <option selected>Choose...</option>
                         <option value="1">Admin</option>
-                        <option value="2">Cashier</option>
-                        <option value="3">Maintenance</option>
-                        <option value="4">Driver</option>
-                        <option value="5">Conductor</option>
+                        <option value="2">Driver</option>
+                        <option value="3">Controller</option>
+                        <option value="4">Dispatcher</option>
+                        <option value="5">Maintenance</option>
+                        <option value="6">Cashier</option>
                     </select>
+                    
                 </div>
             </div>
             <div class="col-lg-12 mt-5" id="login-btn-div">
@@ -107,7 +80,7 @@
             </div>
             <div class="col-lg-12 mb-3" id="login-btn-div">
                 <div class="col-lg-12 mb-3">
-                    <a href="dashboard_home.html"><button type="button" class="btn-secondary btn-med login-btn" id="login-btn" tabindex="0" style="width: 100%;">
+                    <a href="main_dashboard.html"><button type="button" class="btn-secondary btn-med login-btn" id="login-btn" tabindex="0" style="width: 100%;">
                         <i class="bi bi-x-lg"></i> CANCEL
                     </button></a>
                 </div>

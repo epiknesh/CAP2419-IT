@@ -206,7 +206,7 @@ body {
 #content nav a {
 	color: var(--dark);
 }
-#content nav .bx.bx-menu {
+#content nav .bx.bx-menu, .bx.bx-refresh {
 	cursor: pointer;
 	color: var(--dark);
 }
@@ -524,10 +524,29 @@ ul {
   padding-left: 0;
 }
 
-.btn{
-  
+.bx.bx-plus, .bx.bxs-edit{
+  margin-right: 5px;
 }
 
+#content main .table-data .order table tr td .status.in-transit {
+	background: var(--green);
+}
+
+#content main .table-data .order table tr td .status.in-terminal {
+	background: var(--dark);
+}
+
+#content main .table-data .order table tr td .status.maintenance-major {
+	background: var(--red);
+}
+
+#content main .table-data .order table tr td .status.maintenance-moderate {
+	background: var(--orange);
+}
+
+#content main .table-data .order table tr td .status.maintenance-minor {
+	background: var(--yellow);
+}
 
 
 

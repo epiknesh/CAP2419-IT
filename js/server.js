@@ -38,8 +38,13 @@ app.post('/register', async (req, res) => {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Find the highest existing accountID and increment it
+        const lastAccount = await Account.findOne().sort({ accountID: -1 });
+        const newAccountID = lastAccount ? lastAccount.accountID + 1 : 1;
+
         // Create a new account
         const newAccount = new Account({
+            accountID: newAccountID,
             firstName,
             lastName,
             birthdate,
@@ -51,13 +56,14 @@ app.post('/register', async (req, res) => {
 
         // Save to database
         await newAccount.save();
-        res.status(201).json({ message: 'Account registered successfully' });
+        res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 app.post('/login', async (req, res) => {
     try {
@@ -113,6 +119,47 @@ app.get('/dispatch', async (req, res) => {
     }
 });
 
+app.put('/dispatch/:busID', async (req, res) => {
+    try {
+        const busID = Number(req.params.busID); // Convert busID to a number
+        const dispatch = await Dispatch.findOne({ busID });
+
+        if (!dispatch) {
+            return res.status(404).json({ message: 'Bus not found in dispatch records' });
+        }
+
+        // Update values as per your logic
+        dispatch.status = 1; // Change status from 2 to 1
+        dispatch.lastDispatch = dispatch.nextDispatch; // Set lastDispatch to previous nextDispatch
+        dispatch.nextDispatch = new Date().toISOString(); // Set nextDispatch to current time
+
+        await dispatch.save(); // Save updated dispatch data
+
+        res.status(200).json({ message: 'Dispatch updated successfully', dispatch });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.get('/dispatch/:busID', async (req, res) => {
+    try {
+        const busID = Number(req.params.busID);
+        const dispatch = await Dispatch.findOne({ busID });
+
+        if (!dispatch) {
+            return res.status(404).json({ message: 'Bus not found in dispatch records' });
+        }
+
+        res.status(200).json(dispatch);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
 const Income = require('./models/Income'); 
 
 app.get('/income', async (req, res) => {
@@ -124,6 +171,82 @@ app.get('/income', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+const Accounts = require('./models/Accounts'); 
+
+app.get('/accounts', async (req, res) => {
+    try {
+        const accounts = await Accounts.find(); 
+        res.status(200).json(accounts);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/accounts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Accounts.findByIdAndDelete(id);
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+const Capacity = require('./models/Capacity'); 
+
+app.get('/capacity', async (req, res) => {
+    try {
+        const capacity = await Capacity.find(); 
+        res.status(200).json(capacity);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+const Buses = require('./models/Bus'); 
+
+app.get('/buses', async (req, res) => {
+    try {
+        const buses = await Buses.find(); 
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+app.get('/fleetPersonnel', async (req, res) => {
+    try {
+        const buses = await Buses.find();
+        const accounts = await Accounts.find();
+
+        const fleetPersonnel = buses.map(bus => {
+            const driver = accounts.find(account => account.accountID === bus.driverID);
+            const controller = accounts.find(account => account.accountID === bus.controllerID);
+            
+            return {
+                busID: bus.busID,
+                driver: driver ? `${driver.firstName} ${driver.lastName}` : 'Unknown',
+                controller: controller ? `${controller.firstName} ${controller.lastName}` : 'Unknown'
+            };
+        });
+
+        res.status(200).json(fleetPersonnel);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+
 
 
 

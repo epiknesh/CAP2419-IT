@@ -75,8 +75,8 @@ function submitRegistration() {
         data: JSON.stringify(accountData),
         success: function(response) {
             alert(response.message);
-            window.location.href = 'dashboard_home.html'; // Redirect upon success
-        },
+            window.location.href = 'main_dashboard.html?tab=team'; // Redirect with tab parameter
+        },        
         error: function(xhr) {
             alert(xhr.responseJSON?.message || 'Registration failed');
         }
