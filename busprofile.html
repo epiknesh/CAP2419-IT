@@ -275,6 +275,20 @@
             box-shadow: 0 0 5px rgba(15, 143, 125, 0.5);
         }
 
+        #shareLinkContainer a {
+            color: white;
+            font-weight: bold; 
+            text-decoration: none; 
+            display: block; 
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #shareLinkContainer a:hover {
+            text-decoration: underline; 
+        }
+
+
         select option {
             padding: 8px;
         }
@@ -531,35 +545,76 @@
         <!-- Live Location Popup -->
         <div id="liveLocationPopup" class="popup">
             <div class="popup-header">
-                <span class="popup-title">Live Location</span>
+                <span class="popup-title">Share Live Location</span>
                 <button class="close-btn" onclick="closePopup('liveLocationPopup')">&times;</button>
             </div>
             <div class="popup-content">
+                <p>Enable location services to share your current location.</p>
                 <div id="map"></div>
+                <div id="shareLinkContainer"></div>
+
             </div>
         </div>
     
         <script>
             function openPopup(id) {
                 document.getElementById(id).style.display = 'block';
-                if (id === 'liveLocationPopup') {
-                setTimeout(() => {
-                    document.getElementById('map').innerHTML = ''; // Clear previous map
-                    let map = L.map('map').setView([14.5995, 120.9842], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap contributors'
-                    }).addTo(map);
-                    L.marker([14.5995, 120.9842]).addTo(map).bindPopup("Your Location").openPopup();
-                    setTimeout(() => { map.invalidateSize(); }, 300);
-                }, 500);
-            }
+
+                if (id === "liveLocationPopup") {
+                    shareLocationPopup(); // Call the function only if the ID matches
+                }
+
                 document.querySelectorAll('.save-btn').forEach(button => {
                     button.addEventListener('click', function() {
                         this.closest('.popup').style.display = 'none';
                     });
                 });
             }
-    
+
+            function shareLocationPopup() {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser.");
+                    return;
+                }
+
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        if (!window.liveMap) {
+                            window.liveMap = L.map("map").setView([lat, lng], 15);
+                            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                                attribution: "&copy; OpenStreetMap contributors",
+                            }).addTo(window.liveMap);
+                        }
+
+                        if (window.liveMarker) {
+                            window.liveMarker.setLatLng([lat, lng]);
+                        } else {
+                            window.liveMarker = L.marker([lat, lng]).addTo(window.liveMap);
+                        }
+
+                        window.liveMap.setView([lat, lng], 15);
+
+                        const shareLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                        document.getElementById("shareLinkContainer").innerHTML =
+                            `<a id="shareLink" href="${shareLink}" target="_blank">Share Live Location</a>`;
+                    },
+                    (error) => {
+                        alert("Unable to retrieve your location. Please enable location services.");
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                document.getElementById("startSharing").addEventListener("click", function () {
+                    openPopup("liveLocationPopup");
+                    liveLocationPopup();
+                });
+            });
+
             function closePopup(id) {
                 document.getElementById(id).style.display = 'none';
             }
