@@ -8,14 +8,24 @@
 </head>
 <body>
     <script>
-        // Show an alert to notify the user about the successful logout
-        alert('You have been logged out successfully.');
+        // Check if the user is logged in (e.g., by checking a session or token)
+        const isLoggedIn = localStorage.getItem('auth-token'); // Or sessionStorage, depending on how you store the token
 
-        // Optionally, clear session data if stored in localStorage
-        localStorage.removeItem('auth-token');
+        if (!isLoggedIn) {
+            // Show an alert if the user is not logged in
+            alert('You are not logged in. You will be redirected to the Login Page shortly.');
 
-        // Redirect to the login page after logout
-        window.location.href = "buslogin.html";
+            window.location.href = "buslogin.html";
+        } else {
+            // Proceed with logout if the user is logged in
+            alert('You have been logged out successfully.');
+
+            // Optionally, clear session data if stored in localStorage
+            localStorage.removeItem('auth-token');
+
+            // Redirect to the login page after logout
+            window.location.href = "buslogin.html";
+        }
     </script>
     <script src="js/buslogout.js"></script>
 </body>
