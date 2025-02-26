@@ -107,6 +107,42 @@ app.get('/maintenance', async (req, res) => {
     }
 });
 
+
+// Fetch all maintenance records (for populating Bus ID dropdown)
+app.get('/maintenance', async (req, res) => {
+    try {
+        const buses = await Maintenance.find({}, 'busID'); // Fetch only bus IDs
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update maintenance record for a specific bus
+app.put('/maintenance/:busID', async (req, res) => {
+    try {
+        const { busID } = req.params;
+        const { status, issue, schedule, assignedStaff, vehicle_condition } = req.body;
+
+        // Update the maintenance record
+        const updatedMaintenance = await Maintenance.findOneAndUpdate(
+            { busID: busID },
+            { status, issue, schedule, assignedStaff, vehicle_condition },
+            { new: true }
+        );
+
+        if (!updatedMaintenance) {
+            return res.status(404).json({ message: 'Bus not found in maintenance records' });
+        }
+
+        res.status(200).json({ message: 'Maintenance record updated successfully', updatedMaintenance });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 const Dispatch = require('./models/Dispatch'); // Import Bus model
 
 app.get('/dispatch', async (req, res) => {
