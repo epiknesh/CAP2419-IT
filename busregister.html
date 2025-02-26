@@ -28,7 +28,7 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             text-align: center;
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
             position: relative;
             backdrop-filter: blur(10px);
         }
@@ -92,6 +92,18 @@
                 margin-bottom: 80px;
             }
         }
+
+        /* Error message styling */
+        #error_message {
+            margin-top: 6px;
+            margin-bottom: 6px; 
+            padding: 10px;
+            color: #f44336;
+            font-size: 18px;
+            font-weight: bold;
+            display: none; 
+            text-align: center; 
+        }
     </style>
 </head>
 
@@ -99,42 +111,45 @@
     <div class="register-container">
         <i class="fas fa-bus logo" style="font-size: 60px; color: #2ec4b6;"></i>
         <h2>BusMate Register</h2>
-        <form>
+        <form enctype="multipart/form-data">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-image"></i></span>
-                <input type="file" class="form-control" accept="image/*" name="profile_picture">
+                <input type="file" id="input_profile_pic" class="form-control" required>
             </div>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                <input type="text" class="form-control" placeholder="First Name" required>
+                <input type="text" class="form-control" id="input_username" placeholder="Username" required>
             </div>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                <input type="text" class="form-control" placeholder="Last Name" required>
+                <input type="text" class="form-control" id="input_firstname" placeholder="First Name" required>
+            </div>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" class="form-control" id="input_lastname" placeholder="Last Name" required>
             </div>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                <input type="email" class="form-control" placeholder="Email" required>
+                <input type="email" class="form-control" id="input_email" placeholder="Email" required>
             </div>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                <input type="text" class="form-control" placeholder="Phone Number (09XXXXXXXXX)" required 
-                    pattern="09[0-9]{9}" title="Phone number must start with '09' and be 11 digits long.">
+                <input type="text" class="form-control" id="input_phone" placeholder="Phone Number" required>
             </div>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" class="form-control" placeholder="Password" required>
+                <input type="password" class="form-control" id="input_password" placeholder="Password" required>
             </div>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" class="form-control" placeholder="Confirm Password" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+            <button type="button" class="btn btn-primary w-100" id="registerSubmit">Register</button>
         </form>
+        <div id="error_message"></div>
         <div class="login-link">
             Already have an account? <a href="buslogin.html">Login</a>
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/busregister.js"></script>
 </body>
 
 </html>

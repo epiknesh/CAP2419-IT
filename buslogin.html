@@ -92,6 +92,18 @@
                 margin-bottom: 80px;
             }
         }
+
+        /* Error message styling */
+        #error_message {
+            margin-top: 6px;
+            margin-bottom: 6px; 
+            padding: 10px;
+            color: #f44336;
+            font-size: 18px;
+            font-weight: bold;
+            display: none; 
+            text-align: center; 
+        }
     </style>
 </head>
 
@@ -101,19 +113,23 @@
         <h2>BusMate Login</h2>
         <form>
             <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                <input type="email" class="form-control" placeholder="Email" required>
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" class="form-control" id="input_username" placeholder="Username" required>
             </div>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" class="form-control" placeholder="Password" required>
+                <input type="password" class="form-control" id="input_password" placeholder="Password" required>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button type="button" class="btn btn-primary w-100" id="loginSubmit">Login</button>
         </form>
+        <div id="error_message"></div>
         <div class="signup-link">
             Don't have an account? <a href="busregister.html">Sign Up</a>
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/buslogin.js"></script>
 </body>
 
 </html>

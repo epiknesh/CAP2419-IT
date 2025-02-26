@@ -3,12 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=buslogin.html">
+    <meta http-equiv="refresh" content="3; url=buslogin.html"> <!-- Redirect after 3 seconds -->
     <title>BusMate - Logout</title>
 </head>
 <body>
     <script>
+        // Show an alert to notify the user about the successful logout
+        alert('You have been logged out successfully.');
+
+        // Optionally, clear session data if stored in localStorage
+        localStorage.removeItem('auth-token');
+
+        // Redirect to the login page after logout
         window.location.href = "buslogin.html";
     </script>
+    <script src="js/buslogout.js"></script>
 </body>
 </html>
