@@ -1,4 +1,3 @@
-// buslogin.js
 document.getElementById('loginSubmit').addEventListener('click', preLogin);
 
 async function preLogin() {
@@ -7,7 +6,7 @@ async function preLogin() {
 
     // Basic validation
     if (!username || !password) {
-        showError('Please fill in all fields');
+        showError('Please fill in all fields.');
         return;
     }
 
@@ -20,17 +19,30 @@ async function preLogin() {
             body: JSON.stringify({ username, password })
         });
 
+        // Check if response status is ok
         const result = await response.json();
 
         if (response.ok) {
             alert(result.message);
             localStorage.setItem('token', result.token); // Store token
-            window.location.href = 'bushome.html'; // Redirect to dashboard or home page
+            window.location.href = 'bushome.html'; // Redirect to home page
         } else {
-            showError(result.message);
+            // Handle specific server errors returned from the API
+            if (result.message.includes('incorrect password')) {
+                showError('Incorrect password. Please try again.');
+            } else if (result.message.includes('user not found')) {
+                showError('User not found. Please check your username.');
+            } else {
+                showError(result.message || 'An unexpected error occurred.');
+            }
         }
     } catch (error) {
-        showError('An error occurred. Please try again.');
+        // Handle network or other unexpected errors
+        if (error.name === 'TypeError') {
+            showError('Network error. Please check your internet connection.');
+        } else {
+            showError('An error occurred. Please try again.');
+        }
     }
 }
 
