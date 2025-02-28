@@ -150,6 +150,16 @@
                 dropdown.style.display = "none";
             });
         });
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            const token = localStorage.getItem("token"); // Get token from localStorage
+
+            if (!token) {
+                alert("You are not logged in. Redirecting to login page..."); // Show alert
+                // Redirect to login page if token is missing
+                window.location.href = "buslogin.html";
+            }
+        });
     </script>
 </body>
 
