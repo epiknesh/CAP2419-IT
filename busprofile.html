@@ -36,8 +36,8 @@
             <div class="camera-icon">📷</div>
         </div>
 
-        <div class="fullname">Vyshak</div>
-        <div class="username">@vys21</div>
+        <div id="fullname" class="fullname"></div>
+        <div id="username" class="username"></div>
 
         <div class="options"> 
             <div class="option" onclick="openPopup('liveLocationPopup')">
@@ -230,6 +230,18 @@
                 alert("You are not logged in. Redirecting to login page..."); // Show alert
                 // Redirect to login page if token is missing
                 window.location.href = "buslogin.html";
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const user = JSON.parse(localStorage.getItem('user')); // Retrieve user data
+
+            if (user) {
+                document.querySelector('.fullname').innerText = `${user.firstName} ${user.lastName}`;
+                document.querySelector('.username').innerText = `@${user.username}`;
+            } else {
+                console.error("User data not found. Redirecting to login...");
+                window.location.href = "buslogin.html"; // Redirect if no user data
             }
         });
     </script>

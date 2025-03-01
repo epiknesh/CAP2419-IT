@@ -51,3 +51,18 @@ function showError(message) {
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
 }
+
+fetch('/buslogin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+})
+.then(response => response.json())
+.then(data => {
+    if (data.token) {
+        localStorage.setItem('user', JSON.stringify(data.user)); // Store user data
+    } else {
+        alert(data.message);
+    }
+})
+.catch(error => console.error('Error:', error));
