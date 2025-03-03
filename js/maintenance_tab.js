@@ -390,7 +390,7 @@ function showFleetReadinessForm() {
             const additionalFields = document.getElementById('additionalFields');
             
             busStatus.addEventListener('change', function () {
-                if (busStatus.value === "2" || busStatus.value === "3") {
+                if (busStatus.value === "2") {
                     additionalFields.style.display = 'block';
                 } else {
                     additionalFields.style.display = 'none';
