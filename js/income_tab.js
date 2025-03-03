@@ -69,6 +69,8 @@ function fetchIncomeData() {
       const tableBody = document.getElementById("busIncomeTable");
       tableBody.innerHTML = ""; // Clear existing data
 
+      data.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
+
       data.forEach(item => {
         const row = `
           <tr>
@@ -88,69 +90,86 @@ function fetchIncomeData() {
     });
 }
 function showIncomeForm() {
-  const formHtml = `
-    <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="incomeModalLabel">Add Daily Income</h5>
-            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="incomeForm">
-               <div class="mb-3">
-                <label for="busId" class="form-label">Bus ID:</label>
-                <select class="form-select" id="busId" name="busId" required>
-                  <option value="" selected disabled>Select Bus</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                </select>
+  fetch('http://localhost:3000/income')
+      .then(response => response.json())
+      .then(data => {
+        const busOptions = data
+            .sort((a, b) => a.busID - b.busID) // Ensure sorting in the frontend
+            .map(income => `<option value="${income.busID}">${income.busID}</option>`)
+            .join('');
+
+
+          const formHtml = `
+              <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-md modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="incomeModalLabel">Add Daily Income</h5>
+                      <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <form id="incomeForm">
+                         <div class="mb-3">
+                          <label for="busId" class="form-label">Bus ID:</label>
+                          <select class="form-select" id="busId" name="busId" required>
+                            <option value="" selected disabled>Select Bus</option>
+                            ${busOptions}
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="income" class="form-label">Today's Income:</label>
+                          <input type="number" class="form-control" id="income" name="income" required>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="button" class="btn btn-success" id="submitIncome">Submit</button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="mb-3">
-                <label for="income" class="form-label">Today's Income:</label>
-                <input type="number" class="form-control" id="income" name="income" required>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" id="submitIncome">Submit</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+          `;
 
-  // Append the modal to the body
-  document.body.insertAdjacentHTML('beforeend', formHtml);
+          document.body.insertAdjacentHTML('beforeend', formHtml);
+          document.getElementById('submitIncome').addEventListener('click', function () {
+              const busId = document.getElementById('busId').value;
+              const income = document.getElementById('income').value;
+              
+              if (busId && income) {
+                  fetch('http://localhost:3000/update-income', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ busID: Number(busId), incomeToday: Number(income) })
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                      showAlert(data.message, 'success');
+                      incomeModal.hide();
+                      document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click();
+                  })
+                  .catch(error => console.error('Error updating income:', error));
+              } else {
+                  showAlert('Please fill in all fields.', 'warning');
+              }
+          });
 
-  // Event listener for the Submit button
-  document.getElementById('submitIncome').addEventListener('click', function () {
-    const busId = document.getElementById('busId').value;
-    const income = document.getElementById('income').value;
+          const modalElement = document.getElementById('incomeModal');
+          const incomeModal = new bootstrap.Modal(modalElement);
+          incomeModal.show();
 
-    if (busId && income) {
-      showAlert('Income has been successfully added!', 'success');
-      incomeModal.hide();
-    } else {
-			showAlert('Please fill in all fields.', 'warning');
-		}
-  });
-
-  // Initialize Bootstrap's modal
-  const modalElement = document.getElementById('incomeModal');
-  const incomeModal = new bootstrap.Modal(modalElement);
-  incomeModal.show();
-
-  // Cleanup the modal once it's hidden
-  modalElement.addEventListener('hidden.bs.modal', function () {
-    modalElement.remove();
-    document.querySelector('.modal-backdrop').remove();
-    document.body.classList.remove('modal-open');
-    document.body.style = '';
-  });
+          modalElement.addEventListener('hidden.bs.modal', function () {
+              modalElement.remove();
+              document.querySelector('.modal-backdrop').remove();
+              document.body.classList.remove('modal-open');
+              document.body.style = '';
+          });
+      })
+      .catch(error => console.error('Error fetching bus IDs:', error));
 }
+
 
 // Function to Show Alert
 function showAlert(message, type) {

@@ -208,6 +208,26 @@ app.get('/income', async (req, res) => {
     }
 });
 
+app.post('/update-income', async (req, res) => {
+    try {
+        const { busID, incomeToday } = req.body;
+        const incomeRecord = await Income.findOne({ busID });
+        
+        if (!incomeRecord) {
+            return res.status(404).json({ message: 'Bus ID not found' });
+        }
+
+        incomeRecord.incomeToday = incomeToday;
+        incomeRecord.totalIncome += incomeToday;
+        await incomeRecord.save();
+        
+        res.status(200).json({ message: 'Income updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 const Accounts = require('./models/Accounts'); 
 
 app.get('/accounts', async (req, res) => {
