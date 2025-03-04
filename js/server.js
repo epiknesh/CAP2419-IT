@@ -300,6 +300,27 @@ app.get('/fleetPersonnel', async (req, res) => {
     }
 });
 
+app.post('/update-fleet-personnel', async (req, res) => {
+    try {
+        const { busID, driverID, controllerID } = req.body;
+        
+        const updatedBus = await Buses.findOneAndUpdate(
+            { busID },
+            { driverID: driverID || null, controllerID: controllerID || null },
+            { new: true }
+        );
+        
+        if (!updatedBus) {
+            return res.status(404).json({ message: 'Bus ID not found' });
+        }
+        
+        res.status(200).json({ message: 'Fleet personnel updated successfully', updatedBus });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 
 

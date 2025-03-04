@@ -426,6 +426,7 @@ function showFleetReadinessForm() {
                     });
 
                     if (response.ok) {
+
                         
                         const editStatusModal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
                         editStatusModal.hide(); // Hide the modal

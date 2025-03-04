@@ -247,60 +247,197 @@ async function fetchFleetPersonnel() {
 
 // Function to show the Fleet Readiness form || Edit Status Button
 function showFleetReadinessStatusForm() {
-    const formHtml = `
-        <div class="modal fade" id="editFleetStatusModal" tabindex="-1" aria-labelledby="editFleetStatusModalLabel" aria-hidden="true">
+    fetch('http://localhost:3000/maintenance')
+    .then(response => response.json())
+    .then(buses => {
+        buses.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
+        const busOptions = buses.map(bus => `<option value="${bus.busID}">${bus.busID}</option>`).join('');
+        
+        const formHtml = `
+            <div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editStatusModalLabel">Edit Fleet Readiness</h5>
+                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="fleetReadinessForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busId" class="form-label">Bus ID:</label>
+                                        <select class="form-select" id="busId" name="busId" required>
+                                            <option value="">Select Bus</option>
+                                            ${busOptions}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busStatus" class="form-label">Status:</label>
+                                        <select class="form-select" id="busStatus" name="busStatus" required>
+                                            <option value="">Select Status</option>
+                                            <option value="1">Operating</option>
+                                            <option value="2">Under Maintenance</option>
+                                            <option value="3">Pending</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div id="additionalFields" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="issue" class="form-label">Issue:</label>
+                                        <textarea class="form-control" id="issue" name="issue" rows="2" placeholder="Describe the vehicle's current issue" style="resize: none;"></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="scheduleMaintenance" class="form-label">Schedule Maintenance:</label>
+                                            <input type="date" class="form-control" id="scheduleMaintenance" name="scheduleMaintenance">
+                                        </div>
+                                        <div class="col-md-6 mb-3" id="assignedMaintaineeContainer">
+                                            <label for="assignedMaintainee" class="form-label">Assigned Maintenance:</label>
+                                            <input type="text" class="form-control" id="assignedMaintainee" name="assignedMaintainee" placeholder="Enter assigned technician">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vehicleCondition" class="form-label">Vehicle Condition:</label>
+                                        <select class="form-select" id="vehicleCondition" name="vehicleCondition" required>
+                                            <option value="">Select Condition</option>
+                                            <option value="3">Major</option>
+                                            <option value="2">Moderate</option>
+                                            <option value="1">Minor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="submitStatus">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+        
+        const busStatus = document.getElementById('busStatus');
+        const additionalFields = document.getElementById('additionalFields');
+        
+        busStatus.addEventListener('change', function () {
+            if (busStatus.value === "2") {
+                additionalFields.style.display = 'block';
+            } else {
+                additionalFields.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('submitStatus').addEventListener('click', async function () {
+            const busId = document.getElementById('busId').value;
+            const busStatus = document.getElementById('busStatus').value;
+            const issue = document.getElementById('issue').value;
+            const vehicleCondition = document.getElementById('vehicleCondition').value;
+            const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
+            const assignedMaintainee = document.getElementById('assignedMaintainee').value;
+
+            if (!busId || !busStatus) {
+                showAlert('Please fill in all required fields.', 'warning');
+                return;
+            }
+            
+            const updateData = {
+                status: parseInt(busStatus),
+                issue: issue || '',
+                vehicle_condition: parseInt(vehicleCondition) || null,
+                schedule: scheduleMaintenance || null,
+                assignedStaff: assignedMaintainee || null
+            };
+
+            try {
+                const response = await fetch(`http://localhost:3000/maintenance/${busId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    
+                    const editStatusModal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
+                    editStatusModal.hide(); // Hide the modal
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click(); // Refresh the tab content
+                    
+                } else {
+                    showAlert('Error updating status.', 'danger');
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert('Server error.', 'danger');
+            }
+        });
+        
+        const modalElement = document.getElementById('editStatusModal');
+        const editStatusModal = new bootstrap.Modal(modalElement);
+        editStatusModal.show();
+        
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+    });
+}
+
+// TO DO : SHOW ONLY BUSES THAT ARE OPERATIVE
+// Function to show the Fleet Personnel form || Edit Assignment Button
+function showFleetPersonnelForm() {
+    Promise.all([
+        fetch('http://localhost:3000/buses').then(res => res.json()),
+        fetch('http://localhost:3000/accounts').then(res => res.json())
+    ])
+    .then(([buses, accounts]) => {
+        const busOptions = buses
+            .sort((a, b) => a.busID - b.busID) // Ensure sorting in frontend
+            .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
+            .join('');
+        const driverOptions = `<option value="">Unassigned</option>` + 
+            accounts.filter(acc => acc.role == '2')
+                   .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
+                   .join('');
+        const controllerOptions = `<option value="">Unassigned</option>` + 
+            accounts.filter(acc => acc.role == '3')
+                   .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
+                   .join('');
+
+        const formHtml = `
+        <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editFleetStatusModalLabel">Edit Fleet Readiness</h5>
+                        <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
                         <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="fleetReadinessForm">
+                        <form id="fleetPersonnelForm">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="busId" class="form-label">Bus ID:</label>
                                     <select class="form-select" id="busId" name="busId" required>
-                                        <option value="">Select Bus</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="busStatus" class="form-label">Status:</label>
-                                    <select class="form-select" id="busStatus" name="busStatus" required>
-                                        <option value="">Select Status</option>
-                                        <option value="1">Operating</option>
-                                        <option value="2">Under Maintenance</option>
-                                        <option value="3">Pending</option>
-
+                                        <option value="" selected disabled>Select Bus</option>
+                                        ${busOptions}
                                     </select>
                                 </div>
                             </div>
-                            <!-- Additional Inputs for Under Maintenance -->
-                            <div id="additionalFields" style="display: none;">
-                                <div class="mb-3">
-                                    <label for="issue" class="form-label">Issue:</label>
-                                    <textarea class="form-control" id="issue" name="issue" rows="4" placeholder="Describe the issue in detail"></textarea>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="busDriver" class="form-label">Driver:</label>
+                                    <select class="form-select" id="busDriver" name="busDriver" required>
+                                        ${driverOptions}
+                                    </select>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="scheduleMaintenance" class="form-label">Schedule Maintenance:</label>
-                                        <input type="date" class="form-control" id="scheduleMaintenance" name="scheduleMaintenance">
-                                    </div>
-                                     <div class="col-md-6 mb-3" id="assignedMaintaineeContainer">
-                                        <label for="assignedMaintainee" class="form-label">Assigned Maintenance:</label>
-                                        <input type="text" class="form-control" id="assignedMaintainee" name="assignedMaintainee" placeholder="Enter assigned technician">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="vehicleCondition" class="form-label">Vehicle Condition:</label>
-                                    <select class="form-select" id="vehicleCondition" name="vehicleCondition" required>
-                                        <option value="">Select Condition</option>
-                                        <option value="3">Major</option>
-                                        <option value="2">Moderate</option>
-                                        <option value="1">Minor</option>
+                                <div class="col-md-6 mb-3">
+                                    <label for="busController" class="form-label">Controller:</label>
+                                    <select class="form-select" id="busController" name="busController" required>
+                                        ${controllerOptions}
                                     </select>
                                 </div>
                             </div>
@@ -308,155 +445,53 @@ function showFleetReadinessStatusForm() {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-success" id="submitFleetStatus">Submit</button>
+                        <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
                     </div>
                 </div>
             </div>
         </div>
-    `;
+        `;
 
-    // Append the modal to the body
-    document.body.insertAdjacentHTML('beforeend', formHtml);
+        document.body.insertAdjacentHTML('beforeend', formHtml);
 
-    // Show/Hide additional fields based on selected status
-    const busStatus = document.getElementById('busStatus');
-    const additionalFields = document.getElementById('additionalFields');
-    busStatus.addEventListener('change', function () {
-        if (busStatus.value === "2") {
-            additionalFields.style.display = 'block';
-        } else {
-            additionalFields.style.display = 'none';
-        }
-    });
+        document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
+            const busId = document.getElementById('busId').value;
+            const busController = document.getElementById('busController').value || null;
+            const busDriver = document.getElementById('busDriver').value || null;
 
-   // Event listener for the Submit button
-    document.getElementById('submitFleetStatus').addEventListener('click', function () {
-    const busId = document.getElementById('busId').value;
-    const bus_status = document.getElementById('busStatus');
+            if (busId) {
+                fetch('http://localhost:3000/update-fleet-personnel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ busID: Number(busId), driverID: busDriver, controllerID: busController })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showAlert(data.message, 'success');
+                    const editPersonnelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
+                    editPersonnelModal.hide();
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+                })
+                .catch(error => console.error('Error updating fleet personnel:', error));
+            } else {
+                showAlert('Please fill in all fields.', 'warning');
+            }
+        });
 
-    // Check if "Under Maintenance" is selected
-    if (bus_status.value === "2") {
-        const issue = document.getElementById('issue').value;
-        const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
-        const assignedMaintainee = document.getElementById('assignedMaintainee').value;
-        const vehicleCondition = document.getElementById('vehicleCondition').value;
+        const modalElement = document.getElementById('editFleetPersonnelModal');
+        const editStatusModal = new bootstrap.Modal(modalElement);
+        editStatusModal.show();
 
-        // Ensure all required fields are filled
-        if (busId && bus_status && issue && scheduleMaintenance && assignedMaintainee && vehicleCondition) {
-            showAlert('Status has been successfully updated!', 'success');
-            editStatusModal.hide();
-        } else {
-            showAlert('Please fill in all fields for maintenance.', 'warning');
-        }
-    } else {
-        // If not "Under Maintenance", only Bus ID and Status are required
-        if (busId && bus_status) {
-            showAlert('Status has been successfully updated!', 'success');
-            editStatusModal.hide();
-        } else {
-            showAlert('Please fill in all required fields.', 'warning');
-        }
-    }
-});
-    
-    // Initialize Bootstrap's modal
-    const modalElement = document.getElementById('editFleetStatusModal');
-    const editStatusModal = new bootstrap.Modal(modalElement);
-    editStatusModal.show();
-
-    // Cleanup the modal once it's hidden
-    modalElement.addEventListener('hidden.bs.modal', function () {
-        modalElement.remove();
-        document.querySelector('.modal-backdrop').remove();
-        document.body.classList.remove('modal-open');
-        document.body.style = '';
-    });
-}
-
-// TO DO : SHOW ONLY BUSES THAT ARE OPERATIVE
-// Function to show the Fleet Personnel form || Edit Assignment Button
-function showFleetPersonnelForm(){
-    const formHtml = `
-    <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
-                    <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="fleetPersonnelForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="busId" class="form-label">Bus ID:</label>
-                                <select class="form-select" id="busId" name="busId" required>
-                                    <option value="">Select Bus</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="busDriver" class="form-label">Driver:</label>
-                                <select class="form-select" id="busDriver" name="busDriver" required>
-                                    <option value="">Select Driver</option>
-                                    <option value="1">Norman</option>
-                                    <option value="2">Norman</option>
-                                    <option value="3">Norman</option>
-                                </select>
-                            </div>
-                             <div class="col-md-6 mb-3">
-                                <label for="busController" class="form-label">Controller:</label>
-                                <select class="form-select" id="busController" name="busController" required>
-                                    <option value="">Select Controller</option>
-                                    <option value="1">Paolo</option>
-                                    <option value="2">Paolo</option>
-                                    <option value="3">Paolo</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
-                </div>
-            </div>
-        </div>
-    </div>
-`;
-
-    // Append the modal to the body
-    document.body.insertAdjacentHTML('beforeend', formHtml);
-
-    // Event listener for the Submit button
-    document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
-        const busId = document.getElementById('busId').value;
-        const busController = document.getElementById('busController').value;
-        const busDriver = document.getElementById('busDriver').value;
-
-        if (busId && busController && busDriver) {
-            showAlert('Personnel has been successfully updated!', 'success');
-            editPersonnelModal.hide();
-        } else {
-            showAlert('Please fill in all fields.', 'warning');
-        }
-    });
-
-    // Initialize Bootstrap's modal
-    const modalElement = document.getElementById('editFleetPersonnelModal');
-    const editStatusModal = new bootstrap.Modal(modalElement);
-    editStatusModal.show();
-
-    // Cleanup the modal once it's hidden
-    modalElement.addEventListener('hidden.bs.modal', function () {
-        modalElement.remove();
-        document.querySelector('.modal-backdrop').remove();
-        document.body.classList.remove('modal-open');
-        document.body.style = '';
-    });
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+    })
+    .catch(error => console.error('Error fetching data:', error));
 }
 
 
