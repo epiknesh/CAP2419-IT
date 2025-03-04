@@ -47,7 +47,7 @@ html {
 }
 
 #content nav {
-	height: 56px;
+	height: 100px;
 	background: var(--light);
 	padding: 0 24px;
 	display: flex;
@@ -58,17 +58,9 @@ html {
 	top: 0;
 	left: 0;
 	z-index: 1000;
+	background-color: #192B4A;
 }
-#content nav::before {
-	content: '';
-	position: absolute;
-	width: 40px;
-	height: 40px;
-	bottom: -40px;
-	left: 0;
-	border-radius: 50%;
-	box-shadow: -20px -20px 0 var(--light);
-}
+
 #content nav a {
 	color: var(--dark);
 }
@@ -89,26 +81,35 @@ h3{
   margin-bottom: 0;
 }
 .group-title {
-	max-width: 400px;
-	width: 100%;
+	flex: .5;
   font-size: 24px;
   font-weight: bold;
-  color: #192B4A;
-	margin-right: auto;  /* margin-right: auto; This sets the profile icon on the right side of the page */ 
+  color: var(--light);
+	  /* margin-right: auto; This sets the profile icon on the right side of the page */ 
 }
 
 #content nav .profile img {
-	width: 36px;
-	height: 36px;
+	width: 50px;
+	height: 50px;
 	object-fit: cover;
 	border-radius: 50%;
 }
 
 /* JST KIDLAT LOGO */
-.navbar-brand img{
-  width: 36px;
-	height: 36px;
+#content nav .jst-container{
+	margin-right: auto;
+}
+
+#content nav .jst-container img{
+	width: 60px;
+	height: 65px;
 	object-fit: cover;
+	margin-bottom: 16px;
+}
+
+.bxs-bus{
+	font-size: 24px;
+  color: var(--light);
 }
 
 .navbar-brand{
