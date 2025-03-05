@@ -138,21 +138,6 @@ app.get('/busprofile', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/user', authenticateToken, async (req, res) => {
-  try {
-      const user = await BusAccount.findById(req.user.id);
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      res.json({
-          username: user.username,
-          profilePicture: user.profile_picture // Consistent naming with frontend
-      });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server error" });
-  }
-});
-
 // Serve static files (profile pictures)
 app.use('/uploads', express.static('uploads'));
 

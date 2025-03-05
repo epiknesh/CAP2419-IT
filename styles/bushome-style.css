@@ -49,6 +49,19 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+.profile-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile-img {
+    width: 40px; /* Mini size */
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
 /* Container for Search, Location, and Map */
 .content-container {
     margin: 0 40px;
