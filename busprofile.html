@@ -17,7 +17,7 @@
         <div class="container-fluid">
             <a class="navbar-brand">Hello,<br>BusMate!</a>
             <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
-                <div class="notification-count">3</div>
+                <img id="profile-picture" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
                 <div id="dropdown-menu" class="dropdown-content">
                     <a href="bushome.html">Home</a>
                     <a href="busrecents.html">Recents</a>
@@ -29,12 +29,43 @@
         </div>
     </nav>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+            if (!token) {
+                window.location.href = "buslogin.html"; // Redirect if not logged in
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/busprofile", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch user profile");
+                }
+
+                const userData = await response.json();
+                const profileImg = document.getElementById("profile-picture"); // Fixed ID match
+
+                profileImg.src = userData.profile_picture 
+                    ? `http://localhost:3000/uploads/${userData.profile_picture}`
+                    : "http://localhost:3000/uploads/default-picture.jpg"; // Default image if no profile picture
+
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        });
+    </script>
+
     <div class="sub-header">Profile</div>
 
         <div class="profile-picture">
-            <img src="https://via.placeholder.com/100" alt="Profile Picture">
+            <img id="profile-pic" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile Picture">
             <div class="camera-icon">📷</div>
-        </div>
+        </div>    
 
         <div id="fullname" class="fullname"></div>
         <div id="username" class="username"></div>
@@ -242,6 +273,33 @@
             } else {
                 console.error("User data not found. Redirecting to login...");
                 window.location.href = "buslogin.html"; // Redirect if no user data
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+            if (!token) {
+                window.location.href = "buslogin.html"; // Redirect if not logged in
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/busprofile", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch user profile");
+                }
+
+                const userData = await response.json();
+                document.getElementById("profile-pic").src = userData.profile_picture 
+                    ? `http://localhost:3000/uploads/${userData.profile_picture}`
+                    : "http://localhost:3000/uploads/default-picture.jpg"; // Default image if no profile picture
+
+            } catch (error) {
+                console.error("Error fetching profile:", error);
             }
         });
     </script>

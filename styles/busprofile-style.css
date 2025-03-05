@@ -74,6 +74,19 @@ body {
     z-index: 1000;
 }
 
+.profile-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile-img {
+    width: 40px; /* Mini size */
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
 /* Dropdown links */
 .dropdown-content a {
     display: block;
