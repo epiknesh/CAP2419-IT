@@ -212,15 +212,19 @@ app.post('/update-income', async (req, res) => {
     try {
         const { busID, incomeToday } = req.body;
         const incomeRecord = await Income.findOne({ busID });
-        
+
         if (!incomeRecord) {
             return res.status(404).json({ message: 'Bus ID not found' });
         }
 
+        // Update values by adding today's income
         incomeRecord.incomeToday = incomeToday;
+        incomeRecord.incomeWeek += incomeToday;
+        incomeRecord.incomeMonth += incomeToday;
         incomeRecord.totalIncome += incomeToday;
+
         await incomeRecord.save();
-        
+
         res.status(200).json({ message: 'Income updated successfully' });
     } catch (error) {
         console.error(error);

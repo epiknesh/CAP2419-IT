@@ -75,10 +75,10 @@ function fetchIncomeData() {
         const row = `
           <tr>
             <td>${item.busID}</td>
-            <td>₱${item.incomeToday.toLocaleString()}</td>
-            <td>₱${item.incomeWeek.toLocaleString()}</td>
-            <td>₱${item.incomeMonth.toLocaleString()}</td>
-            <td>₱${item.totalIncome.toLocaleString()}</td>
+            <td>₱${item.incomeToday.toFixed(2)}</td>
+            <td>₱${item.incomeWeek.toFixed(2)}</td>
+            <td>₱${item.incomeMonth.toFixed(2)}</td>
+            <td>₱${item.totalIncome.toFixed(2)}</td>
           </tr>
         `;
         tableBody.innerHTML += row;
@@ -89,6 +89,7 @@ function fetchIncomeData() {
       document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
     });
 }
+
 function showIncomeForm() {
   fetch('http://localhost:3000/income')
       .then(response => response.json())
