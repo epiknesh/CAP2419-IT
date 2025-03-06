@@ -19,8 +19,10 @@ async function prelogin() {
       const data = await response.json();
 
       if (response.ok) {
-          localStorage.setItem('token', data.token); // Store token for session
-          window.location.href = 'dashboard_home.html'; // Redirect on success
+          localStorage.setItem('token', data.token); // Store token
+          localStorage.setItem('user', JSON.stringify(data.user)); // Store user details
+          
+          window.location.href = 'main_dashboard.html'; // Redirect on success
       } else {
           displayMessage(data.message, 'both'); // Show error message
       }
@@ -30,6 +32,8 @@ async function prelogin() {
       displayMessage('Server error. Try again later.', 'both');
   }
 }
+
+
 
 
 function displayMessage(message,type){

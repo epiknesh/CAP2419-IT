@@ -68,12 +68,13 @@ app.post('/register', async (req, res) => {
   
       await newSettings.save();
   
-      res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID });
+      res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID })
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });
     }
   });
+
 
 
 app.post('/login', async (req, res) => {
@@ -93,12 +94,26 @@ app.post('/login', async (req, res) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-            expiresIn: '1h' // Token expires in 1 hour
-        });
+        const token = jwt.sign(
+            { id: user._id, email: user.email, role: user.role }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1h' } // Token expires in 1 hour
+        );
 
-        // Return token & user details
-        res.status(200).json({ message: 'Login successful', token, user: { email: user.email, role: user.role } });
+        // Send response with token and user details
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token, 
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                firstName: user.firstName, 
+                lastName: user.lastName, 
+                birthdate: user.birthdate, 
+                mobile: user.mobile, 
+                role: user.role 
+            } 
+        });
 
     } catch (error) {
         console.error(error);
@@ -223,15 +238,19 @@ app.post('/update-income', async (req, res) => {
     try {
         const { busID, incomeToday } = req.body;
         const incomeRecord = await Income.findOne({ busID });
-        
+
         if (!incomeRecord) {
             return res.status(404).json({ message: 'Bus ID not found' });
         }
 
+        // Update values by adding today's income
         incomeRecord.incomeToday = incomeToday;
+        incomeRecord.incomeWeek += incomeToday;
+        incomeRecord.incomeMonth += incomeToday;
         incomeRecord.totalIncome += incomeToday;
+
         await incomeRecord.save();
-        
+
         res.status(200).json({ message: 'Income updated successfully' });
     } catch (error) {
         console.error(error);
@@ -331,6 +350,57 @@ app.post('/update-fleet-personnel', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+app.put('/update-profile', async (req, res) => {
+    try {
+        const { id, firstName, lastName, birthdate, mobile, email } = req.body;
+
+        // Check if the user exists
+        const user = await Account.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if the updated email or mobile number is already in use by another user
+        const existingEmail = await Account.findOne({ email, _id: { $ne: id } });
+        if (existingEmail) {
+            return res.status(400).json({ message: "Email is already taken" });
+        }
+
+        const existingMobile = await Account.findOne({ mobile, _id: { $ne: id } });
+        if (existingMobile) {
+            return res.status(400).json({ message: "Phone number is already registered" });
+        }
+
+        // Update user details
+        user.firstName = firstName || user.firstName;
+        user.lastName = lastName || user.lastName;
+        user.birthdate = birthdate || user.birthdate;
+        user.mobile = mobile || user.mobile;
+        user.email = email || user.email;
+
+        await user.save();
+
+        // Return updated user data
+        res.status(200).json({ 
+            message: "Profile updated successfully", 
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                birthdate: user.birthdate,
+                mobile: user.mobile,
+                email: user.email,
+                role: user.role
+            } 
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 
 
 
