@@ -6,8 +6,8 @@ const SettingsSchema = new mongoose.Schema({
   capacity_notif: { type: Boolean, required: true, default: false },
   eta_notif: { type: Boolean, required: true, default: false }
 }, { 
-  timestamps: true, 
-  collection: 'settings' 
+  timestamps: true,
+  collection: 'settings'
 });
 
-module.exports = mongoose.model('Settings', SettingsSchema);
+module.exports = mongoose.model('Settings', SettingsSchema, 'settings');

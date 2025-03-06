@@ -105,7 +105,7 @@ app.post('/login', async (req, res) => {
             message: 'Login successful', 
             token, 
             user: { 
-                id: user._id, 
+                accountid: user.accountID, 
                 email: user.email, 
                 firstName: user.firstName, 
                 lastName: user.lastName, 
@@ -180,6 +180,8 @@ app.get('/dispatch', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+
 
 app.put('/dispatch/:busID', async (req, res) => {
     try {
@@ -399,7 +401,52 @@ app.put('/update-profile', async (req, res) => {
         console.error(error);
         res.status(500).json({ message: "Server error" });
     }
-});
+
+    });
+
+
+
+      app.get('/settings', async (req, res) => {
+        try {
+            const settings = await Settings.find(); // Fetch all bus data
+            res.status(200).json(settings);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    });
+      
+app.get('/settings/:accountID', async (req, res) => {
+    const accountID = parseInt(req.params.accountID);
+    try {
+      const settings = await Settings.findOne({ accountID });
+      if (!settings) {
+        return res.status(404).json({ message: 'Settings not found' });
+      }
+      res.json(settings);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.put('/settings/:accountID', async (req, res) => {
+    const accountID = parseInt(req.params.accountID);
+    const updates = req.body;
+  
+    try {
+      const settings = await Settings.findOneAndUpdate({ accountID }, updates, { new: true });
+      if (!settings) {
+        return res.status(404).json({ message: 'Settings not found' });
+      }
+      res.json(settings);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  
 
 
 
