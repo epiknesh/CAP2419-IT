@@ -20,7 +20,7 @@ async function prelogin() {
 
       if (response.ok) {
           localStorage.setItem('token', data.token); // Store token
-          localStorage.setItem('user', JSON.stringify(data.user)); // Store user data
+          localStorage.setItem('user', JSON.stringify(data.user)); // Store user details
           
           window.location.href = 'main_dashboard.html'; // Redirect on success
       } else {
@@ -32,6 +32,7 @@ async function prelogin() {
       displayMessage('Server error. Try again later.', 'both');
   }
 }
+
 
 
 

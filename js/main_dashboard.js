@@ -45,7 +45,7 @@ const logoutLink = document.querySelector('.dropdown-item.text-danger');
     } 
 
 
-console.log(user.email);
+console.log(user);
 	
     const fleetContent = document.querySelector("#fleetContent tbody");
     const maintenanceContent = document.querySelector("#maintenanceContent tbody");
