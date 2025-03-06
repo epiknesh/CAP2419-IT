@@ -12,6 +12,13 @@
             event.preventDefault(); // Prevent default link behavior
             const mainContent = document.querySelector('#content main');
 
+             // Show a loading message immediately
+            mainContent.innerHTML = `
+                <div class="loading-message" style="text-align: center; padding: 20px;">
+                    <h3>Loading Maintenance Report...</h3>
+                </div>
+            `;
+
             // Fetch maintenance data from the server
             try {
                 const response = await fetch('http://localhost:3000/maintenance'); // API call to server

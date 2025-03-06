@@ -6,9 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
 	link.href='css/styles.css';
 	document.head.appendChild(link);
 
-  const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(7) a');
+  const incomeTab = document.querySelector('#sidebar .side-menu.top li:nth-child(7) a');
   
-  teamTab.addEventListener('click', function (event) {
+  incomeTab.addEventListener('click', function (event) {
     event.preventDefault();
     const mainContent = document.querySelector('#content main');
     mainContent.innerHTML = `
