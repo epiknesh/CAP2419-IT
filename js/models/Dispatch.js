@@ -7,7 +7,7 @@ const DispatchSchema = new mongoose.Schema({
     nextDispatch: { type: Date, required: true },
     coordinates: {
         type: { type: String, enum: ['Point'], required: true },
-        coordinates: { type: [Number], required: true }, // [longitude, latitude]
+        coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
     }
 }, { timestamps: true });
 

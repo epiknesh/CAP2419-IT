@@ -107,44 +107,62 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
 	async function dispatchBus(busID) {
-		try {
-		  // Fetch the current dispatch data
-		  const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
-	  
-		  if (!dispatchResponse.ok) {
-			throw new Error(`Server responded with ${dispatchResponse.status}`);
-		  }
-	  
-		  const dispatchData = await dispatchResponse.json();
-	  
-		  // Schedule the next dispatch (e.g., 1 hour later)
-		  const nextDispatchTime = new Date();
-		  nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
-	  
-		  // Prepare updated data
-		  const updatedData = {
-			status: 1,
-			lastDispatch: dispatchData.nextDispatch,
-			nextDispatch: nextDispatchTime.toISOString(),
-		  };
-	  
-		  // Send the update request
-		  const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
-			method: "PUT",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(updatedData),
-		  });
-	  
-		  if (!updateResponse.ok) {
-			throw new Error(`Update failed with status ${updateResponse.status}`);
-		  }
-	  
-		  console.log(`Bus ${busID} dispatched successfully.`);
-		  await loadDispatchData();
-		} catch (error) {
-		  console.error(`Error updating dispatch for bus ${busID}:`, error);
-		}
-	  }
-	  
+        try {
+            // Fetch the current dispatch data
+            const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+        
+            if (!dispatchResponse.ok) {
+                throw new Error(`Server responded with ${dispatchResponse.status}`);
+            }
+        
+            const dispatchData = await dispatchResponse.json();
+    
+            // Fetch the latest location of the bus
+            const locationResponse = await fetch(`http://localhost:8000/api/get_locations`);
+            if (!locationResponse.ok) {
+                throw new Error(`Location API responded with ${locationResponse.status}`);
+            }
+    
+            const locations = await locationResponse.json();
+    
+            if (!locations[busID]) {
+                throw new Error(`Location data for bus ${busID} not found.`);
+            }
+    
+            const { latitude, longitude } = locations[busID];
+    
+            // Schedule the next dispatch (e.g., 1 hour later)
+            const nextDispatchTime = new Date();
+            nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
+    
+            // Prepare updated data
+            const updatedData = {
+                status: 1,
+                lastDispatch: dispatchData.nextDispatch,  // Move the previous dispatch time
+                nextDispatch: nextDispatchTime.toISOString(),
+                coordinates: {
+                    type: "Point",
+                    coordinates: [longitude, latitude]  // MongoDB stores GeoJSON [longitude, latitude]
+                }
+            };
+    
+            // Send the update request
+            const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedData),
+            });
+    
+            if (!updateResponse.ok) {
+                throw new Error(`Update failed with status ${updateResponse.status}`);
+            }
+    
+            console.log(`Bus ${busID} dispatched successfully with updated location.`);
+            await loadDispatchData();
+        } catch (error) {
+            console.error(`Error updating dispatch for bus ${busID}:`, error);
+        }
+    }
+          
 	
 });

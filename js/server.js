@@ -121,24 +121,23 @@ app.get('/dispatch', async (req, res) => {
 
 app.put('/dispatch/:busID', async (req, res) => {
     try {
-        const busID = Number(req.params.busID); // Convert busID to a number
-        const dispatch = await Dispatch.findOne({ busID });
+        const { status, lastDispatch, nextDispatch, coordinates } = req.body;
 
-        if (!dispatch) {
-            return res.status(404).json({ message: 'Bus not found in dispatch records' });
+        const updatedDispatch = await Dispatch.findOneAndUpdate(
+            { busID: req.params.busID },
+            { status, lastDispatch, nextDispatch, coordinates },
+            { new: true }
+        );
+
+        if (!updatedDispatch) {
+            return res.status(404).json({ message: "Dispatch record not found" });
         }
 
-        // Update values as per your logic
-        dispatch.status = 1; // Change status from 2 to 1
-        dispatch.lastDispatch = dispatch.nextDispatch; // Set lastDispatch to previous nextDispatch
-        dispatch.nextDispatch = new Date().toISOString(); // Set nextDispatch to current time
+        res.status(200).json({ message: "Dispatch updated successfully", dispatch: updatedDispatch });
 
-        await dispatch.save(); // Save updated dispatch data
-
-        res.status(200).json({ message: 'Dispatch updated successfully', dispatch });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: "Server error" });
     }
 });
 
