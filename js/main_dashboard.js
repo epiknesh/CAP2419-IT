@@ -1,4 +1,52 @@
 document.addEventListener("DOMContentLoaded", async function () {
+	const user = JSON.parse(localStorage.getItem('user'));
+    
+    if (!user) {
+        window.location.href = 'login.html'; // Redirect if not logged in
+        return;
+    }
+
+	const logoutButton = document.querySelector('.logout');
+
+if (logoutButton) {
+    logoutButton.addEventListener('click', function (event) {
+        event.preventDefault(); // Prevent default link behavior
+
+        console.log("Logout button clicked"); // Log when button is clicked
+
+        // Clear stored user data and token
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        console.log("User data removed from localStorage"); // Log after clearing storage
+
+        // Redirect to login page
+        window.location.href = 'login.html';
+    });
+} else {
+    console.error("Logout button not found in the DOM.");
+}
+
+const logoutLink = document.querySelector('.dropdown-item.text-danger');
+
+    if (logoutLink) {
+        logoutLink.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent default navigation
+
+            // Clear stored user data and token
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            console.log("User data removed from localStorage"); // Log after clearing storage
+
+            // Redirect to login page
+            window.location.href = 'login.html';
+        });
+    } 
+
+
+console.log(user.email);
+	
     const fleetContent = document.querySelector("#fleetContent tbody");
     const maintenanceContent = document.querySelector("#maintenanceContent tbody");
     const busPercentageBox = document.querySelector(".text-success");
@@ -14,6 +62,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 	   let operatingBuses = new Set(); // Store operating bus IDs
 	   let operatingCount = 0;
 	   const totalBuses = buses.length;
+	   
 
 	   fleetContent.innerHTML = "";
 	   maintenanceContent.innerHTML = "";

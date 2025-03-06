@@ -30,9 +30,15 @@ app.post('/register', async (req, res) => {
         const { firstName, lastName, birthdate, mobile, email, password, role } = req.body;
 
         // Check if the email is already registered
-        const existingUser = await Account.findOne({ email });
-        if (existingUser) {
+        const existingEmail = await Account.findOne({ email });
+        if (existingEmail) {
             return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        // Check if the mobile number is already registered
+        const existingMobile = await Account.findOne({ mobile });
+        if (existingMobile) {
+            return res.status(400).json({ message: 'Phone number is already registered' });
         }
 
         // Hash the password
@@ -65,6 +71,7 @@ app.post('/register', async (req, res) => {
 });
 
 
+
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -82,12 +89,23 @@ app.post('/login', async (req, res) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-            expiresIn: '1h' // Token expires in 1 hour
-        });
+        const token = jwt.sign(
+            { id: user._id, email: user.email, role: user.role }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1h' } // Token expires in 1 hour
+        );
 
-        // Return token & user details
-        res.status(200).json({ message: 'Login successful', token, user: { email: user.email, role: user.role } });
+        // Send response with token and user details
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token, 
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                name: user.name, // Include name for UI personalization
+                role: user.role 
+            } 
+        });
 
     } catch (error) {
         console.error(error);
