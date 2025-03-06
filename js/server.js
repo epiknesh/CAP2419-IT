@@ -6,6 +6,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const Account = require('./models/Accounts'); // Import the model
+const Settings = require('./models/Settings');
 
 const app = express();
 
@@ -27,42 +28,52 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.post('/register', async (req, res) => {
     try {
-        const { firstName, lastName, birthdate, mobile, email, password, role } = req.body;
-
-        // Check if the email is already registered
-        const existingUser = await Account.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email already exists' });
-        }
-
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Find the highest existing accountID and increment it
-        const lastAccount = await Account.findOne().sort({ accountID: -1 });
-        const newAccountID = lastAccount ? lastAccount.accountID + 1 : 1;
-
-        // Create a new account
-        const newAccount = new Account({
-            accountID: newAccountID,
-            firstName,
-            lastName,
-            birthdate,
-            mobile,
-            email,
-            password: hashedPassword,
-            role
-        });
-
-        // Save to database
-        await newAccount.save();
-        res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID });
-
+      const { firstName, lastName, birthdate, mobile, email, password, role } = req.body;
+  
+      // Check if the email is already registered
+      const existingUser = await Account.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+  
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      // Find the highest existing accountID and increment it
+      const lastAccount = await Account.findOne().sort({ accountID: -1 });
+      const newAccountID = lastAccount ? lastAccount.accountID + 1 : 1;
+  
+      // Create a new account
+      const newAccount = new Account({
+        accountID: newAccountID,
+        firstName,
+        lastName,
+        birthdate,
+        mobile,
+        email,
+        password: hashedPassword,
+        role
+      });
+  
+      // Save the new account to the database
+      await newAccount.save();
+  
+      // Create a new settings document for this account with all notifications set to false by default
+      const newSettings = new Settings({
+        accountID: newAccountID,
+        dispatch_notif: false,
+        capacity_notif: false,
+        eta_notif: false
+      });
+  
+      await newSettings.save();
+  
+      res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
     }
-});
+  });
 
 
 app.post('/login', async (req, res) => {

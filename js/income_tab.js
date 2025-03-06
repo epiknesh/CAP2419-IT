@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	//Import Css 
 	const link  = document.createElement('link');
 	link.rel='stylesheet';
-	link.href='css/styles.css';
+	link.href='styles/modal.css';
 	document.head.appendChild(link);
 
   const incomeTab = document.querySelector('#sidebar .side-menu.top li:nth-child(7) a');
