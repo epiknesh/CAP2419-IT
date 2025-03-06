@@ -95,19 +95,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         `;
 
-        // After injecting HTML, attach listeners
         document.querySelectorAll('.notification-checkbox').forEach((checkbox) => {
           checkbox.addEventListener('change', function () {
             const notifField = this.getAttribute('data-notif');
             const state = this.checked;
-
+        
+            // Mapping field names to friendly notification names
+            const notifNames = {
+              dispatch_notif: "Bus Dispatch",
+              capacity_notif: "Passenger Load Monitoring",
+              eta_notif: "ETA Alert"
+            };
+        
+            const friendlyName = notifNames[notifField];
+        
             // Send email
             const templateParams = {
               to_email: loggedEmail,
-              subject: `${notifField.replace('_', ' ')} Notification Changed`,
-              message: `Your notification "${notifField}" is now ${state ? 'enabled' : 'disabled'}.`
+              subject: `${notifNames[notifField]} Notification Changed`,
+              message: `Your notification "${notifNames[notifField]}" is now ${state ? 'enabled' : 'disabled'}.`
             };
-
+            
             emailjs.send(service_id, template_id, templateParams)
               .then(() => console.log('Email sent successfully!'))
               .catch((error) => console.error('Email send failed', error));
