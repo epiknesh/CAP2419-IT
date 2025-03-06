@@ -6,6 +6,10 @@ document.addEventListener("DOMContentLoaded", function () {
     link.href='styles/modal.css';
     document.head.appendChild(link);
 
+    
+
+    
+
     const fleetTab = document.querySelector('#sidebar .side-menu.top li:nth-child(4) a');
     
     fleetTab.addEventListener('click', async function (event) {
@@ -141,6 +145,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Function to fetch fleet capacity
+// Store buses that have already triggered the email notification to prevent duplicate sends
+const notifiedBuses = new Set();
+
 async function fetchFleetCapacity() {
     try {
         const response = await fetch('http://localhost:3000/capacity');
@@ -158,9 +165,18 @@ async function fetchFleetCapacity() {
         const tableBody = document.querySelector("#fleetCapacity tbody");
         tableBody.innerHTML = "";
 
-        Object.values(latestCapacities).forEach(entry => {
+        for (const entry of Object.values(latestCapacities)) {
             const percentage = (entry.capacity / maxCapacity) * 100;
-            const formattedDate = new Date(entry.date).toLocaleDateString();
+            const formattedDate = new Date(entry.date).toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                hour12: true
+            });
+
+            // Append capacity data to table
             tableBody.innerHTML += `
                 <tr>
                     <td>${entry.busID}</td>
@@ -168,18 +184,68 @@ async function fetchFleetCapacity() {
                     <td>${percentage.toFixed(2)}%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: ${percentage}%"
-                                aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar ${percentage >= 100 ? 'bg-danger' : 'bg-success'}" 
+                                role="progressbar" 
+                                style="width: ${percentage}%"
+                                aria-valuenow="${percentage}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
                         </div>
                     </td>
                 </tr>
             `;
-        });
 
+            // Send email notification if capacity reaches 100%
+            if (percentage >= 100 && !notifiedBuses.has(entry.busID)) {
+                await sendCapacityEmail(entry.busID, formattedDate);
+                notifiedBuses.add(entry.busID); // Mark as notified
+            }
+        }
     } catch (error) {
         console.error("Error fetching fleet capacity data:", error);
     }
 }
+
+    // Retrieve user info from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    const loggedEmail = user.email;
+    const accountID = user.accountid;
+    const service_id = "service_sgqumch";
+    const template_id = "template_2rljx4t";
+
+    // Initialize EmailJS
+    window.addEventListener('load', function () {
+        if (!window.emailjs) {
+            console.error("EmailJS SDK did not load. Check your network or script URL.");
+            return;
+        }
+        emailjs.init("-d3fui43Avx0AbMV5"); // Replace with your EmailJS user ID
+    });
+
+
+async function sendCapacityEmail(busID, formattedDate) {
+    try {
+        // Fetch user's notification settings
+        const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
+        const settings = await settingsResponse.json();
+
+        // Only send email if capacity notifications are enabled
+        if (settings.capacity_notif) {
+            const templateParams = {
+                to_email: loggedEmail,
+                subject: `Bus ${busID} Reached Full Capacity`,
+                message: `Bus ${busID} has reached full capacity at ${formattedDate}.`
+            };
+
+            await emailjs.send(service_id, template_id, templateParams);
+            console.log(`Email notification sent for Bus ${busID} full capacity.`);
+        }
+    } catch (error) {
+        console.error("Error sending capacity email:", error);
+    }
+}
+
 
 // Function to fetch fleet status and maintenance
 async function fetchFleetStatus() {
