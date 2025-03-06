@@ -42,7 +42,7 @@
         <p class="address" id="address">Fetching address...</p>
         
         <!-- Map -->
-        <div id="map"></div>
+        <div id="map" style="height: 500px;"></div>
     </div>
 
     <div class="mobile-ui">
@@ -64,64 +64,61 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        let map, userMarker;
+        let map = L.map("map").setView([14.5995, 120.9842], 13);
 
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    let latitude = position.coords.latitude;
-                    let longitude = position.coords.longitude;
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
 
-                    document.getElementById('location-coordinates').textContent = `Lat: ${latitude}, Lon: ${longitude}`;
+        let busMarkers = {};  // Store bus markers
 
-                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('address').textContent = data.display_name;
-                        });
+        function updateBusLocations() {
+            fetch("http://localhost:8000/api/get_locations")  // Now using port 8000
+                .then(response => response.json())
+                .then(data => {
+                    Object.keys(data).forEach(bus_id => {
+                        const { latitude, longitude } = data[bus_id];
 
-                    if (!map) {
-                        map = L.map('map').setView([latitude, longitude], 13);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                    } else {
-                        map.setView([latitude, longitude], 13);
-                    }
-
-                    if (!userMarker) {
-                        userMarker = L.marker([latitude, longitude]).addTo(map);
-                    } else {
-                        userMarker.setLatLng([latitude, longitude]);
-                    }
-                });
-            }
+                        if (busMarkers[bus_id]) {
+                            busMarkers[bus_id].setLatLng([latitude, longitude]);
+                        } else {
+                            busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
+                                .bindPopup(`🚌 ${bus_id}`);
+                        }
+                    });
+                })
+                .catch(error => console.error("❌ Error fetching bus data:", error));
         }
 
-        window.onload = function () {
-            getCurrentLocation();
-        };
+        setInterval(updateBusLocations, 5000);  // Update every 5 seconds
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const dropdown = document.getElementById("dropdown-menu");
-            const notificationTab = document.querySelector(".notification-tab");
+        // window.onload = function () {
+        //     getCurrentLocation();
+        // };
 
-            notificationTab.addEventListener("mouseover", function () {
-                dropdown.style.display = "block";
-            });
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const dropdown = document.getElementById("dropdown-menu");
+        //     const notificationTab = document.querySelector(".notification-tab");
 
-            dropdown.addEventListener("mouseleave", function () {
-                dropdown.style.display = "none";
-            });
-        });
+        //     notificationTab.addEventListener("mouseover", function () {
+        //         dropdown.style.display = "block";
+        //     });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const token = localStorage.getItem("token"); // Get token from localStorage
+        //     dropdown.addEventListener("mouseleave", function () {
+        //         dropdown.style.display = "none";
+        //     });
+        // });
 
-            if (!token) {
-                alert("You are not logged in. Redirecting to login page..."); // Show alert
-                // Redirect to login page if token is missing
-                window.location.href = "buslogin.html";
-            }
-        });
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const token = localStorage.getItem("token"); // Get token from localStorage
+
+        //     if (!token) {
+        //         alert("You are not logged in. Redirecting to login page..."); // Show alert
+        //         // Redirect to login page if token is missing
+        //         window.location.href = "buslogin.html";
+        //     }
+        // });
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
