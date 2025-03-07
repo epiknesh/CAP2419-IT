@@ -26,16 +26,12 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="table-data">
         <div class="order position-relative" id="incomeContent">
           <div class="head">
-            <h3>Bus Income</h3>
-            <a href="#" id="addDailyIncomeBtn" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#incomeModal">
-              <i class='bx bx-plus'></i> Add Daily Income
-            </a>
+            <h3>Income Report</h3>
           </div>
           <table>
             <thead>
               <tr>
                 <th>Bus ID</th>
-                <th>Income Today</th>
                 <th>Income This Week</th>
                 <th>Income This Month</th>
                 <th>Total Income</th>
@@ -46,6 +42,28 @@ document.addEventListener("DOMContentLoaded", function () {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div class="table-data">
+        <div class="order position-relative" id="dailyIncome">
+          <div class="head">
+            <h3>Daily Income</h3>
+            <a href="#" id="addDailyIncomeBtn" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#incomeModal">
+              <i class='bx bx-plus'></i> Add Daily Income
+            </a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Bus ID</th>
+                <th>Income Today</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="dailyIncomeTable">
+              <tr><td colspan="5">Loading...</td></tr>
+            </tbody>
+          </table>
       </div>
 
 			 <div id="alertContainer"></div>
@@ -66,27 +84,50 @@ function fetchIncomeData() {
   fetch('http://localhost:3000/income')
     .then(response => response.json())
     .then(data => {
-      const tableBody = document.getElementById("busIncomeTable");
-      tableBody.innerHTML = ""; // Clear existing data
+      const busIncomeTable = document.getElementById("busIncomeTable");
+      const dailyIncomeTable = document.getElementById("dailyIncomeTable");
+
+      busIncomeTable.innerHTML = ""; // Clear existing data
+      dailyIncomeTable.innerHTML = ""; // Clear existing data
+
+      if(data.length === 0){
+        busIncomeTable.innerHTML = "<tr><td colspan='5'>No income data available</td></tr>";
+        dailyIncomeTable.innerHTML = "<tr><td colspan='5'>No daily income data available</td></tr>";
+      }
 
       data.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
 
+      //Populate Bus Income Table
       data.forEach(item => {
         const row = `
           <tr>
             <td>${item.busID}</td>
-            <td>₱${item.incomeToday.toFixed(2)}</td>
             <td>₱${item.incomeWeek.toFixed(2)}</td>
             <td>₱${item.incomeMonth.toFixed(2)}</td>
             <td>₱${item.totalIncome.toFixed(2)}</td>
           </tr>
         `;
-        tableBody.innerHTML += row;
+        busIncomeTable.innerHTML += row;
+      });
+
+      //Populate Daily Income Table
+      data.forEach(item => {
+        if (item.incomeToday > 0) { // Ensure only valid daily income data is displayed
+          const dailyRow = `
+            <tr>
+              <td>${item.busID}</td>
+              <td>₱${item.incomeToday.toFixed(2)}</td>
+              <td>${new Date().toISOString().split('T')[0]}</td> 
+            </tr>
+          `;
+          dailyIncomeTable.innerHTML += dailyRow;
+        }
       });
     })
     .catch(error => {
       console.error("Error fetching income data:", error);
       document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
+      document.getElementById("dailyIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
     });
 }
 
