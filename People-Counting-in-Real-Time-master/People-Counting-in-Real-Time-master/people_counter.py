@@ -104,7 +104,9 @@ def people_counter():
 	if not args.get("input", False):
 		logger.info("Logger is working")	
 		logger.info("Starting the live stream..")
-		vs = VideoStream(int(config["url"])).start()
+		vs = VideoStream(config["url"]).start() 
+		#vs = VideoStream(int(config["url"])).start() // THIS IS FOR WEBCAM
+
 		time.sleep(2.0)
 
 	# otherwise, grab a reference to the video file
