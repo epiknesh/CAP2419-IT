@@ -1,4 +1,26 @@
-document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    // Dynamically import CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'css/styles.css';
+    document.head.appendChild(link);
+
+    // Retrieve user info from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    const loggedEmail = user.email;
+    const accountID = user.accountid;
+    const service_id = "service_sgqumch";
+    const template_id = "template_2rljx4t";
+
+    // Initialize EmailJS
+    window.addEventListener('load', function () {
+        if (!window.emailjs) {
+            console.error("EmailJS SDK did not load. Check your network or script URL.");
+            return;
+        }
+        emailjs.init("-d3fui43Avx0AbMV5"); // Replace with your EmailJS user ID
+    });
+
     const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(5) a');
 
     teamTab.addEventListener('click', async function (event) {
@@ -18,23 +40,22 @@ document.addEventListener("DOMContentLoaded", async function () {
             const maintenanceResponse = await fetch('http://localhost:3000/maintenance');
             const maintenanceData = await maintenanceResponse.json();
 
-            // Filter to get only operative buses (status = 1)
+            // Get only operative buses (status = 1)
             const operativeBuses = maintenanceData.filter(bus => bus.status === 1).map(bus => bus.busID);
 
             // Fetch dispatch data
             const dispatchResponse = await fetch('http://localhost:3000/dispatch');
             const dispatchData = await dispatchResponse.json();
 
-            // Filter dispatch records to include only operative buses
+            // Filter dispatch records for operative buses
             const operativeDispatches = dispatchData.filter(dispatch => operativeBuses.includes(dispatch.busID));
 
-            // Function to format time without seconds
+            // Function to format time
             const formatTime = (dateString) => {
                 const options = { hour: 'numeric', minute: 'numeric', hour12: true };
                 return new Date(dateString).toLocaleTimeString('en-US', options);
             };
 
-            // Generate the dispatch boxes dynamically
             let dispatchContent = `
                 <div class="head-title">
                     <div class="left">
@@ -89,7 +110,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 dispatchContent += `</div>`; // Close the last "table-data" div
             }
 
-            // Insert generated content into the main section
             document.querySelector('#content main').innerHTML = dispatchContent;
 
             // Attach event listeners to dispatch buttons
@@ -106,45 +126,72 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-	async function dispatchBus(busID) {
-		try {
-		  // Fetch the current dispatch data
-		  const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
-	  
-		  if (!dispatchResponse.ok) {
-			throw new Error(`Server responded with ${dispatchResponse.status}`);
-		  }
-	  
-		  const dispatchData = await dispatchResponse.json();
-	  
-		  // Schedule the next dispatch (e.g., 1 hour later)
-		  const nextDispatchTime = new Date();
-		  nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
-	  
-		  // Prepare updated data
-		  const updatedData = {
-			status: 1,
-			lastDispatch: dispatchData.nextDispatch,
-			nextDispatch: nextDispatchTime.toISOString(),
-		  };
-	  
-		  // Send the update request
-		  const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
-			method: "PUT",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(updatedData),
-		  });
-	  
-		  if (!updateResponse.ok) {
-			throw new Error(`Update failed with status ${updateResponse.status}`);
-		  }
-	  
-		  console.log(`Bus ${busID} dispatched successfully.`);
-		  await loadDispatchData();
-		} catch (error) {
-		  console.error(`Error updating dispatch for bus ${busID}:`, error);
-		}
-	  }
-	  
-	
+    async function dispatchBus(busID) {
+        try {
+            // Fetch the current dispatch data
+            const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+
+            if (!dispatchResponse.ok) {
+                throw new Error(`Server responded with ${dispatchResponse.status}`);
+            }
+
+            const dispatchData = await dispatchResponse.json();
+
+            // Schedule the next dispatch (e.g., 1 hour later)
+            const nextDispatchTime = new Date();
+            nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
+
+            // Prepare updated data
+            const updatedData = {
+                status: 1,
+                lastDispatch: dispatchData.nextDispatch,
+                nextDispatch: nextDispatchTime.toISOString(),
+            };
+
+            // Send the update request
+            const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedData),
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error(`Update failed with status ${updateResponse.status}`);
+            }
+
+            console.log(`Bus ${busID} dispatched successfully.`);
+
+            // Check if dispatch notification is enabled
+            const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
+            const settings = await settingsResponse.json();
+
+            if (settings.dispatch_notif) {
+                // Get the current local time without modifying timezone offsets
+                const localDispatchTime = new Date();
+            
+                // Format the local time properly
+                const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true
+                });
+            
+                // Send email notification
+                const templateParams = {
+                    to_email: loggedEmail,
+                    subject: `Bus ${busID} Dispatched`,
+                    message: `Bus ${busID} has been dispatched at ${formattedTime}.`
+                };
+            
+                emailjs.send(service_id, template_id, templateParams)
+                    .then(() => console.log(`Email notification sent for Bus ${busID}.`))
+                    .catch((error) => console.error("Email send failed", error));
+            }
+            
+
+            await loadDispatchData();
+        } catch (error) {
+            console.error(`Error updating dispatch for bus ${busID}:`, error);
+        }
+    }
 });
