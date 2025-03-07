@@ -7,6 +7,11 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const Account = require('./models/Accounts'); // Import the model
 const Settings = require('./models/Settings');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -105,6 +110,7 @@ app.post('/login', async (req, res) => {
             message: 'Login successful', 
             token, 
             user: { 
+                id: user._id,
                 accountid: user.accountID, 
                 email: user.email, 
                 firstName: user.firstName, 
@@ -445,6 +451,44 @@ app.get('/settings/:accountID', async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   });
+
+
+cloudinary.config({
+    cloud_name: 'doecgbux4',
+    api_key: '435565291394525',
+    api_secret: 'W6_8slgUq-DPnrfiAxFfQ227FCI'
+});
+
+// Configure Multer to use Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'profile_pictures',
+        format: async (req, file) => 'png', // Convert to PNG
+        public_id: (req, file) => Date.now() + '-' + file.originalname
+    },
+});
+
+const upload = multer({ storage });
+
+app.post('/upload-profile-picture', upload.single('profilePicture'), async (req, res) => {
+    try {
+        const { id } = req.body;
+        if (!id) return res.status(400).json({ message: "User ID is required" });
+
+        const user = await Account.findById(id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.profilePicture = req.file.path; // Cloudinary URL
+        await user.save();
+
+        res.status(200).json({ message: "Profile picture updated", profilePicture: req.file.path });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
   
   
 
