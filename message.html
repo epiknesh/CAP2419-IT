@@ -60,41 +60,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  <script>
-    // Scroll to bottom of chatbox
-    const chatboxMessages = document.querySelector('.chatbox__messages');
-    chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
-    
-    // Send message on button click
-    const sendButton = document.querySelector('.chatbox__input button');
-    sendButton.addEventListener('click', () => {
-      const input = document.querySelector('.chatbox__input input');
-      const message = input.value;
-      if (message.trim() !== '') {
-        const newMessage = document.createElement('div');
-        newMessage.className = 'message message--sent';
-        newMessage.innerHTML = `
-          <img src="img/noprofile.jpg" alt="Profile Picture" class="message__profile-pic">
-          <div class="message__content">
-            <p class="message__user">Jane Smith</p>
-            <p>${message}</p>
-            <span class="message__time">${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-          </div>
-        `;
-        chatboxMessages.appendChild(newMessage);
-        input.value = '';
-        chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
-      }
-    });
-
-    // Send message on Enter key press
-    const input = document.querySelector('.chatbox__input input');
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        sendButton.click();
-      }
-    });
-
-  </script>
+  <script src="js/message.js"></script>
 </body>
 </html>

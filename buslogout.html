@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=buslogin.html">
+    <meta http-equiv="refresh" content="3; url=buslogin.html"> <!-- Redirect after 3 seconds -->
     <title>BusMate - Logout</title>
 </head>
 <body>
     <script>
+        // Check if the user is logged in before proceeding
+        if (localStorage.getItem('auth-token')) {
+            // User is logged in, proceed with logout
+            localStorage.removeItem('auth-token'); // Clear token
+        }
+
+        // Redirect to login page after logout
         window.location.href = "buslogin.html";
     </script>
 </body>
