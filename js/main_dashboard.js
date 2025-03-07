@@ -27,6 +27,16 @@ if (logoutButton) {
     console.error("Logout button not found in the DOM.");
 }
 
+// Set profile picture
+const profileImg = document.querySelector('#profileDropdown img');
+if (profileImg) {
+    profileImg.src = user.pic ? user.pic : 'img/people.png'; // Use stored profile pic or fallback image
+    profileImg.alt = "User Profile Picture"; // Accessibility
+} else {
+    console.error("Profile image element not found.");
+}
+
+
 const logoutLink = document.querySelector('.dropdown-item.text-danger');
 
     if (logoutLink) {

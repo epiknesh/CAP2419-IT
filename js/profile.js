@@ -8,6 +8,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     console.log("Loaded user data:", user);
 
+     // Profile picture elements
+     const profileDropdownImg = document.querySelector('#profileDropdown img');
+     const profileSectionImg = document.querySelector('#profile-pic');
+ 
+     // Set profile pictures from user data
+     if (profileDropdownImg && profileSectionImg) {
+         const profilePicUrl = user.pic ? user.pic : 'img/people.png'; // Fallback if no pic
+         profileDropdownImg.src = profilePicUrl;
+         profileSectionImg.src = profilePicUrl;
+     }
+
     // Populate form fields with user data
     document.getElementById('input_firstname').value = user.firstName || "";
     document.getElementById('input_lastname').value = user.lastName || "";

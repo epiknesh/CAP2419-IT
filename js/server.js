@@ -117,7 +117,8 @@ app.post('/login', async (req, res) => {
                 lastName: user.lastName, 
                 birthdate: user.birthdate, 
                 mobile: user.mobile, 
-                role: user.role 
+                role: user.role,
+                pic: user.profilePicture
             } 
         });
 
