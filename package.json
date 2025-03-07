@@ -1,5 +1,29 @@
 {
   "dependencies": {
-    "emailjs-com": "^3.2.0"
-  }
+    "bcrypt": "^5.1.1",
+  "emailjs-com": "^3.2.0",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "simple-peer": "^9.11.1",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.1"
+  },
+  "name": "cap2419-it",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/epiknesh/CAP2419-IT.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/epiknesh/CAP2419-IT/issues"
+  },
+  "homepage": "https://github.com/epiknesh/CAP2419-IT#readme",
+  "description": ""
 }
