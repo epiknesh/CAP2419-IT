@@ -1,29 +1,31 @@
 const socket = new WebSocket('ws://localhost:8080');
 
 socket.onmessage = (event) => {
-    if (event.data instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = function () {
-            displayMessage(reader.result); // Convert Blob to text
-        };
-        reader.readAsText(event.data);
-    } else {
-        displayMessage(event.data); // Already a string
+    let messageData;
+    
+    try {
+        messageData = JSON.parse(event.data); // Attempt to parse JSON
+    } catch (error) {
+        console.error("Invalid message format:", event.data);
+        return; // Exit if parsing fails
     }
+
+    displayReceivedMessage(messageData);
 };
 
 // Function to display received messages
-function displayMessage(messageText) {
+function displayReceivedMessage(messageData) {
     const chatboxMessages = document.querySelector('.chatbox__messages');
     const newMessage = document.createElement('div');
     newMessage.className = 'message message--received';
     newMessage.innerHTML = `
-        <img src="img/noprofile.jpg" alt="Profile Picture" class="message__profile-pic">
+        <img src="${messageData.profilePic}" alt="Profile Picture" class="message__profile-pic">
         <div class="message__content">
-            <p>Other User</p>
-            <p>${messageText}</p>
-            <span class="message__time">${new Date().toLocaleTimeString()}</span>
+            <p>${messageData.sender}</p>
+            <p>${messageData.message}</p>
+            <span class="message__time">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
         </div>`;
+    
     chatboxMessages.appendChild(newMessage);
     chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
 }
@@ -37,26 +39,37 @@ input.addEventListener('keypress', (event) => {
 });
 
 function sendMessage() {
-    const message = input.value.trim();
-    if (message !== '') {
-        socket.send(message);
-        appendSentMessage(message);
-        input.value = '';
-    }
+    const messageText = input.value.trim();
+    if (messageText === '') return;
+
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const messageData = {
+        sender: `${user.firstName || 'Unknown'} ${user.lastName || 'User'}`, // Concatenating first and last name
+        profilePic: user.pic || 'img/noprofile.jpg', // Fallback if profile picture is missing
+        message: messageText,
+        timestamp: new Date().toISOString()
+    };
+    
+    socket.send(JSON.stringify(messageData)); // Send as JSON
+    appendSentMessage(messageData);
+
+    input.value = ''; // Clear input field
 }
 
+
 // Function to append sent messages to the chatbox
-function appendSentMessage(message) {
+function appendSentMessage(messageData) {
     const chatboxMessages = document.querySelector('.chatbox__messages');
     const newMessage = document.createElement('div');
     newMessage.className = 'message message--sent';
     newMessage.innerHTML = `
-        <img src="img/noprofile.jpg" alt="Profile Picture" class="message__profile-pic">
+        <img src="${messageData.profilePic}" alt="Profile Picture" class="message__profile-pic">
         <div class="message__content">
-            <p>You</p>
-            <p>${message}</p>
-            <span class="message__time">${new Date().toLocaleTimeString()}</span>
+            <p>${messageData.sender}</p>
+            <p>${messageData.message}</p>
+            <span class="message__time">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
         </div>`;
+    
     chatboxMessages.appendChild(newMessage);
     chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
 }

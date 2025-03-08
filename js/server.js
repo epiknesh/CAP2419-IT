@@ -507,14 +507,20 @@ wss.on('connection', (ws) => {
     console.log('New client connected');
 
     ws.on('message', (message) => {
-        console.log(`Received: ${message}`);
-        
-        // Broadcast message to all clients
-        clients.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
+        try {
+            const messageData = JSON.parse(message); // Ensure it's valid JSON
+            console.log(`Received message from ${messageData.sender}: ${messageData.message}`);
+
+            // Broadcast message to all other clients
+            clients.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(messageData)); // Send structured JSON
+                }
+            });
+
+        } catch (error) {
+            console.error("Invalid JSON received:", message);
+        }
     });
 
     ws.on('close', () => {
@@ -524,6 +530,7 @@ wss.on('connection', (ws) => {
 });
 
 console.log('WebSocket server running on ws://localhost:8080');
+
 
 
 
