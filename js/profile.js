@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+
+
     console.log("Loaded user data:", user);
 
      // Profile picture elements
@@ -36,6 +38,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.getElementById('profile-pic-input').addEventListener('change', uploadProfilePicture);
+
+    const updateButton = document.getElementById('save-btn');
+    if (updateButton) {
+        updateButton.addEventListener('click', updateProfile);
+    }
+
 });
 
 async function uploadProfilePicture(event) {
@@ -43,8 +51,10 @@ async function uploadProfilePicture(event) {
     if (!file) return;
 
     const formData = new FormData();
+    const user = JSON.parse(localStorage.getItem('user'));
+
     formData.append("profilePicture", file);
-    formData.append("id", JSON.parse(localStorage.getItem('user')).id);
+    formData.append("id", user.id);
 
     try {
         const response = await fetch('http://localhost:3000/upload-profile-picture', {
@@ -53,17 +63,22 @@ async function uploadProfilePicture(event) {
         });
 
         const data = await response.json();
+
         if (response.ok) {
             alert("Profile picture updated successfully!");
-            document.getElementById('profile-pic').src = data.profilePicture;
             
-            // Update local storage with the new profile picture
-            let user = JSON.parse(localStorage.getItem('user'));
-            user.profilePicture = data.profilePicture;
+            // Update profile picture in UI
+            document.getElementById('profile-pic').src = data.profilePicture;
+            const profileDropdownImg = document.querySelector('#profileDropdown img');
+            if (profileDropdownImg) profileDropdownImg.src = data.profilePicture;
+
+            // Update local storage
+            user.pic = data.profilePicture; // Ensure consistency with 'pic'
             localStorage.setItem('user', JSON.stringify(user));
         } else {
             alert(data.message);
         }
+
     } catch (error) {
         console.error("Error uploading profile picture:", error);
         alert("An error occurred while uploading the profile picture.");
@@ -71,7 +86,7 @@ async function uploadProfilePicture(event) {
 }
 
 async function updateProfile() {
-    const user = JSON.parse(localStorage.getItem('user'));
+    let user = JSON.parse(localStorage.getItem('user'));
 
     if (!user) {
         alert("User data not found. Please log in again.");
@@ -98,10 +113,14 @@ async function updateProfile() {
 
         if (response.ok) {
             alert(data.message);
-            localStorage.setItem('user', JSON.stringify(data.user)); // Update local storage
-            window.location.reload(); // Refresh to reflect changes
+
+            // Update local storage immediately without reloading
+            user = { ...user, ...updatedData }; // Merge updated fields
+            localStorage.setItem('user', JSON.stringify(user));
+
+           
         } else {
-            alert(data.message); // Show error message
+            alert(data.message);
         }
 
     } catch (error) {
