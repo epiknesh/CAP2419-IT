@@ -6,11 +6,18 @@ document.addEventListener("DOMContentLoaded", function () {
     link.href='styles/modal.css';
     document.head.appendChild(link);
 
-    
-
-    
+    const fleetBtn = document.getElementById('fleetBtn');
 
     const fleetTab = document.querySelector('#sidebar .side-menu.top li:nth-child(4) a');
+
+    if (fleetBtn && fleetTab) {
+        fleetBtn.addEventListener("click", function () {
+            fleetTab.click(); // Simulates a click on the sidebar item
+            console.log("Fleet button clicked");
+        });
+    } else {
+        console.error("Fleet button or sidebar tab not found");
+    }
     
     fleetTab.addEventListener('click', async function (event) {
         event.preventDefault();

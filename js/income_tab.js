@@ -6,7 +6,17 @@ document.addEventListener("DOMContentLoaded", function () {
 	link.href='styles/modal.css';
 	document.head.appendChild(link);
 
+  const incomeBtn = document.getElementById('incomeBtn');
   const incomeTab = document.querySelector('#sidebar .side-menu.top li:nth-child(7) a');
+
+  if (incomeBtn && incomeTab) {
+    incomeBtn.addEventListener("click", function () {
+      incomeTab.click(); // Simulates a click on the sidebar item
+        console.log("Income button clicked");
+    });
+  } else {
+      console.error("Income button or sidebar tab not found");
+  }
   
   incomeTab.addEventListener('click', function (event) {
     event.preventDefault();

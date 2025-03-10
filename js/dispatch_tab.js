@@ -27,9 +27,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         emailjs.init("-d3fui43Avx0AbMV5"); // Replace with your EmailJS user ID
     });
 
-    const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(5) a');
+    const dispatchBtn = document.getElementById('dispatchBtn');
+    const dispatchTab = document.querySelector('#sidebar .side-menu.top li:nth-child(5) a');
 
-    teamTab.addEventListener('click', async function (event) {
+    if (dispatchBtn && dispatchTab) {
+        dispatchBtn.addEventListener("click", function () {
+            dispatchTab.click(); // Simulates a click on the sidebar item
+            console.log("Dispatch button clicked");
+        });
+    } else {
+        console.error("Dispatch button or sidebar tab not found");
+    }
+
+    dispatchTab.addEventListener('click', async function (event) {
         event.preventDefault(); // Prevent default link behavior
 
         try {

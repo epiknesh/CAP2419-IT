@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="order position-relative" id="fleetContent">
                         <div class="head">
                             <h3>Fleet</h3>
-                            <a href="fleet.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Fleet</a>
+                            <a class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2" id="fleetBtn">Go To Fleet</a>
                         </div>
                         <table>
                             <thead>
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="order position-relative" id="maintenanceContent">
                         <div class="head">
                             <h3>Fleet Maintenance Report</h3>
-                            <a href="maintenance.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Maintenance</a>
+                            <a class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2" id="maintenanceBtn">Go To Maintenance</a>
                         </div>
                         <table class="table table-striped">
                             <thead>
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="order position-relative" id="dispatchContent">
                         <div class="head">
                             <h3>Bus Dispatch</h3>
-                            <a href="dispatch.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Dispatch</a>
+                            <a class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2" id="dispatchBtn">Go To Dispatch</a>
                         </div>
                         <table>
                             <thead>
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="order position-relative" id="incomeContent">
                         <div class="head">
                             <h3>Bus Income</h3>
-                            <a href="income.html" class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2">Go To Income</a>
+                            <a class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2" id="incomeBtn">Go To Income</a>
                         </div>
                         <table>
                             <thead>
@@ -211,6 +211,41 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
                 
             `;
+            setTimeout(() => {
+                const fleetBtn = document.getElementById("fleetBtn");
+                const maintenanceBtn = document.getElementById("maintenanceBtn");
+                const dispatchBtn = document.getElementById("dispatchBtn");
+                const incomeBtn = document.getElementById("incomeBtn");
+                if (incomeBtn) {
+                    incomeBtn.addEventListener("click", function (event) {
+                        event.preventDefault(); // Prevent navigation
+                        console.log("Income button clicked");
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click();
+                    });
+                }
+                if (dispatchBtn) {
+                    dispatchBtn.addEventListener("click", function (event) {
+                        event.preventDefault(); // Prevent navigation
+                        console.log("Dispatch button clicked");
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(5) a').click();
+                    });
+                }
+                if (maintenanceBtn) {
+                    maintenanceBtn.addEventListener("click", function (event) {
+                        event.preventDefault(); // Prevent navigation
+                        console.log("Maintenance button clicked");
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(6) a').click();
+                    });
+                }
+                if (fleetBtn) {
+                    fleetBtn.addEventListener("click", function (event) {
+                        event.preventDefault(); // Prevent navigation
+                        console.log("Fleet button clicked");
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+                    });
+                }
+            }, 100); // Slight delay to ensure the button exists before binding
+
         } catch (error) {
             console.error("Error fetching data:", error);
         }
