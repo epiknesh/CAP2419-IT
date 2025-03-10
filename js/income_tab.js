@@ -233,3 +233,7 @@ function showAlert(message, type) {
     }
   }, 5000);
 }
+
+// // TO DO
+// 1. Only display Operating buses in the Daily Income table and form
+// 2. Reset the "income today" field when date changes
