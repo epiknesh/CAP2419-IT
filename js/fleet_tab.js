@@ -21,6 +21,13 @@ document.addEventListener("DOMContentLoaded", function () {
     
     fleetTab.addEventListener('click', async function (event) {
         event.preventDefault();
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "5", "6"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
+        
         
         const mainContent = document.querySelector('#content main');
         

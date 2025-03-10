@@ -21,6 +21,13 @@ document.addEventListener("DOMContentLoaded", function () {
   incomeTab.addEventListener('click', function (event) {
     event.preventDefault();
     const mainContent = document.querySelector('#content main');
+
+    const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "4", "5"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
+
     mainContent.innerHTML = `
       <div class="head-title">
         <div class="left">
@@ -223,25 +230,27 @@ function showIncomeForm() {
 }
 
 
-// Function to Show Alert
 function showAlert(message, type) {
-  const alertContainer = document.getElementById('alertContainer');
+  let alertContainer = document.getElementById('alertContainer');
+
+  // Create alert container if it doesn't exist
+  if (!alertContainer) {
+      alertContainer = document.createElement('div');
+      alertContainer.id = 'alertContainer';
+      document.body.prepend(alertContainer); // Add it at the top of the body
+  }
+
   const alertHtml = `
-    <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
-      ${message}
-    </div>
+      <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+      </div>
   `;
   alertContainer.innerHTML = alertHtml;
 
-  // Auto-dismiss the alert after 3 seconds
+  // Auto-dismiss after 3 seconds
   setTimeout(() => {
-    const alertElement = alertContainer.querySelector('.alert');
-    if (alertElement) {
-      alertElement.classList.remove('show');
-      alertElement.classList.add('hide');
-      setTimeout(() => alertElement.remove(), 500);
-    }
-  }, 5000);
+      alertContainer.innerHTML = '';
+  }, 3000);
 }
 
 // // TO DO

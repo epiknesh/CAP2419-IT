@@ -23,6 +23,12 @@
             event.preventDefault(); // Prevent default link behavior
             const mainContent = document.querySelector('#content main');
 
+            const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "4", "6"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
+
              // Show a loading message immediately
             mainContent.innerHTML = `
                 <div class="loading-message" style="text-align: center; padding: 20px;">
