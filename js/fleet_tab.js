@@ -181,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await fetchFleetCapacity();
         await fetchFleetStatus();
         await fetchFleetPersonnel();
+        await fetchFleetFuel();
 
         // Add event listener for the "Edit Status" button
         const editStatusBtn = document.getElementById('editFleetBtn');
@@ -621,10 +622,65 @@ function showFleetPersonnelForm() {
     .catch(error => console.error('Error fetching data:', error));
 }
 
+async function fetchFleetFuel() {
+    try {
+        const response = await fetch('http://localhost:3000/fuel'); // Adjust API endpoint if needed
+        const fuelData = await response.json();
 
-// Edit Fuel Report
-function showFuelReportForm(){
-    const formHtml = `
+        const tableBody = document.querySelector("#fleetFuel tbody");
+        tableBody.innerHTML = ""; // Clear existing data
+
+        for (const fuel of fuelData) {
+            const fuelPercentage = Math.min((fuel.currentFuel / 100) * 100, 100); // Assuming 100L tank
+            const formattedDate = new Date(fuel.lastFullTank).toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                hour12: true
+            });
+
+            // Append fuel data to the table
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${fuel.busId}</td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar ${fuelPercentage <= 20 ? 'bg-danger' : 'bg-success'}" 
+                                role="progressbar" 
+                                style="width: ${fuelPercentage}%"
+                                aria-valuenow="${fuelPercentage}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                        <span>${fuelPercentage.toFixed(0)}%</span>
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error("Error fetching fleet fuel data:", error);
+    }
+}
+
+
+// Function to show the Edit Fuel Report form
+async function showFuelReportForm() {
+    try {
+        // Fetch available bus IDs from the fuel database
+        const response = await fetch('http://localhost:3000/fuel');
+        const fuelData = await response.json();
+
+        // Generate bus options dynamically
+        let busOptions = '<option value="">Select Bus</option>';
+        fuelData.forEach(bus => {
+            busOptions += `<option value="${bus.busId}">${bus.busId}</option>`;
+        });
+
+        const formHtml = `
             <div class="modal fade" id="editFleetFuelModal" tabindex="-1" aria-labelledby="editFleetFuelModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
@@ -638,10 +694,7 @@ function showFuelReportForm(){
                                     <div class="col-md-6 mb-3">
                                         <label for="busId" class="form-label">Bus ID:</label>
                                         <select class="form-select" id="busId" name="busId" required>
-                                            <option value="">Select Bus</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
+                                            ${busOptions}
                                         </select>
                                     </div>
                                 </div>
@@ -660,7 +713,6 @@ function showFuelReportForm(){
                                         <!-- Display Numeric Value -->
                                         <span id="fuelPercentage">50%</span>
                                     </div>
- 
                                 </div>
                             </form>
                         </div>
@@ -675,32 +727,69 @@ function showFuelReportForm(){
 
         document.body.insertAdjacentHTML('beforeend', formHtml);
 
+        // Event listener for submitting the form
         document.getElementById('submitStatus').addEventListener('click', async function () {
-                const busId = document.getElementById('busId').value;
-                const busDate = document.getElementById('busDate').value;
-                const busFuelLevel = document.getElementById('busFuelLevel').value;
+            const busId = document.getElementById('busId').value;
+            const busDate = document.getElementById('busDate').value;
+            const busFuelLevel = document.getElementById('busFuelLevel').value;
 
-                if (!busId || !busDate || !busFuelLevel) {
-                    showAlert('Please fill in all required fields.', 'warning');
-                }else{
+            if (!busId || !busDate || !busFuelLevel) {
+                showAlert('Please fill in all required fields.', 'warning');
+                return;
+            }
+
+            // Update the database with new values
+            try {
+                const updateResponse = await fetch(`http://localhost:3000/fuel/${busId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lastFullTank: busDate,
+                        currentFuel: busFuelLevel
+                    })
+                });
+
+                if (updateResponse.ok) {
                     showAlert('Fuel Report Updated', 'success');
                     const editFleetFuelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetFuelModal'));
                     editFleetFuelModal.hide();
-                    
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+                } else {
+                    showAlert('Failed to update fuel report.', 'danger');
                 }
+            } catch (error) {
+                console.error('Error updating fuel data:', error);
+                showAlert('Server error. Try again later.', 'danger');
+            }
         });
 
+        // Initialize and show modal
         const modalElement = document.getElementById('editFleetFuelModal');
         const editFleetFuelModal = new bootstrap.Modal(modalElement);
         editFleetFuelModal.show();
 
+        // Cleanup modal on close
         modalElement.addEventListener('hidden.bs.modal', function () {
             modalElement.remove();
             document.querySelector('.modal-backdrop').remove();
             document.body.classList.remove('modal-open');
             document.body.style = '';
         });
+
+    } catch (error) {
+        console.error('Error fetching bus IDs:', error);
+    }
 }
+
+// Function to update fuel progress bar in real time
+function updateFuelLevel(value) {
+    const fuelProgress = document.getElementById("fuelProgress");
+    const fuelPercentage = document.getElementById("fuelPercentage");
+
+    fuelProgress.value = value; // Update progress bar value
+    fuelPercentage.textContent = `${value}%`; // Update displayed percentage
+}
+
 
 
 // Function to Show Alert

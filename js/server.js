@@ -489,6 +489,42 @@ app.post('/upload-profile-picture', upload.single('profilePicture'), async (req,
     }
 });
 
+const Fuel = require('./models/Fuel');
+
+app.get('/fuel', async (req, res) => {
+    try {
+        const fuelData = await Fuel.find();
+        res.json(fuelData);
+    } catch (error) {
+        console.error('Error fetching fuel data:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Route to update fuel data
+app.put('/fuel/:busId', async (req, res) => {
+    try {
+        const { busId } = req.params;
+        const { lastFullTank, currentFuel } = req.body;
+
+        const updatedFuel = await Fuel.findOneAndUpdate(
+            { busId: Number(busId) },
+            { lastFullTank: new Date(lastFullTank), currentFuel: Number(currentFuel) },
+            { new: true }
+        );
+
+        if (!updatedFuel) {
+            return res.status(404).json({ message: "Bus ID not found" });
+        }
+
+        res.json(updatedFuel);
+    } catch (error) {
+        console.error('Error updating fuel data:', error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
   
   
 
