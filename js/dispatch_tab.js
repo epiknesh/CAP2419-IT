@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     link.href = 'css/styles.css';
     document.head.appendChild(link);
 
+     // Dynamically import CSS (Modal)
+    const link2 = document.createElement('link');
+    link2.rel = 'stylesheet';
+    link2.href = 'css/modal.css';
+    document.head.appendChild(link2);
+
     // Retrieve user info from localStorage
     const user = JSON.parse(localStorage.getItem('user'));
     const loggedEmail = user.email;
@@ -21,10 +27,26 @@ document.addEventListener('DOMContentLoaded', async function () {
         emailjs.init("-d3fui43Avx0AbMV5"); // Replace with your EmailJS user ID
     });
 
-    const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(5) a');
+    const dispatchBtn = document.getElementById('dispatchBtn');
+    const dispatchTab = document.querySelector('#sidebar .side-menu.top li:nth-child(5) a');
 
-    teamTab.addEventListener('click', async function (event) {
+    if (dispatchBtn && dispatchTab) {
+        dispatchBtn.addEventListener("click", function () {
+            dispatchTab.click(); // Simulates a click on the sidebar item
+            console.log("Dispatch button clicked");
+        });
+    } else {
+        console.error("Dispatch button or sidebar tab not found");
+    }
+
+    dispatchTab.addEventListener('click', async function (event) {
         event.preventDefault(); // Prevent default link behavior
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "5", "6"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
+        
 
         try {
             await loadDispatchData();
@@ -107,7 +129,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </div>
                     `;
                 });
-                dispatchContent += `</div>`; // Close the last "table-data" div
+                dispatchContent += `</div> 
+                
+                <div id="alertContainer"></div>
+                `; 
             }
 
             document.querySelector('#content main').innerHTML = dispatchContent;
@@ -116,7 +141,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.querySelectorAll('.dispatch-btn').forEach(button => {
                 button.addEventListener('click', async function () {
                     const busID = this.getAttribute('data-busid');
-                    await dispatchBus(busID);
+                    showConfirmationModal(busID);
+                   
                 });
             });
 
@@ -124,6 +150,48 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.error("Error fetching data:", error);
             document.querySelector('#content main').innerHTML = `<p>Error loading dispatch data.</p>`;
         }
+    }
+
+    function showConfirmationModal(busID){
+         // Remove any existing modal to prevent duplicates
+        const existingModal = document.getElementById('confirmationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        const modalHTML= `<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="color: black;">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="confirmationModalLabel">Confirm Dispatch</h5>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to dispatch Bus ${busID}?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-primary" id="confirmDispatchBtn">Confirm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        // Initialize Bootstrap Modal
+        const modalElement = document.getElementById('confirmationModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        document.getElementById('confirmDispatchBtn').addEventListener('click', async () => {
+            modal.hide(); // Hide the modal
+            await dispatchBus(busID); //Dispatch the Bus
+        });
+
+        // Remove modal from the DOM after it is hidden
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            modalElement.remove();
+        });
     }
 
     async function dispatchBus(busID) {
@@ -194,4 +262,35 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.error(`Error updating dispatch for bus ${busID}:`, error);
         }
     }
+
+    function showAlert(message, type) {
+        let alertContainer = document.getElementById('alertContainer');
+    
+        // Create alert container if it doesn't exist
+        if (!alertContainer) {
+            alertContainer = document.createElement('div');
+            alertContainer.id = 'alertContainer';
+            document.body.prepend(alertContainer); // Add it at the top of the body
+        }
+    
+        const alertHtml = `
+            <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+            </div>
+        `;
+        alertContainer.innerHTML = alertHtml;
+    
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            alertContainer.innerHTML = '';
+        }, 3000);
+    }
+    
+  
 });
+
+
+// // TO DO
+// 1. Only Operative buses should be displayed in dispatch page
+// 2. Only in terminal buses should be dispatched
+// 3. Use ShowAlert for dispatch success and failure (did the function already, just need to call it)

@@ -6,11 +6,28 @@
         link.href='styles/modal.css';
         document.head.appendChild(link);
 
+        const maintenanceBtn = document.getElementById('maintenanceBtn');
+        const maintenanceTab = document.querySelector('#sidebar .side-menu.top li:nth-child(6) a');
+
+        if (maintenanceBtn && maintenanceTab) {
+            maintenanceBtn.addEventListener("click", function () {
+                maintenanceTab.click(); // Simulates a click on the sidebar item
+                console.log("Maintenance button clicked");
+            });
+        } else {
+            console.error("Maintenance button or sidebar tab not found");
+        }
+
         // Ensure the DOM is fully loaded before attaching event listeners
-        const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(6) a');
-        teamTab.addEventListener('click', async function (event) {
+        maintenanceTab.addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent default link behavior
             const mainContent = document.querySelector('#content main');
+
+            const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "4", "6"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
 
              // Show a loading message immediately
             mainContent.innerHTML = `

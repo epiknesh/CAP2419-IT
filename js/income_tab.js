@@ -6,11 +6,28 @@ document.addEventListener("DOMContentLoaded", function () {
 	link.href='styles/modal.css';
 	document.head.appendChild(link);
 
+  const incomeBtn = document.getElementById('incomeBtn');
   const incomeTab = document.querySelector('#sidebar .side-menu.top li:nth-child(7) a');
+
+  if (incomeBtn && incomeTab) {
+    incomeBtn.addEventListener("click", function () {
+      incomeTab.click(); // Simulates a click on the sidebar item
+        console.log("Income button clicked");
+    });
+  } else {
+      console.error("Income button or sidebar tab not found");
+  }
   
   incomeTab.addEventListener('click', function (event) {
     event.preventDefault();
     const mainContent = document.querySelector('#content main');
+
+    const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "4", "5"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
+
     mainContent.innerHTML = `
       <div class="head-title">
         <div class="left">
@@ -26,16 +43,12 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="table-data">
         <div class="order position-relative" id="incomeContent">
           <div class="head">
-            <h3>Bus Income</h3>
-            <a href="#" id="addDailyIncomeBtn" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#incomeModal">
-              <i class='bx bx-plus'></i> Add Daily Income
-            </a>
+            <h3>Income Report</h3>
           </div>
           <table>
             <thead>
               <tr>
                 <th>Bus ID</th>
-                <th>Income Today</th>
                 <th>Income This Week</th>
                 <th>Income This Month</th>
                 <th>Total Income</th>
@@ -46,6 +59,28 @@ document.addEventListener("DOMContentLoaded", function () {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div class="table-data">
+        <div class="order position-relative" id="dailyIncome">
+          <div class="head">
+            <h3>Daily Income</h3>
+            <a href="#" id="addDailyIncomeBtn" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#incomeModal">
+              <i class='bx bx-plus'></i> Add Daily Income
+            </a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Bus ID</th>
+                <th>Income Today</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="dailyIncomeTable">
+              <tr><td colspan="5">Loading...</td></tr>
+            </tbody>
+          </table>
       </div>
 
 			 <div id="alertContainer"></div>
@@ -66,27 +101,50 @@ function fetchIncomeData() {
   fetch('http://localhost:3000/income')
     .then(response => response.json())
     .then(data => {
-      const tableBody = document.getElementById("busIncomeTable");
-      tableBody.innerHTML = ""; // Clear existing data
+      const busIncomeTable = document.getElementById("busIncomeTable");
+      const dailyIncomeTable = document.getElementById("dailyIncomeTable");
+
+      busIncomeTable.innerHTML = ""; // Clear existing data
+      dailyIncomeTable.innerHTML = ""; // Clear existing data
+
+      if(data.length === 0){
+        busIncomeTable.innerHTML = "<tr><td colspan='5'>No income data available</td></tr>";
+        dailyIncomeTable.innerHTML = "<tr><td colspan='5'>No daily income data available</td></tr>";
+      }
 
       data.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
 
+      //Populate Bus Income Table
       data.forEach(item => {
         const row = `
           <tr>
             <td>${item.busID}</td>
-            <td>₱${item.incomeToday.toFixed(2)}</td>
             <td>₱${item.incomeWeek.toFixed(2)}</td>
             <td>₱${item.incomeMonth.toFixed(2)}</td>
             <td>₱${item.totalIncome.toFixed(2)}</td>
           </tr>
         `;
-        tableBody.innerHTML += row;
+        busIncomeTable.innerHTML += row;
+      });
+
+      //Populate Daily Income Table
+      data.forEach(item => {
+        if (item.incomeToday > 0) { // Ensure only valid daily income data is displayed
+          const dailyRow = `
+            <tr>
+              <td>${item.busID}</td>
+              <td>₱${item.incomeToday.toFixed(2)}</td>
+              <td>${new Date().toISOString().split('T')[0]}</td> 
+            </tr>
+          `;
+          dailyIncomeTable.innerHTML += dailyRow;
+        }
       });
     })
     .catch(error => {
       console.error("Error fetching income data:", error);
       document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
+      document.getElementById("dailyIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
     });
 }
 
@@ -172,23 +230,29 @@ function showIncomeForm() {
 }
 
 
-// Function to Show Alert
 function showAlert(message, type) {
-  const alertContainer = document.getElementById('alertContainer');
+  let alertContainer = document.getElementById('alertContainer');
+
+  // Create alert container if it doesn't exist
+  if (!alertContainer) {
+      alertContainer = document.createElement('div');
+      alertContainer.id = 'alertContainer';
+      document.body.prepend(alertContainer); // Add it at the top of the body
+  }
+
   const alertHtml = `
-    <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
-      ${message}
-    </div>
+      <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+      </div>
   `;
   alertContainer.innerHTML = alertHtml;
 
-  // Auto-dismiss the alert after 3 seconds
+  // Auto-dismiss after 3 seconds
   setTimeout(() => {
-    const alertElement = alertContainer.querySelector('.alert');
-    if (alertElement) {
-      alertElement.classList.remove('show');
-      alertElement.classList.add('hide');
-      setTimeout(() => alertElement.remove(), 500);
-    }
-  }, 5000);
+      alertContainer.innerHTML = '';
+  }, 3000);
 }
+
+// // TO DO
+// 1. Only display Operating buses in the Daily Income table and form
+// 2. Reset the "income today" field when date changes

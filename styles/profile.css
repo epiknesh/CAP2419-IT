@@ -85,6 +85,8 @@ h3{
   font-size: 24px;
   font-weight: bold;
   color: var(--light);
+    margin-left: 0;
+
 	  /* margin-right: auto; This sets the profile icon on the right side of the page */ 
 }
 
