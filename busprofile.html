@@ -14,10 +14,11 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand">Hello,<br>BusMate!</a>
-            <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
-                <img id="profile-picture" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
+        <div class="container-fluid d-flex align-items-center">
+            <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
+            <a class="navbar-brand ms-2">Hello,<br>BusMate!</a>
+            <div class="notification-tab ms-auto" onmouseover="showDropdown()" onmouseout="hideDropdown()">
+                <img id="profile-picture1" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
                 <div id="dropdown-menu" class="dropdown-content">
                     <a href="bushome.html">Home</a>
                     <a href="busrecents.html">Recents</a>
@@ -27,7 +28,7 @@
                 </div>
             </div>
         </div>
-    </nav>
+    </nav>  
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
@@ -239,28 +240,6 @@
             dropdown.addEventListener("mouseleave", function () {
                 dropdown.style.display = "none";
             });
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const token = localStorage.getItem("token"); // Get token from localStorage
-
-            if (!token) {
-                alert("You are not logged in. Redirecting to login page..."); // Show alert
-                // Redirect to login page if token is missing
-                window.location.href = "buslogin.html";
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const user = JSON.parse(localStorage.getItem('user')); // Retrieve user data
-
-            if (user) {
-                document.querySelector('.fullname').innerText = `${user.firstName} ${user.lastName}`;
-                document.querySelector('.username').innerText = `@${user.username}`;
-            } else {
-                console.error("User data not found. Redirecting to login...");
-                window.location.href = "buslogin.html"; // Redirect if no user data
-            }
         });
 
         document.addEventListener("DOMContentLoaded", async () => {
