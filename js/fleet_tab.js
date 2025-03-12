@@ -130,6 +130,46 @@ document.addEventListener("DOMContentLoaded", function () {
                             </table>
                         </div>
                     </div>
+
+                    <div class="table-data">
+                        <div class="order position-relative" id="fleetFuel">
+                            <div class="head">
+                                <h3>Fuel Report</h3>
+                                    <a href="#" id="editFuelBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetFuelModal">
+                                    <i class='bx bxs-edit'></i> Edit Fuel Report
+                                </a>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Bus ID</th>
+                                        <th>Last Full Tank</th>
+                                        <th>
+                                            <div>
+                                                Current Fuel Level 
+                                            </div>
+                                            <div class="text-secondary"> 
+                                                <small>Fuel Level after the last trip</small>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>2021-09-01</td>
+                                        <td>
+                                           <div class="progress">
+                                                <div class="progress-bar bg-success" role="progressbar" id="fuelProgress" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span id="fuelPercentage1">50%</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tbody id="fleetPersonnelTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="alertContainer"></div>
@@ -154,6 +194,13 @@ document.addEventListener("DOMContentLoaded", function () {
         editFleetBtn.addEventListener('click', function (event) {
             event.preventDefault();
             showFleetPersonnelForm();
+        });
+
+        // Add event listener for the "Edit Fuel Report" button
+        const editFuelBtn = document.getElementById('editFuelBtn');
+        editFuelBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            showFuelReportForm();
         });
     });
 });
@@ -574,6 +621,86 @@ function showFleetPersonnelForm() {
     .catch(error => console.error('Error fetching data:', error));
 }
 
+
+// Edit Fuel Report
+function showFuelReportForm(){
+    const formHtml = `
+            <div class="modal fade" id="editFleetFuelModal" tabindex="-1" aria-labelledby="editFleetFuelModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editFleetFuelModalLabel">Edit Fleet Fuel Report</h5>
+                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="fleetFuelForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busId" class="form-label">Bus ID:</label>
+                                        <select class="form-select" id="busId" name="busId" required>
+                                            <option value="">Select Bus</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busDate" class="form-label">Last Full Tank:</label>
+                                        <input type="date" class="form-control" id="busDate" name="busDate" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busFuelLevel" class="form-label">Current Fuel Level:</label>
+                                        <input type="range" class="form-range" id="busFuelLevel" name="busFuelLevel" min="0" max="100" step="1" value="50" oninput="updateFuelLevel(this.value)">
+                                        
+                                        <!-- Progress Bar -->
+                                        <progress id="fuelProgress" value="50" max="100" class="w-100"></progress>
+                                        
+                                        <!-- Display Numeric Value -->
+                                        <span id="fuelPercentage">50%</span>
+                                    </div>
+ 
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="submitStatus">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+
+        document.getElementById('submitStatus').addEventListener('click', async function () {
+                const busId = document.getElementById('busId').value;
+                const busDate = document.getElementById('busDate').value;
+                const busFuelLevel = document.getElementById('busFuelLevel').value;
+
+                if (!busId || !busDate || !busFuelLevel) {
+                    showAlert('Please fill in all required fields.', 'warning');
+                }else{
+                    showAlert('Fuel Report Updated', 'success');
+                    const editFleetFuelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetFuelModal'));
+                    editFleetFuelModal.hide();
+                    
+                }
+        });
+
+        const modalElement = document.getElementById('editFleetFuelModal');
+        const editFleetFuelModal = new bootstrap.Modal(modalElement);
+        editFleetFuelModal.show();
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+}
 
 
 // Function to Show Alert
