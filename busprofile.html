@@ -49,7 +49,7 @@
                 }
 
                 const userData = await response.json();
-                const profileImg = document.getElementById("profile-picture"); // Fixed ID match
+                const profileImg = document.getElementById("profile-picture1"); // Fixed ID match
 
                 profileImg.src = userData.profile_picture 
                     ? `http://localhost:3000/uploads/${userData.profile_picture}`
@@ -60,7 +60,7 @@
             }
         });
     </script>
-
+    
     <div class="sub-header">Profile</div>
 
         <div class="profile-picture">
