@@ -35,6 +35,7 @@ fleetTab.addEventListener("click", async function (event) {
     console.log("Fleet tab clicked. Access granted.");
     // Proceed with loading fleet data if needed
 
+
         const mainContent = document.querySelector('#content main');
 
         if (!document.querySelector("#fleetContainer")) {
@@ -223,6 +224,7 @@ if (editFuelBtn) {
 
     });
 });
+
 
 let map;
 let busMarkers = {};  // Store bus markers for live updates
