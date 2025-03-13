@@ -61,7 +61,7 @@ def log_data(capacity):
 	db = client["BusMatePH"]
 
 	# Replace 'mycollection' with the name of your collection
-	collection = db["opencv"]
+	collection = db["capacity"]
 
 	#Prepare the data for insertion
 	data = {
@@ -104,7 +104,10 @@ def people_counter():
 	if not args.get("input", False):
 		logger.info("Logger is working")	
 		logger.info("Starting the live stream..")
-		vs = VideoStream(int(config["url"])).start()
+		vs = VideoStream(config["url"]).start() #http://192.168.1.3:5000/video_feed - URL 100.100.13.85:5000
+
+		#vs = VideoStream(int(config["url"])).start() # // THIS IS FOR WEBCAM
+
 		time.sleep(2.0)
 
 	# otherwise, grab a reference to the video file
@@ -409,3 +412,4 @@ def people_counter():
 
 if __name__ == "__main__":
     people_counter()
+

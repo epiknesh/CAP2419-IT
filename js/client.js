@@ -110,4 +110,34 @@ app.post('/busregister', upload.single('profile_picture'), async (req, res) => {
   }
 });
 
+// Middleware to verify token
+const authenticateToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.status(401).json({ message: "Access Denied" });
+
+  jwt.verify(token.split(" ")[1], 'your-jwt-secret', (err, user) => {
+      if (err) return res.status(403).json({ message: "Invalid Token" });
+      req.user = user;
+      next();
+  });
+};
+
+// Get Profile Endpoint
+app.get('/busprofile', authenticateToken, async (req, res) => {
+  try {
+      const user = await BusAccount.findById(req.user.id);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      res.json({
+          username: user.username,
+          profile_picture: user.profile_picture
+      });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Serve static files (profile pictures)
+app.use('/uploads', express.static('uploads'));
 

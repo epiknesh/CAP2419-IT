@@ -2,9 +2,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // Ensure the DOM is fully loaded before attaching event listeners
     const teamTab = document.querySelector('#sidebar .side-menu.top li:nth-child(2) a');
 
+
+
     teamTab.addEventListener('click', async function (event) {
         event.preventDefault(); // Prevent default link behavior
         const mainContent = document.querySelector('#content main');
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (["2", "3", "4", "5", "6"].includes(user.role)) {
+            showAlert('You do not have permission to access this page.', 'danger');
+            return;
+        }
+        
 
         // Show a loading message immediately
         mainContent.innerHTML = `
@@ -141,3 +150,27 @@ function showConfirmationModal(userId) {
         document.getElementById('confirmationModal').remove();  // Clean up modal
     });
 }
+function showAlert(message, type) {
+    let alertContainer = document.getElementById('alertContainer');
+
+    // Create alert container if it doesn't exist
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'alertContainer';
+        document.body.prepend(alertContainer); // Add it at the top of the body
+    }
+
+    const alertHtml = `
+        <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+        </div>
+    `;
+    alertContainer.innerHTML = alertHtml;
+
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 3000);
+}
+
+
