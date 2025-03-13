@@ -194,23 +194,28 @@ app.put('/dispatch/:busID', async (req, res) => {
     try {
         const { status, lastDispatch, nextDispatch, coordinates } = req.body;
 
+        console.log(`🛠️ Updating Dispatch for Bus ID ${req.params.busID}`);
+
         const updatedDispatch = await Dispatch.findOneAndUpdate(
-            { busID: req.params.busID },
-            { status, lastDispatch, nextDispatch, coordinates },
+            { busID: req.params.busID }, // Find by busID
+            { $set: { status, lastDispatch, nextDispatch, coordinates } },
             { new: true }
         );
 
         if (!updatedDispatch) {
+            console.error("❌ Dispatch record not found");
             return res.status(404).json({ message: "Dispatch record not found" });
         }
 
+        console.log("✅ Successfully updated dispatch:", updatedDispatch);
         res.status(200).json({ message: "Dispatch updated successfully", dispatch: updatedDispatch });
 
     } catch (error) {
-        console.error(error);
+        console.error("❌ Error updating dispatch:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
+
 
 app.get('/dispatch/:busID', async (req, res) => {
     try {

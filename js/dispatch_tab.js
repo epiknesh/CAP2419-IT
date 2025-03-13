@@ -170,12 +170,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
     
             const locations = await locationResponse.json();
+
+            console.log("Received location data:", locations);
+
+            const busIDAPI = `bus${busID}`;
     
-            if (!locations[busID]) {
-                throw new Error(`Location data for bus ${busID} not found.`);
+            if (!locations[busIDAPI]) {
+                throw new Error(`Location data for bus${busID} not found.`);
             }
     
-            const { latitude, longitude } = locations[busID];
+            const { latitude, longitude } = locations[busIDAPI];
+
+            console.log("Full locations object:", locations);
+console.log("Attempting to access busID:", busID);
+console.log("Value at locations[busID]:", locations[busID]);
+console.log("latitude:", latitude);
+console.log("longitude:", longitude);
     
             // Schedule the next dispatch (e.g., 1 hour later)
             const nextDispatchTime = new Date();
@@ -193,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             };
     
             // ✅ Send update request only ONCE
-            const updateResponse = await fetch(`http://localhost:3000/update-dispatch/${busID}`, {
+            const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatedData)
