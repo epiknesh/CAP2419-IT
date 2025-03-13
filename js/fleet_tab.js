@@ -34,7 +34,6 @@ fleetTab.addEventListener("click", async function (event) {
 
     console.log("Fleet tab clicked. Access granted.");
     // Proceed with loading fleet data if needed
-});
 
         const mainContent = document.querySelector('#content main');
 
