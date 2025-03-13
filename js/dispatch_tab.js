@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     link.href = 'css/styles.css';
     document.head.appendChild(link);
 
-     // Dynamically import CSS (Modal)
+    // Dynamically import CSS (Modal)
     const link2 = document.createElement('link');
     link2.rel = 'stylesheet';
     link2.href = 'css/modal.css';
@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             showAlert('You do not have permission to access this page.', 'danger');
             return;
         }
-        
 
         try {
             await loadDispatchData();
@@ -55,6 +54,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.querySelector('#content main').innerHTML = `<p>Error loading dispatch data.</p>`;
         }
     });
+
+}); // ✅ This was missing
+
 
     async function loadDispatchData() {
         try {
@@ -152,145 +154,138 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    function showConfirmationModal(busID){
-         // Remove any existing modal to prevent duplicates
-        const existingModal = document.getElementById('confirmationModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        const modalHTML= `<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="color: black;">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="confirmationModalLabel">Confirm Dispatch</h5>
-                                    </div>
-                                    <div class="modal-body">
-                                        Are you sure you want to dispatch Bus ${busID}?
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="button" class="btn btn-primary" id="confirmDispatchBtn">Confirm</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        `;
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        // Initialize Bootstrap Modal
-        const modalElement = document.getElementById('confirmationModal');
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-
-        document.getElementById('confirmDispatchBtn').addEventListener('click', async () => {
-            modal.hide(); // Hide the modal
-            await dispatchBus(busID); //Dispatch the Bus
-        });
-
-        // Remove modal from the DOM after it is hidden
-        modalElement.addEventListener('hidden.bs.modal', () => {
-            modalElement.remove();
-        });
+function showConfirmationModal(busID) {
+    // Remove any existing modal to prevent duplicates
+    const existingModal = document.getElementById("confirmationModal");
+    if (existingModal) {
+        existingModal.remove();
     }
 
-    async function dispatchBus(busID) {
-        try {
-            // Fetch the current dispatch data
-            const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
-
-            if (!dispatchResponse.ok) {
-                throw new Error(`Server responded with ${dispatchResponse.status}`);
-            }
-
-            const dispatchData = await dispatchResponse.json();
-
-            // Schedule the next dispatch (e.g., 1 hour later)
-            const nextDispatchTime = new Date();
-            nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
-
-            // Prepare updated data
-            const updatedData = {
-                status: 1,
-                lastDispatch: dispatchData.nextDispatch,
-                nextDispatch: nextDispatchTime.toISOString(),
-            };
-
-            // Send the update request
-            const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedData),
-            });
-
-            if (!updateResponse.ok) {
-                throw new Error(`Update failed with status ${updateResponse.status}`);
-            }
-
-            console.log(`Bus ${busID} dispatched successfully.`);
-
-            // Check if dispatch notification is enabled
-            const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
-            const settings = await settingsResponse.json();
-
-            if (settings.dispatch_notif) {
-                // Get the current local time without modifying timezone offsets
-                const localDispatchTime = new Date();
-            
-                // Format the local time properly
-                const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "numeric",
-                    hour12: true
-                });
-            
-                // Send email notification
-                const templateParams = {
-                    to_email: loggedEmail,
-                    subject: `Bus ${busID} Dispatched`,
-                    message: `Bus ${busID} has been dispatched at ${formattedTime}.`
-                };
-            
-                emailjs.send(service_id, template_id, templateParams)
-                    .then(() => console.log(`Email notification sent for Bus ${busID}.`))
-                    .catch((error) => console.error("Email send failed", error));
-            }
-            
-
-            await loadDispatchData();
-        } catch (error) {
-            console.error(`Error updating dispatch for bus ${busID}:`, error);
-        }
-    }
-
-    function showAlert(message, type) {
-        let alertContainer = document.getElementById('alertContainer');
-    
-        // Create alert container if it doesn't exist
-        if (!alertContainer) {
-            alertContainer = document.createElement('div');
-            alertContainer.id = 'alertContainer';
-            document.body.prepend(alertContainer); // Add it at the top of the body
-        }
-    
-        const alertHtml = `
-            <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
+    const modalHTML = `
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="color: black;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmationModalLabel">Confirm Dispatch</h5>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to dispatch Bus ${busID}?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmDispatchBtn">Confirm</button>
+                    </div>
+                </div>
             </div>
-        `;
-        alertContainer.innerHTML = alertHtml;
-    
-        // Auto-dismiss after 3 seconds
-        setTimeout(() => {
-            alertContainer.innerHTML = '';
-        }, 3000);
-    }
-    
-  
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+// Initialize Bootstrap Modal
+const modalElement = document.getElementById("confirmationModal");
+const modal = new bootstrap.Modal(modalElement);
+modal.show();
+
+// Confirm Dispatch Button Click
+document.getElementById("confirmDispatchBtn").addEventListener("click", async () => {
+    modal.hide(); // Hide the modal
+    await dispatchBus(busID); // Dispatch the Bus
 });
 
+// Remove modal from the DOM after it is hidden
+modalElement.addEventListener("hidden.bs.modal", () => {
+    modalElement.remove();
+});
 
-// // TO DO
-// 1. Only Operative buses should be displayed in dispatch page
-// 2. Only in terminal buses should be dispatched
-// 3. Use ShowAlert for dispatch success and failure (did the function already, just need to call it)
+}
+
+async function dispatchBus(busID) {
+    try {
+        // Fetch current dispatch data
+        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+        if (!dispatchResponse.ok) {
+            throw new Error(`Server responded with ${dispatchResponse.status}`);
+        }
+
+        const dispatchData = await dispatchResponse.json();
+
+        // Fetch the latest location of the bus
+        const locationResponse = await fetch(`http://localhost:8000/api/get_locations`);
+        if (!locationResponse.ok) {
+            throw new Error(`Location API responded with ${locationResponse.status}`);
+        }
+
+        const locations = await locationResponse.json();
+
+        if (!locations[busID]) {
+            throw new Error(`Location data for bus ${busID} not found.`);
+        }
+
+        const { latitude, longitude } = locations[busID];
+
+        // Schedule the next dispatch (e.g., 1 hour later)
+        const nextDispatchTime = new Date();
+        nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
+
+        // Prepare updated data
+        const updatedData = {
+            status: 1,
+            lastDispatch: dispatchData.nextDispatch,  // Move the previous dispatch time
+            nextDispatch: nextDispatchTime.toISOString(),
+            coordinates: {
+                type: "Point",
+                coordinates: [longitude, latitude]  // MongoDB stores GeoJSON as [longitude, latitude]
+            }
+        };
+
+        // Send update request to the server
+        const updateDispatchResponse = await fetch(`http://localhost:3000/update-dispatch/${busID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData)
+        });
+
+        if (!updateDispatchResponse.ok) {
+            throw new Error(`Update failed with status ${updateDispatchResponse.status}`);
+        }
+
+        console.log(`Bus ${busID} successfully dispatched and updated.`);
+    } catch (error) {
+        console.error(`Error updating dispatch for bus ${busID}:`, error);
+    }
+}
+
+
+
+
+ // Function to Show Alert
+function showAlert(message, type) {
+    let alertContainer = document.getElementById('alertContainer'); // Use 'let' only once
+
+    // Create alert container if it doesn't exist
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'alertContainer';
+        document.body.prepend(alertContainer); // Add it at the top of the body
+    }
+
+    const alertHtml = `
+        <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+        </div>
+    `;
+
+    alertContainer.innerHTML = alertHtml;
+
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        const alertElement = alertContainer.querySelector('.alert');
+        if (alertElement) {
+            alertElement.classList.remove('show');
+            alertElement.classList.add('hide');
+            setTimeout(() => alertElement.remove(), 500);
+        }
+    }, 3000);
+}  // ❌ Removed extra `});`
