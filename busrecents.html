@@ -15,9 +15,10 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid d-flex justify-content-between align-items-center">
+            <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
             <a class="navbar-brand">Hello,<br>BusMate!</a>
             <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
-                <div class="notification-count">3</div>
+                <img id="profile-picture1" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
                 <div id="dropdown-menu" class="dropdown-content">
                     <a href="bushome.html">Home</a>
                     <a href="busrecents.html">Recents</a>
@@ -28,6 +29,37 @@
             </div>
         </div>
     </nav>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+            if (!token) {
+                window.location.href = "buslogin.html"; // Redirect if not logged in
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/busprofile", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch user profile");
+                }
+
+                const userData = await response.json();
+                const profileImg = document.getElementById("profile-picture1"); // Fixed ID match
+
+                profileImg.src = userData.profile_picture 
+                    ? `http://localhost:3000/uploads/${userData.profile_picture}`
+                    : "http://localhost:3000/uploads/default-picture.jpg"; // Default image if no profile picture
+
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        });
+    </script>
 
     <!-- Recent Section -->
     <div class="recent-title">RECENT</div>
@@ -69,19 +101,6 @@
                 <span class="time">JFK 09:00 AM</span>
                 <span class="dot end"></span>
                 <span class="time">LGA 10:05 AM</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="mobile-ui">
-        <div class="container">
-            <div class="fab">🗺️</div>
-            <div class="rating">
-                <a href="bushome.html"><span>🏠</span></a>
-                <a href="busrecents.html"><span>🕓</span></a>
-                <div style="width: 50px;"></div> 
-                <a href="buses.html"><span>🚌</span></a>
-                <a href="busprofile.html"><span>👤</span></a>
             </div>
         </div>
     </div>

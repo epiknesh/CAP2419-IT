@@ -1,8 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
+
+    //Import Css 
+    const link  = document.createElement('link');
+    link.rel='stylesheet';
+    link.href='styles/modal.css';
+    document.head.appendChild(link);
+
+    const fleetBtn = document.getElementById('fleetBtn');
+
     const fleetTab = document.querySelector('#sidebar .side-menu.top li:nth-child(4) a');
 
-    fleetTab.addEventListener('click', async function (event) {
-        event.preventDefault();
+// Ensure fleetBtn triggers fleetTab when clicked
+if (fleetBtn && fleetTab) {
+    fleetBtn.addEventListener("click", function () {
+        fleetTab.click(); // Simulates a click on the sidebar item
+        console.log("Fleet button clicked");
+    });
+} else {
+    console.error("Fleet button or sidebar tab not found");
+}
+
+// Fleet Tab Click Event Listener
+fleetTab.addEventListener("click", async function (event) {
+    event.preventDefault();
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    // Restrict access for specific roles
+    if (["2", "3", "5", "6"].includes(user.role)) {
+        showAlert("You do not have permission to access this page.", "danger");
+        return;
+    }
+
+    console.log("Fleet tab clicked. Access granted.");
+    // Proceed with loading fleet data if needed
+});
 
         const mainContent = document.querySelector('#content main');
 
@@ -52,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div class="order position-relative" id="fleetStatus">
                             <div class="head">
                                 <h3>Fleet Readiness</h3>
-                                <a href="register.html" class="btn btn-warning mb-4">
+                                    <a href="#" id="editFleetBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetStatusModal">
                                     <i class='bx bxs-edit'></i> Edit Status
                                 </a>
                             </div>
@@ -88,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div class="order position-relative" id="fleetDriver">
                             <div class="head">
                                 <h3>Fleet Personnel</h3>
-                                <a href="register.html" class="btn btn-warning mb-4">
+                                    <a href="#" id="editPersonnelBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetPersonnelModal">
                                     <i class='bx bxs-edit'></i> Edit Assignment
                                 </a>
                             </div>
@@ -104,7 +136,50 @@ document.addEventListener("DOMContentLoaded", function () {
                             </table>
                         </div>
                     </div>
+
+                    <div class="table-data">
+                        <div class="order position-relative" id="fleetFuel">
+                            <div class="head">
+                                <h3>Fuel Report</h3>
+                                    <a href="#" id="editFuelBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetFuelModal">
+                                    <i class='bx bxs-edit'></i> Edit Fuel Report
+                                </a>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Bus ID</th>
+                                        <th>Last Full Tank</th>
+                                        <th>
+                                            <div>
+                                                Current Fuel Level 
+                                            </div>
+                                            <div class="text-secondary"> 
+                                                <small>Fuel Level after the last trip</small>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>2021-09-01</td>
+                                        <td>
+                                           <div class="progress">
+                                                <div class="progress-bar bg-success" role="progressbar" id="fuelProgress" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span id="fuelPercentage1">50%</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tbody id="fleetPersonnelTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+
+                <div id="alertContainer"></div>
+
             `;
             
             initializeMap(); // Call function to initialize the map
@@ -113,8 +188,40 @@ document.addEventListener("DOMContentLoaded", function () {
         await fetchFleetCapacity();
         await fetchFleetStatus();
         await fetchFleetPersonnel();
-        updateBusLocations();  // Fetch initial bus locations
-        setInterval(updateBusLocations, 5000); // Refresh bus locations every 5 seconds
+// Fetch initial bus locations and refresh every 5 seconds
+updateBusLocations();
+setInterval(updateBusLocations, 5000);
+
+// Fetch fleet fuel data
+await fetchFleetFuel();
+
+// Add event listener for the "Edit Status" button
+const editStatusBtn = document.getElementById("editFleetBtn");
+if (editStatusBtn) {
+    editStatusBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        showFleetReadinessStatusForm();
+    });
+}
+
+// Add event listener for the "Edit Assignment" button
+const editFleetBtn = document.getElementById("editPersonnelBtn");
+if (editFleetBtn) {
+    editFleetBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        showFleetPersonnelForm();
+    });
+}
+
+// Add event listener for the "Edit Fuel Report" button
+const editFuelBtn = document.getElementById("editFuelBtn");
+if (editFuelBtn) {
+    editFuelBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        showFuelReportForm();
+    });
+}
+
     });
 });
 
@@ -152,6 +259,9 @@ async function updateBusLocations() {
 }
 
 // Function to fetch fleet capacity
+// Store buses that have already triggered the email notification to prevent duplicate sends
+const notifiedBuses = new Set();
+
 async function fetchFleetCapacity() {
     try {
         const response = await fetch('http://localhost:3000/capacity');
@@ -169,9 +279,18 @@ async function fetchFleetCapacity() {
         const tableBody = document.querySelector("#fleetCapacity tbody");
         tableBody.innerHTML = "";
 
-        Object.values(latestCapacities).forEach(entry => {
+        for (const entry of Object.values(latestCapacities)) {
             const percentage = (entry.capacity / maxCapacity) * 100;
-            const formattedDate = new Date(entry.date).toLocaleDateString();
+            const formattedDate = new Date(entry.date).toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                hour12: true
+            });
+
+            // Append capacity data to table
             tableBody.innerHTML += `
                 <tr>
                     <td>${entry.busID}</td>
@@ -179,18 +298,68 @@ async function fetchFleetCapacity() {
                     <td>${percentage.toFixed(2)}%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: ${percentage}%"
-                                aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar ${percentage >= 100 ? 'bg-danger' : 'bg-success'}" 
+                                role="progressbar" 
+                                style="width: ${percentage}%"
+                                aria-valuenow="${percentage}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
                         </div>
                     </td>
                 </tr>
             `;
-        });
 
+            // Send email notification if capacity reaches 100%
+            if (percentage >= 100 && !notifiedBuses.has(entry.busID)) {
+                await sendCapacityEmail(entry.busID, formattedDate);
+                notifiedBuses.add(entry.busID); // Mark as notified
+            }
+        }
     } catch (error) {
         console.error("Error fetching fleet capacity data:", error);
     }
 }
+
+    // Retrieve user info from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    const loggedEmail = user.email;
+    const accountID = user.accountid;
+    const service_id = "service_sgqumch";
+    const template_id = "template_2rljx4t";
+
+    // Initialize EmailJS
+    window.addEventListener('load', function () {
+        if (!window.emailjs) {
+            console.error("EmailJS SDK did not load. Check your network or script URL.");
+            return;
+        }
+        emailjs.init("-d3fui43Avx0AbMV5"); // Replace with your EmailJS user ID
+    });
+
+
+async function sendCapacityEmail(busID, formattedDate) {
+    try {
+        // Fetch user's notification settings
+        const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
+        const settings = await settingsResponse.json();
+
+        // Only send email if capacity notifications are enabled
+        if (settings.capacity_notif) {
+            const templateParams = {
+                to_email: loggedEmail,
+                subject: `Bus ${busID} Reached Full Capacity`,
+                message: `Bus ${busID} has reached full capacity at ${formattedDate}.`
+            };
+
+            await emailjs.send(service_id, template_id, templateParams);
+            console.log(`Email notification sent for Bus ${busID} full capacity.`);
+        }
+    } catch (error) {
+        console.error("Error sending capacity email:", error);
+    }
+}
+
 
 // Function to fetch fleet status and maintenance
 async function fetchFleetStatus() {
@@ -255,3 +424,446 @@ async function fetchFleetPersonnel() {
         console.error("Error loading fleet personnel:", error);
     }
 }
+
+// Function to show the Fleet Readiness form || Edit Status Button
+function showFleetReadinessStatusForm() {
+    fetch('http://localhost:3000/maintenance')
+    .then(response => response.json())
+    .then(buses => {
+        buses.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
+        const busOptions = buses.map(bus => `<option value="${bus.busID}">${bus.busID}</option>`).join('');
+        
+        const formHtml = `
+            <div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editStatusModalLabel">Edit Fleet Readiness</h5>
+                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="fleetReadinessForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busId" class="form-label">Bus ID:</label>
+                                        <select class="form-select" id="busId" name="busId" required>
+                                            <option value="">Select Bus</option>
+                                            ${busOptions}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busStatus" class="form-label">Status:</label>
+                                        <select class="form-select" id="busStatus" name="busStatus" required>
+                                            <option value="">Select Status</option>
+                                            <option value="1">Operating</option>
+                                            <option value="2">Under Maintenance</option>
+                                            <option value="3">Pending</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div id="additionalFields" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="issue" class="form-label">Issue:</label>
+                                        <textarea class="form-control" id="issue" name="issue" rows="2" placeholder="Describe the vehicle's current issue" style="resize: none;"></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="scheduleMaintenance" class="form-label">Schedule Maintenance:</label>
+                                            <input type="date" class="form-control" id="scheduleMaintenance" name="scheduleMaintenance">
+                                        </div>
+                                        <div class="col-md-6 mb-3" id="assignedMaintaineeContainer">
+                                            <label for="assignedMaintainee" class="form-label">Assigned Maintenance:</label>
+                                            <input type="text" class="form-control" id="assignedMaintainee" name="assignedMaintainee" placeholder="Enter assigned technician">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vehicleCondition" class="form-label">Vehicle Condition:</label>
+                                        <select class="form-select" id="vehicleCondition" name="vehicleCondition" required>
+                                            <option value="">Select Condition</option>
+                                            <option value="3">Major</option>
+                                            <option value="2">Moderate</option>
+                                            <option value="1">Minor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="submitStatus">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+        
+        const busStatus = document.getElementById('busStatus');
+        const additionalFields = document.getElementById('additionalFields');
+        
+        busStatus.addEventListener('change', function () {
+            if (busStatus.value === "2") {
+                additionalFields.style.display = 'block';
+            } else {
+                additionalFields.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('submitStatus').addEventListener('click', async function () {
+            const busId = document.getElementById('busId').value;
+            const busStatus = document.getElementById('busStatus').value;
+            const issue = document.getElementById('issue').value;
+            const vehicleCondition = document.getElementById('vehicleCondition').value;
+            const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
+            const assignedMaintainee = document.getElementById('assignedMaintainee').value;
+
+            if (!busId || !busStatus) {
+                showAlert('Please fill in all required fields.', 'warning');
+                return;
+            }
+            
+            const updateData = {
+                status: parseInt(busStatus),
+                issue: issue || '',
+                vehicle_condition: parseInt(vehicleCondition) || null,
+                schedule: scheduleMaintenance || null,
+                assignedStaff: assignedMaintainee || null
+            };
+
+            try {
+                const response = await fetch(`http://localhost:3000/maintenance/${busId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    
+                    const editStatusModal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
+                    editStatusModal.hide(); // Hide the modal
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click(); // Refresh the tab content
+                    
+                } else {
+                    showAlert('Error updating status.', 'danger');
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert('Server error.', 'danger');
+            }
+        });
+        
+        const modalElement = document.getElementById('editStatusModal');
+        const editStatusModal = new bootstrap.Modal(modalElement);
+        editStatusModal.show();
+        
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+    });
+}
+
+// TO DO : SHOW ONLY BUSES THAT ARE OPERATIVE
+// Function to show the Fleet Personnel form || Edit Assignment Button
+function showFleetPersonnelForm() {
+    Promise.all([
+        fetch('http://localhost:3000/buses').then(res => res.json()),
+        fetch('http://localhost:3000/accounts').then(res => res.json())
+    ])
+    .then(([buses, accounts]) => {
+        const busOptions = buses
+            .sort((a, b) => a.busID - b.busID) // Ensure sorting in frontend
+            .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
+            .join('');
+        const driverOptions = `<option value="">Unassigned</option>` + 
+            accounts.filter(acc => acc.role == '2')
+                   .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
+                   .join('');
+        const controllerOptions = `<option value="">Unassigned</option>` + 
+            accounts.filter(acc => acc.role == '3')
+                   .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
+                   .join('');
+
+        const formHtml = `
+        <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
+                        <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="fleetPersonnelForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="busId" class="form-label">Bus ID:</label>
+                                    <select class="form-select" id="busId" name="busId" required>
+                                        <option value="" selected disabled>Select Bus</option>
+                                        ${busOptions}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="busDriver" class="form-label">Driver:</label>
+                                    <select class="form-select" id="busDriver" name="busDriver" required>
+                                        ${driverOptions}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="busController" class="form-label">Controller:</label>
+                                    <select class="form-select" id="busController" name="busController" required>
+                                        ${controllerOptions}
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+
+        document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
+            const busId = document.getElementById('busId').value;
+            const busController = document.getElementById('busController').value || null;
+            const busDriver = document.getElementById('busDriver').value || null;
+
+            if (busId) {
+                fetch('http://localhost:3000/update-fleet-personnel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ busID: Number(busId), driverID: busDriver, controllerID: busController })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showAlert(data.message, 'success');
+                    const editPersonnelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
+                    editPersonnelModal.hide();
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+                })
+                .catch(error => console.error('Error updating fleet personnel:', error));
+            } else {
+                showAlert('Please fill in all fields.', 'warning');
+            }
+        });
+
+        const modalElement = document.getElementById('editFleetPersonnelModal');
+        const editStatusModal = new bootstrap.Modal(modalElement);
+        editStatusModal.show();
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+    })
+    .catch(error => console.error('Error fetching data:', error));
+}
+
+async function fetchFleetFuel() {
+    try {
+        const response = await fetch('http://localhost:3000/fuel'); // Adjust API endpoint if needed
+        const fuelData = await response.json();
+
+        const tableBody = document.querySelector("#fleetFuel tbody");
+        tableBody.innerHTML = ""; // Clear existing data
+
+        for (const fuel of fuelData) {
+            const fuelPercentage = Math.min((fuel.currentFuel / 100) * 100, 100); // Assuming 100L tank
+            const formattedDate = new Date(fuel.lastFullTank).toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                hour12: true
+            });
+
+            // Append fuel data to the table
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${fuel.busId}</td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar ${fuelPercentage <= 20 ? 'bg-danger' : 'bg-success'}" 
+                                role="progressbar" 
+                                style="width: ${fuelPercentage}%"
+                                aria-valuenow="${fuelPercentage}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                        <span>${fuelPercentage.toFixed(0)}%</span>
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error("Error fetching fleet fuel data:", error);
+    }
+}
+
+
+// Function to show the Edit Fuel Report form
+async function showFuelReportForm() {
+    try {
+        // Fetch available bus IDs from the fuel database
+        const response = await fetch('http://localhost:3000/fuel');
+        const fuelData = await response.json();
+
+        // Generate bus options dynamically
+        let busOptions = '<option value="">Select Bus</option>';
+        fuelData.forEach(bus => {
+            busOptions += `<option value="${bus.busId}">${bus.busId}</option>`;
+        });
+
+        const formHtml = `
+            <div class="modal fade" id="editFleetFuelModal" tabindex="-1" aria-labelledby="editFleetFuelModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editFleetFuelModalLabel">Edit Fleet Fuel Report</h5>
+                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="fleetFuelForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busId" class="form-label">Bus ID:</label>
+                                        <select class="form-select" id="busId" name="busId" required>
+                                            ${busOptions}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busDate" class="form-label">Last Full Tank:</label>
+                                        <input type="date" class="form-control" id="busDate" name="busDate" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busFuelLevel" class="form-label">Current Fuel Level:</label>
+                                        <input type="range" class="form-range" id="busFuelLevel" name="busFuelLevel" min="0" max="100" step="1" value="50" oninput="updateFuelLevel(this.value)">
+                                        
+                                        <!-- Progress Bar -->
+                                        <progress id="fuelProgress" value="50" max="100" class="w-100"></progress>
+                                        
+                                        <!-- Display Numeric Value -->
+                                        <span id="fuelPercentage">50%</span>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="submitStatus">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+
+        // Event listener for submitting the form
+        document.getElementById('submitStatus').addEventListener('click', async function () {
+            const busId = document.getElementById('busId').value;
+            const busDate = document.getElementById('busDate').value;
+            const busFuelLevel = document.getElementById('busFuelLevel').value;
+
+            if (!busId || !busDate || !busFuelLevel) {
+                showAlert('Please fill in all required fields.', 'warning');
+                return;
+            }
+
+            // Update the database with new values
+            try {
+                const updateResponse = await fetch(`http://localhost:3000/fuel/${busId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lastFullTank: busDate,
+                        currentFuel: busFuelLevel
+                    })
+                });
+
+                if (updateResponse.ok) {
+                    showAlert('Fuel Report Updated', 'success');
+                    const editFleetFuelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetFuelModal'));
+                    editFleetFuelModal.hide();
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+                } else {
+                    showAlert('Failed to update fuel report.', 'danger');
+                }
+            } catch (error) {
+                console.error('Error updating fuel data:', error);
+                showAlert('Server error. Try again later.', 'danger');
+            }
+        });
+
+        // Initialize and show modal
+        const modalElement = document.getElementById('editFleetFuelModal');
+        const editFleetFuelModal = new bootstrap.Modal(modalElement);
+        editFleetFuelModal.show();
+
+        // Cleanup modal on close
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+
+    } catch (error) {
+        console.error('Error fetching bus IDs:', error);
+    }
+}
+
+// Function to update fuel progress bar in real time
+function updateFuelLevel(value) {
+    const fuelProgress = document.getElementById("fuelProgress");
+    const fuelPercentage = document.getElementById("fuelPercentage");
+
+    fuelProgress.value = value; // Update progress bar value
+    fuelPercentage.textContent = `${value}%`; // Update displayed percentage
+}
+
+
+
+// Function to Show Alert
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertHtml = `
+      <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+      </div>
+    `;
+    alertContainer.innerHTML = alertHtml;
+  
+    // Auto-dismiss the alert after 3 seconds
+    setTimeout(() => {
+      const alertElement = alertContainer.querySelector('.alert');
+      if (alertElement) {
+        alertElement.classList.remove('show');
+        alertElement.classList.add('hide');
+        setTimeout(() => alertElement.remove(), 500);
+      }
+    }, 5000);
+  }
+  
+
+

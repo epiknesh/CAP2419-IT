@@ -74,6 +74,19 @@ body {
     z-index: 1000;
 }
 
+.profile-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile-img {
+    width: 40px; /* Mini size */
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
 /* Dropdown links */
 .dropdown-content a {
     display: block;
@@ -374,66 +387,6 @@ a {
 
     .option-text {
         font-size: 18px;
-    }
-
-    .dropdown-content a:not(:last-child) {
-        display: none;
-    }
-
-    .notification-tab:hover .dropdown-content {
-        display: block;
-    }
-
-    .mobile-ui {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: transparent; 
-        width: 100%;
-        margin-top: auto;
-        padding: 10px 0;
-    }
-
-    .mobile-ui .container {
-        position: relative;
-        width: 100%;
-        max-width: 100%;
-        top: 30px; 
-        background: white;
-        padding: 10px 0 10px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-inline: 20px;
-    }
-
-    .mobile-ui .fab { 
-        position: absolute;
-        top: -50px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100px;  
-        height: 100px; 
-        background-color: #00A8A8;
-        border-radius: 50%;
-        display: flex; 
-        justify-content: center;
-        align-items: center;
-        font-size: 50px; 
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .mobile-ui .rating {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    .mobile-ui .rating span {
-        font-size: 50px;
-        color: gold;
-        margin-right: 10px;
-        margin-left: 10px;
     }
 
     .footer {

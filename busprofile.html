@@ -14,10 +14,11 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand">Hello,<br>BusMate!</a>
-            <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
-                <div class="notification-count">3</div>
+        <div class="container-fluid d-flex align-items-center">
+            <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
+            <a class="navbar-brand ms-2">Hello,<br>BusMate!</a>
+            <div class="notification-tab ms-auto" onmouseover="showDropdown()" onmouseout="hideDropdown()">
+                <img id="profile-picture1" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
                 <div id="dropdown-menu" class="dropdown-content">
                     <a href="bushome.html">Home</a>
                     <a href="busrecents.html">Recents</a>
@@ -27,14 +28,45 @@
                 </div>
             </div>
         </div>
-    </nav>
+    </nav>  
 
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+            if (!token) {
+                window.location.href = "buslogin.html"; // Redirect if not logged in
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/busprofile", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch user profile");
+                }
+
+                const userData = await response.json();
+                const profileImg = document.getElementById("profile-picture1"); // Fixed ID match
+
+                profileImg.src = userData.profile_picture 
+                    ? `http://localhost:3000/uploads/${userData.profile_picture}`
+                    : "http://localhost:3000/uploads/default-picture.jpg"; // Default image if no profile picture
+
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        });
+    </script>
+    
     <div class="sub-header">Profile</div>
 
         <div class="profile-picture">
-            <img src="https://via.placeholder.com/100" alt="Profile Picture">
+            <img id="profile-pic" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile Picture">
             <div class="camera-icon">📷</div>
-        </div>
+        </div>    
 
         <div id="fullname" class="fullname"></div>
         <div id="username" class="username"></div>
@@ -191,19 +223,6 @@
             }
         </script>
 
-    <div class="mobile-ui">
-        <div class="container">
-            <div class="fab">🗺️</div>
-            <div class="rating">
-                <a href="bushome.html"><span>🏠</span></a>
-                <a href="busrecents.html"><span>🕓</span></a>
-                <div style="width: 50px;"></div> 
-                <a href="buses.html"><span>🚌</span></a>
-                <a href="busprofile.html"><span>👤</span></a>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <div class="footer">&copy; 2025 BusMate. All Rights Reserved.</div>
 
@@ -223,25 +242,30 @@
             });
         });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const token = localStorage.getItem("token"); // Get token from localStorage
-
+        document.addEventListener("DOMContentLoaded", async () => {
+            const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
             if (!token) {
-                alert("You are not logged in. Redirecting to login page..."); // Show alert
-                // Redirect to login page if token is missing
-                window.location.href = "buslogin.html";
+                window.location.href = "buslogin.html"; // Redirect if not logged in
+                return;
             }
-        });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const user = JSON.parse(localStorage.getItem('user')); // Retrieve user data
+            try {
+                const response = await fetch("http://localhost:3000/busprofile", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
 
-            if (user) {
-                document.querySelector('.fullname').innerText = `${user.firstName} ${user.lastName}`;
-                document.querySelector('.username').innerText = `@${user.username}`;
-            } else {
-                console.error("User data not found. Redirecting to login...");
-                window.location.href = "buslogin.html"; // Redirect if no user data
+                if (!response.ok) {
+                    throw new Error("Failed to fetch user profile");
+                }
+
+                const userData = await response.json();
+                document.getElementById("profile-pic").src = userData.profile_picture 
+                    ? `http://localhost:3000/uploads/${userData.profile_picture}`
+                    : "http://localhost:3000/uploads/default-picture.jpg"; // Default image if no profile picture
+
+            } catch (error) {
+                console.error("Error fetching profile:", error);
             }
         });
     </script>

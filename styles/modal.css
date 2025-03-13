@@ -1,0 +1,40 @@
+.btn-secondary{
+  background-color:#fff;
+  border-color: red;
+  color: red;
+}
+
+.btn-secondary:hover{
+  background-color: rgb(226, 69, 69);
+  color: #fff;
+}
+
+.modal-header{
+  background-color: #066e06;
+  color: #F4F6F7;
+}
+
+#alertContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1055;
+  max-width: 500px;
+}
+
+.custom-alert {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
