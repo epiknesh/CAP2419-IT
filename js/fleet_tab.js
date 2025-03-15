@@ -10,28 +10,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const fleetTab = document.querySelector('#sidebar .side-menu.top li:nth-child(4) a');
 
-    if (fleetBtn && fleetTab) {
-        fleetBtn.addEventListener("click", function () {
-            fleetTab.click(); // Simulates a click on the sidebar item
-            console.log("Fleet button clicked");
-        });
-    } else {
-        console.error("Fleet button or sidebar tab not found");
-    }
-    
-    fleetTab.addEventListener('click', async function (event) {
-        event.preventDefault();
+// Ensure fleetBtn triggers fleetTab when clicked
+if (fleetBtn && fleetTab) {
+    fleetBtn.addEventListener("click", function () {
+        fleetTab.click(); // Simulates a click on the sidebar item
+        console.log("Fleet button clicked");
+    });
+} else {
+    console.error("Fleet button or sidebar tab not found");
+}
 
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (["2", "3", "5", "6"].includes(user.role)) {
-            showAlert('You do not have permission to access this page.', 'danger');
-            return;
-        }
-        
-        
+// Fleet Tab Click Event Listener
+fleetTab.addEventListener("click", async function (event) {
+    event.preventDefault();
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    // Restrict access for specific roles
+    if (["2", "3", "5", "6"].includes(user.role)) {
+        showAlert("You do not have permission to access this page.", "danger");
+        return;
+    }
+
+    console.log("Fleet tab clicked. Access granted.");
+    // Proceed with loading fleet data if needed
+
+
         const mainContent = document.querySelector('#content main');
-        
-        // Load content only if it hasn't been loaded yet
+
         if (!document.querySelector("#fleetContainer")) {
             mainContent.innerHTML = `
                 <div id="fleetContainer">
@@ -45,13 +51,13 @@ document.addEventListener("DOMContentLoaded", function () {
                             </ul>
                         </div>
                     </div>
-                    
+
                     <div class="table-data">
                         <div class="order" id="fleetMap">
                             <div class="head">
                                 <h3>Fleet Map</h3>
                             </div>
-                            <h1>INSERT A MAP WITH LOCATION OF ALL JST KIDLAT BUSES</h1>
+                            <div id="map" style="height: 400px;"></div>
                         </div>
                     </div>
 
@@ -175,36 +181,83 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div id="alertContainer"></div>
 
             `;
+            
+            initializeMap(); // Call function to initialize the map
         }
 
-        // Fetch the latest data each time the Fleet tab is visited
         await fetchFleetCapacity();
         await fetchFleetStatus();
         await fetchFleetPersonnel();
-        await fetchFleetFuel();
+// Fetch initial bus locations and refresh every 5 seconds
+updateBusLocations();
+setInterval(updateBusLocations, 5000);
 
-        // Add event listener for the "Edit Status" button
-        const editStatusBtn = document.getElementById('editFleetBtn');
-        editStatusBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            showFleetReadinessStatusForm();
-          });
+// Fetch fleet fuel data
+await fetchFleetFuel();
 
-        // Add event listener for the "Edit Assignment" button
-        const editFleetBtn = document.getElementById('editPersonnelBtn');
-        editFleetBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            showFleetPersonnelForm();
-        });
+// Add event listener for the "Edit Status" button
+const editStatusBtn = document.getElementById("editFleetBtn");
+if (editStatusBtn) {
+    editStatusBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        showFleetReadinessStatusForm();
+    });
+}
 
-        // Add event listener for the "Edit Fuel Report" button
-        const editFuelBtn = document.getElementById('editFuelBtn');
-        editFuelBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            showFuelReportForm();
-        });
+// Add event listener for the "Edit Assignment" button
+const editFleetBtn = document.getElementById("editPersonnelBtn");
+if (editFleetBtn) {
+    editFleetBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        showFleetPersonnelForm();
+    });
+}
+
+// Add event listener for the "Edit Fuel Report" button
+const editFuelBtn = document.getElementById("editFuelBtn");
+if (editFuelBtn) {
+    editFuelBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        showFuelReportForm();
+    });
+}
+
     });
 });
+
+
+let map;
+let busMarkers = {};  // Store bus markers for live updates
+
+// Initialize OpenStreetMap
+function initializeMap() {
+    map = L.map("map").setView([14.5995, 120.9842], 13); // Centered on Manila
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+}
+
+// Fetch and update bus locations dynamically
+async function updateBusLocations() {
+    try {
+        const response = await fetch("http://localhost:8000/api/get_locations");  // Update API URL if needed
+        const data = await response.json();
+
+        Object.keys(data).forEach(bus_id => {
+            const { latitude, longitude } = data[bus_id];
+
+            if (busMarkers[bus_id]) {
+                busMarkers[bus_id].setLatLng([latitude, longitude]);  // Update marker position
+            } else {
+                busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup(`🚌 <b>Bus ID:</b> ${bus_id}`);
+            }
+        });
+    } catch (error) {
+        console.error("❌ Error fetching bus data:", error);
+    }
+}
 
 // Function to fetch fleet capacity
 // Store buses that have already triggered the email notification to prevent duplicate sends

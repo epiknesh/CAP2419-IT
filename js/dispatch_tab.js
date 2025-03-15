@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+
     function showFleetPersonnelForm() {
         Promise.all([
             fetch('http://localhost:3000/buses').then(res => res.json()),
@@ -433,8 +434,6 @@ async function dispatchBus(busID) {
         console.error(`Error updating dispatch for bus ${busID}:`, error);
     }
 }
-
-
 
 
  // Function to Show Alert

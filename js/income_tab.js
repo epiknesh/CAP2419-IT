@@ -19,6 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   
   incomeTab.addEventListener('click', function (event) {
+    const startCoords = [121.0253809, 14.5504493]; // [Longitude, Latitude]
+const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
+    calculateETA(startCoords, endCoords);
     event.preventDefault();
     const mainContent = document.querySelector('#content main');
 
@@ -256,3 +259,49 @@ function showAlert(message, type) {
 // // TO DO
 // 1. Only display Operating buses in the Daily Income table and form
 // 2. Reset the "income today" field when date changes
+
+const apiKey = "5b3ce3597851110001cf6248ef6021b6165e4d53935261fad6ed7e96"; // Your ORS API key
+const startCoords = [121.0253809, 14.5504493]; // [Longitude, Latitude]
+const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
+const profile = "driving-car"; // Options: 'driving-car', 'cycling-regular', 'foot-walking'
+
+async function calculateETA(startCoords, endCoords) {
+  const url = `https://api.openrouteservice.org/v2/directions/${profile}`;
+
+  console.log(`Fetching ETA from ORS: ${url}`);
+
+  try {
+      const response = await fetch(url, {
+          method: "POST", // ORS requires a POST request
+          headers: {
+              "Content-Type": "application/json",
+              "Authorization": apiKey // ORS requires API key in headers
+          },
+          body: JSON.stringify({
+              coordinates: [startCoords, endCoords], // Proper format
+              format: "json"
+          })
+      });
+
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0) {
+          const etaSeconds = data.routes[0].summary.duration; // Get duration in seconds
+          const etaMinutes = Math.round(etaSeconds / 60); // Convert to minutes
+          console.log(`Estimated Travel Time: ${etaMinutes} minutes`);
+          return etaMinutes;
+      } else {
+          console.error("No route found. Response:", data);
+          return null;
+      }
+  } catch (error) {
+      console.error("Error fetching ETA:", error);
+      return null;
+  }
+}
+
+
+
+
+// Call function with start and end coordinates
+

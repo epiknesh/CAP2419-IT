@@ -117,7 +117,8 @@ app.post('/login', async (req, res) => {
                 lastName: user.lastName, 
                 birthdate: user.birthdate, 
                 mobile: user.mobile, 
-                role: user.role 
+                role: user.role,
+                pic: user.profilePicture
             } 
         });
 
@@ -191,26 +192,30 @@ app.get('/dispatch', async (req, res) => {
 
 app.put('/dispatch/:busID', async (req, res) => {
     try {
-        const busID = Number(req.params.busID); // Convert busID to a number
-        const dispatch = await Dispatch.findOne({ busID });
+        const { status, lastDispatch, nextDispatch, coordinates } = req.body;
 
-        if (!dispatch) {
-            return res.status(404).json({ message: 'Bus not found in dispatch records' });
+        console.log(`🛠️ Updating Dispatch for Bus ID ${req.params.busID}`);
+
+        const updatedDispatch = await Dispatch.findOneAndUpdate(
+            { busID: req.params.busID }, // Find by busID
+            { $set: { status, lastDispatch, nextDispatch, coordinates } },
+            { new: true }
+        );
+
+        if (!updatedDispatch) {
+            console.error("❌ Dispatch record not found");
+            return res.status(404).json({ message: "Dispatch record not found" });
         }
 
-        // Update values as per your logic
-        dispatch.status = 1; // Change status from 2 to 1
-        dispatch.lastDispatch = dispatch.nextDispatch; // Set lastDispatch to previous nextDispatch
-        dispatch.nextDispatch = new Date().toISOString(); // Set nextDispatch to current time
+        console.log("✅ Successfully updated dispatch:", updatedDispatch);
+        res.status(200).json({ message: "Dispatch updated successfully", dispatch: updatedDispatch });
 
-        await dispatch.save(); // Save updated dispatch data
-
-        res.status(200).json({ message: 'Dispatch updated successfully', dispatch });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error("❌ Error updating dispatch:", error);
+        res.status(500).json({ message: "Server error" });
     }
 });
+
 
 app.get('/dispatch/:busID', async (req, res) => {
     try {
@@ -542,14 +547,20 @@ wss.on('connection', (ws) => {
     console.log('New client connected');
 
     ws.on('message', (message) => {
-        console.log(`Received: ${message}`);
-        
-        // Broadcast message to all clients
-        clients.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
+        try {
+            const messageData = JSON.parse(message); // Ensure it's valid JSON
+            console.log(`Received message from ${messageData.sender}: ${messageData.message}`);
+
+            // Broadcast message to all other clients
+            clients.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(messageData)); // Send structured JSON
+                }
+            });
+
+        } catch (error) {
+            console.error("Invalid JSON received:", message);
+        }
     });
 
     ws.on('close', () => {
@@ -559,6 +570,7 @@ wss.on('connection', (ws) => {
 });
 
 console.log('WebSocket server running on ws://localhost:8080');
+
 
 
 

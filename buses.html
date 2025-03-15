@@ -15,9 +15,10 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand">Hello,<br>BusMate!</a>
-            <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
+        <div class="container-fluid d-flex align-items-center">
+            <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
+            <a class="navbar-brand ms-2">Hello,<br>BusMate!</a>
+            <div class="notification-tab ms-auto" onmouseover="showDropdown()" onmouseout="hideDropdown()">
                 <img id="profile-picture1" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
                 <div id="dropdown-menu" class="dropdown-content">
                     <a href="bushome.html">Home</a>
@@ -28,7 +29,7 @@
                 </div>
             </div>
         </div>
-    </nav>
+    </nav>  
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
@@ -72,7 +73,7 @@
             <div class="bus-card">
                 <div class="header-row">
                     <div class="bus-number">BUS # 1</div>
-                    <div class="latest-loc">LATEST LOC</div>
+                    <div class="latest-loc" id="latest-loc">Fetching location...</div>
                 </div>
                 <div id="map1" style="height: 200px;"></div>
             </div>
@@ -80,7 +81,7 @@
             <div class="bus-card">
                 <div class="header-row">
                     <div class="bus-number">BUS # 2</div>
-                    <div class="latest-loc">LATEST LOC</div>
+                    <div class="latest-loc" id="latest-loc-101">Fetching location...</div>
                 </div>
                 <div id="map2" style="height: 200px;"></div>
             </div>
@@ -146,10 +147,59 @@
         }
 
         // Initialize Leaflet Maps
-        var map1 = L.map('map1').setView([51.505, -0.09], 13); // Dummy coordinates
+        var map1 = L.map('map1').setView([14.5995, 120.9842], 13);
+        var map2 = L.map('map2').setView([14.5995, 120.9842], 13);
+        
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map1);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map2);
+
+        var busMarker1, busMarker101;
+
+        function updateBusLocation() {
+            fetch("http://localhost:8000/api/get_locations")
+                .then(response => response.json())
+                .then(data => {
+                    if (data["bus1"]) {
+                        updateMap(map1, "bus1", data["bus1"], "latest-loc", busMarker1);
+                    }
+                    if (data["Bus101"]) {
+                        updateMap(map2, "Bus101", data["Bus101"], "latest-loc-101", busMarker101);
+                    }
+                })
+                .catch(error => console.error("❌ Error fetching bus data:", error));
+        }
+
+        function updateMap(map, busId, busData, locElementId, marker) {
+            const { latitude, longitude } = busData;
+            if (marker) {
+                marker.setLatLng([latitude, longitude]);
+            } else {
+                marker = L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup(`🚌 ${busId}`);
+            }
+            map.setView([latitude, longitude], 13);
+
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                .then(response => response.json())
+                .then(locationData => {
+                    let locationName = "Unknown Location";
+                    if (locationData.address) {
+                        const { road, suburb, city, state, country } = locationData.address;
+                        locationName = [road, suburb, city, state, country].filter(Boolean).join(", ");
+                    }
+                    document.getElementById(locElementId).textContent = locationName;
+                })
+                .catch(error => {
+                    console.error("❌ Error fetching location name:", error);
+                    document.getElementById(locElementId).textContent = "Location unavailable";
+                });
+        }
+
+        setInterval(updateBusLocation, 5000);
 
         var map2 = L.map('map2').setView([51.505, -0.09], 13); // Dummy coordinates
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -169,15 +219,15 @@
             });
         });
         
-        document.addEventListener("DOMContentLoaded", function () {
-            const token = localStorage.getItem("token"); // Get token from localStorage
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     const token = localStorage.getItem("token"); // Get token from localStorage
 
-            if (!token) {
-                alert("You are not logged in. Redirecting to login page..."); // Show alert
-                // Redirect to login page if token is missing
-                window.location.href = "buslogin.html";
-            }
-        });
+        //     if (!token) {
+        //         alert("You are not logged in. Redirecting to login page..."); // Show alert
+        //         // Redirect to login page if token is missing
+        //         window.location.href = "buslogin.html";
+        //     }
+        // });
     </script>
 </body>
 
