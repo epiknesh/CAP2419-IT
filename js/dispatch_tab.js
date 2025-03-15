@@ -73,6 +73,31 @@ document.addEventListener('DOMContentLoaded', async function () {
             const dispatchResponse = await fetch('http://localhost:3000/dispatch');
             const dispatchData = await dispatchResponse.json();
 
+            // Fetch bus data to get plate numbers
+        const busesResponse = await fetch('http://localhost:3000/buses');
+        const busesData = await busesResponse.json();
+
+        // Create a mapping: { busID: plateNumber }
+        const busMap = {};
+        busesData.forEach(bus => {
+            busMap[bus.busID] = bus.plateNumber;
+        });
+
+        // Fetch fleet personnel data
+        const personnelResponse = await fetch('http://localhost:3000/fleetPersonnel');
+        const fleetPersonnelData = await personnelResponse.json();
+
+        // Create a mapping: { busID: {controller, driver} }
+        const personnelMap = {};
+        fleetPersonnelData.forEach(personnel => {
+            personnelMap[personnel.busID] = {
+                controller: personnel.controller || 'N/A',
+                driver: personnel.driver || 'N/A'
+            };
+        });
+
+
+
             // Filter dispatch records for operative buses
             const operativeDispatches = dispatchData.filter(dispatch => operativeBuses.includes(dispatch.busID));
 
@@ -106,13 +131,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                         dispatchContent += `<div class="table-data">`; // Open new "table-data" div
                     }
 
+                    const plateNumber = busMap[dispatch.busID] || 'Unknown';
+
                     dispatchContent += `
                         <div class="order position-relative">
                             <div class="head">
-                                <div class="bus-info">
-                                    <h3>Bus ${dispatch.busID}</h3>
-                                    <h6 class=plate_number>NBC 1234</h5>     
-                                </div>
+                                 <div class="bus-info">
+                                <h3>Bus ${dispatch.busID}</h3>
+                                <h6 class="plate_number">${plateNumber}</h6>     
+                            </div>
                                 
                                 <button class="btn btn-primary mt-3 m-2 dispatch-btn" data-busid="${dispatch.busID}">Dispatch</button>
                             </div>
@@ -137,38 +164,42 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </div>
                     `;
                 });
-                dispatchContent += `</div> 
-                
-                <div class="table-data">
-                        <div class="order position-relative" id="fleetDriver">
-                            <div class="head">
-                                <h3>Fleet Personnel</h3>
-                                    <a href="#" id="editPersonnelBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetPersonnelModal">
-                                    <i class='bx bxs-edit'></i> Edit Assignment
-                                </a>
-                            </div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Bus ID</th>
-                                        <th>Controller</th>
-                                        <th>Driver</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fleetPersonnelTable">
-                                    <tr>
-                                        <td>1</td>
-                                        <td>John Doe</td>
-                                        <td>Jane Doe</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                <div id="alertContainer"></div>
-                `; 
+                dispatchContent += `</div>`;
             }
+    
+            // Fleet Personnel Table
+            dispatchContent += `
+                <div class="table-data">
+                    <div class="order position-relative" id="fleetDriver">
+                        <div class="head">
+                            <h3>Fleet Personnel</h3>
+                            <a href="#" id="editPersonnelBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetPersonnelModal">
+                                <i class='bx bxs-edit'></i> Edit Assignment
+                            </a>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Bus ID</th>
+                                    <th>Controller</th>
+                                    <th>Driver</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fleetPersonnelTable">
+                            ${Object.keys(personnelMap).map(busID => `
+                                <tr>
+                                    <td>${busID}</td>
+                                    <td>${personnelMap[busID].controller}</td>
+                                    <td>${personnelMap[busID].driver}</td>
+                                </tr>
+                            `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="alertContainer"></div>
+            `;
+            
 
             document.querySelector('#content main').innerHTML = dispatchContent;
 
@@ -194,74 +225,110 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-function showFleetPersonnelForm() {
-    const formHTML =`
-    <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
-                    <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="fleetPersonnelForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="busId" class="form-label">Bus ID:</label>
-                                <select class="form-select" id="busId" name="busId" required>
-                                    <option value="" selected disabled>Select Bus</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                </select>
-                            </div>
+    function showFleetPersonnelForm() {
+        Promise.all([
+            fetch('http://localhost:3000/buses').then(res => res.json()),
+            fetch('http://localhost:3000/accounts').then(res => res.json())
+        ])
+        .then(([buses, accounts]) => {
+            const busOptions = buses
+                .sort((a, b) => a.busID - b.busID) // Ensure sorting in frontend
+                .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
+                .join('');
+            const driverOptions = `<option value="">Unassigned</option>` + 
+                accounts.filter(acc => acc.role == '2')
+                       .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
+                       .join('');
+            const controllerOptions = `<option value="">Unassigned</option>` + 
+                accounts.filter(acc => acc.role == '3')
+                       .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
+                       .join('');
+    
+            const formHtml = `
+            <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
+                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="busDriver" class="form-label">Driver:</label>
-                                <select class="form-select" id="busDriver" name="busDriver" required>
-                                    <option value="" selected>Select Driver</option>
-                                    <option value="John Doe">John Doe</option>
-                                    <option value="Jane Doe">Jane Doe</option>
-                                    <option value="Alice Smith">Alice Smith</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="busController" class="form-label">Controller:</label>
-                                <select class="form-select" id="busController" name="busController" required>
-                                    <option value="" selected>Select Controller</option>
-                                    <option value="John Doe">John Doe</option>
-                                    <option value="Jane Doe">Jane Doe</option>
-                                    <option value="Alice Smith">Alice Smith</option>
-                                </select>
-                            </div>
+                        <div class="modal-body">
+                            <form id="fleetPersonnelForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busId" class="form-label">Bus ID:</label>
+                                        <select class="form-select" id="busId" name="busId" required>
+                                            <option value="" selected disabled>Select Bus</option>
+                                            ${busOptions}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busDriver" class="form-label">Driver:</label>
+                                        <select class="form-select" id="busDriver" name="busDriver" required>
+                                            ${driverOptions}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busController" class="form-label">Controller:</label>
+                                        <select class="form-select" id="busController" name="busController" required>
+                                            ${controllerOptions}
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', formHTML);
+            `;
     
-    // Initialize Bootstrap Modal
-    const modalElement = document.getElementById('editFleetPersonnelModal');
-    const FleetModal = new bootstrap.Modal(modalElement);
-    FleetModal.show();
-
-    modalElement.addEventListener('hidden.bs.modal', function () {
-        modalElement.remove();
-        document.querySelector('.modal-backdrop').remove();
-        document.body.classList.remove('modal-open');
-        document.body.style = '';
-    });
-
-}
+            document.body.insertAdjacentHTML('beforeend', formHtml);
+    
+            document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
+                const busId = document.getElementById('busId').value;
+                const busController = document.getElementById('busController').value || null;
+                const busDriver = document.getElementById('busDriver').value || null;
+    
+                if (busId) {
+                    fetch('http://localhost:3000/update-fleet-personnel', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ busID: Number(busId), driverID: busDriver, controllerID: busController })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        showAlert(data.message, 'success');
+                        const editPersonnelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
+                        editPersonnelModal.hide();
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(5) a').click();
+                    })
+                    .catch(error => console.error('Error updating fleet personnel:', error));
+                } else {
+                    showAlert('Please fill in all fields.', 'warning');
+                }
+            });
+    
+            const modalElement = document.getElementById('editFleetPersonnelModal');
+            const editStatusModal = new bootstrap.Modal(modalElement);
+            editStatusModal.show();
+    
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                modalElement.remove();
+                document.querySelector('.modal-backdrop').remove();
+                document.body.classList.remove('modal-open');
+                document.body.style = '';
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
 
 
 
