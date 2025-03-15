@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     link.href = 'css/styles.css';
     document.head.appendChild(link);
 
-     // Dynamically import CSS (Modal)
+    // Dynamically import CSS (Modal)
     const link2 = document.createElement('link');
     link2.rel = 'stylesheet';
     link2.href = 'css/modal.css';
@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             showAlert('You do not have permission to access this page.', 'danger');
             return;
         }
-        
 
         try {
             await loadDispatchData();
@@ -55,6 +54,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.querySelector('#content main').innerHTML = `<p>Error loading dispatch data.</p>`;
         }
     });
+
+     
+
+}); // ✅ This was missing
+
 
     async function loadDispatchData() {
         try {
@@ -68,6 +72,31 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Fetch dispatch data
             const dispatchResponse = await fetch('http://localhost:3000/dispatch');
             const dispatchData = await dispatchResponse.json();
+
+            // Fetch bus data to get plate numbers
+        const busesResponse = await fetch('http://localhost:3000/buses');
+        const busesData = await busesResponse.json();
+
+        // Create a mapping: { busID: plateNumber }
+        const busMap = {};
+        busesData.forEach(bus => {
+            busMap[bus.busID] = bus.plateNumber;
+        });
+
+        // Fetch fleet personnel data
+        const personnelResponse = await fetch('http://localhost:3000/fleetPersonnel');
+        const fleetPersonnelData = await personnelResponse.json();
+
+        // Create a mapping: { busID: {controller, driver} }
+        const personnelMap = {};
+        fleetPersonnelData.forEach(personnel => {
+            personnelMap[personnel.busID] = {
+                controller: personnel.controller || 'N/A',
+                driver: personnel.driver || 'N/A'
+            };
+        });
+
+
 
             // Filter dispatch records for operative buses
             const operativeDispatches = dispatchData.filter(dispatch => operativeBuses.includes(dispatch.busID));
@@ -102,10 +131,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                         dispatchContent += `<div class="table-data">`; // Open new "table-data" div
                     }
 
+                    const plateNumber = busMap[dispatch.busID] || 'Unknown';
+
                     dispatchContent += `
                         <div class="order position-relative">
                             <div class="head">
+                                 <div class="bus-info">
                                 <h3>Bus ${dispatch.busID}</h3>
+                                <h6 class="plate_number">${plateNumber}</h6>     
+                            </div>
+                                
                                 <button class="btn btn-primary mt-3 m-2 dispatch-btn" data-busid="${dispatch.busID}">Dispatch</button>
                             </div>
                             <table>
@@ -129,11 +164,42 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </div>
                     `;
                 });
-                dispatchContent += `</div> 
-                
-                <div id="alertContainer"></div>
-                `; 
+                dispatchContent += `</div>`;
             }
+    
+            // Fleet Personnel Table
+            dispatchContent += `
+                <div class="table-data">
+                    <div class="order position-relative" id="fleetDriver">
+                        <div class="head">
+                            <h3>Fleet Personnel</h3>
+                            <a href="#" id="editPersonnelBtn" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#editFleetPersonnelModal">
+                                <i class='bx bxs-edit'></i> Edit Assignment
+                            </a>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Bus ID</th>
+                                    <th>Controller</th>
+                                    <th>Driver</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fleetPersonnelTable">
+                            ${Object.keys(personnelMap).map(busID => `
+                                <tr>
+                                    <td>${busID}</td>
+                                    <td>${personnelMap[busID].controller}</td>
+                                    <td>${personnelMap[busID].driver}</td>
+                                </tr>
+                            `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="alertContainer"></div>
+            `;
+            
 
             document.querySelector('#content main').innerHTML = dispatchContent;
 
@@ -146,110 +212,126 @@ document.addEventListener('DOMContentLoaded', async function () {
                 });
             });
 
+            // Attach event listener to Edit Assignment button
+            document.getElementById('editPersonnelBtn')?.addEventListener('click', function (event) {
+                event.preventDefault();
+                showFleetPersonnelForm();
+                console.log("Edit Assignment button clicked");
+            });
+
         } catch (error) {
             console.error("Error fetching data:", error);
             document.querySelector('#content main').innerHTML = `<p>Error loading dispatch data.</p>`;
         }
     }
 
-    async function dispatchBus(busID) {
-        try {
-            // Fetch the current dispatch data
-            const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
-    
-            if (!dispatchResponse.ok) {
-                throw new Error(`Server responded with ${dispatchResponse.status}`);
-            }
-    
-            const dispatchData = await dispatchResponse.json();
-    
-            // Fetch the latest location of the bus
-            const locationResponse = await fetch(`http://localhost:8000/api/get_locations`);
-            if (!locationResponse.ok) {
-                throw new Error(`Location API responded with ${locationResponse.status}`);
-            }
-    
-            const locations = await locationResponse.json();
 
-            console.log("Received location data:", locations);
-
-            const busIDAPI = `bus${busID}`;
+    function showFleetPersonnelForm() {
+        Promise.all([
+            fetch('http://localhost:3000/buses').then(res => res.json()),
+            fetch('http://localhost:3000/accounts').then(res => res.json())
+        ])
+        .then(([buses, accounts]) => {
+            const busOptions = buses
+                .sort((a, b) => a.busID - b.busID) // Ensure sorting in frontend
+                .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
+                .join('');
+            const driverOptions = `<option value="">Unassigned</option>` + 
+                accounts.filter(acc => acc.role == '2')
+                       .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
+                       .join('');
+            const controllerOptions = `<option value="">Unassigned</option>` + 
+                accounts.filter(acc => acc.role == '3')
+                       .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
+                       .join('');
     
-            if (!locations[busIDAPI]) {
-                throw new Error(`Location data for bus${busID} not found.`);
-            }
+            const formHtml = `
+            <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
+                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="fleetPersonnelForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busId" class="form-label">Bus ID:</label>
+                                        <select class="form-select" id="busId" name="busId" required>
+                                            <option value="" selected disabled>Select Bus</option>
+                                            ${busOptions}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busDriver" class="form-label">Driver:</label>
+                                        <select class="form-select" id="busDriver" name="busDriver" required>
+                                            ${driverOptions}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="busController" class="form-label">Controller:</label>
+                                        <select class="form-select" id="busController" name="busController" required>
+                                            ${controllerOptions}
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
     
-            const { latitude, longitude } = locations[busIDAPI];
-
-            console.log("Full locations object:", locations);
-console.log("Attempting to access busID:", busID);
-console.log("Value at locations[busID]:", locations[busID]);
-console.log("latitude:", latitude);
-console.log("longitude:", longitude);
+            document.body.insertAdjacentHTML('beforeend', formHtml);
     
-            // Schedule the next dispatch (e.g., 1 hour later)
-            const nextDispatchTime = new Date();
-            nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
+            document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
+                const busId = document.getElementById('busId').value;
+                const busController = document.getElementById('busController').value || null;
+                const busDriver = document.getElementById('busDriver').value || null;
     
-            // Prepare updated data
-            const updatedData = {
-                status: 1,
-                lastDispatch: dispatchData.nextDispatch, // Move the previous dispatch time
-                nextDispatch: nextDispatchTime.toISOString(),
-                coordinates: {
-                    type: "Point",
-                    coordinates: [longitude, latitude] // MongoDB stores GeoJSON as [longitude, latitude]
+                if (busId) {
+                    fetch('http://localhost:3000/update-fleet-personnel', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ busID: Number(busId), driverID: busDriver, controllerID: busController })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        showAlert(data.message, 'success');
+                        const editPersonnelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
+                        editPersonnelModal.hide();
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(5) a').click();
+                    })
+                    .catch(error => console.error('Error updating fleet personnel:', error));
+                } else {
+                    showAlert('Please fill in all fields.', 'warning');
                 }
-            };
-    
-            // ✅ Send update request only ONCE
-            const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedData)
             });
     
-            if (!updateResponse.ok) {
-                throw new Error(`Update failed with status ${updateResponse.status}`);
-            }
+            const modalElement = document.getElementById('editFleetPersonnelModal');
+            const editStatusModal = new bootstrap.Modal(modalElement);
+            editStatusModal.show();
     
-            console.log(`Bus ${busID} dispatched successfully with updated location.`);
-    
-            // ✅ Check if dispatch notification is enabled
-            const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
-            const settings = await settingsResponse.json();
-    
-            if (settings.dispatch_notif) {
-                // Get the current local time
-                const localDispatchTime = new Date();
-                const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "numeric",
-                    hour12: true
-                });
-    
-                // ✅ Send email notification
-                const templateParams = {
-                    to_email: loggedEmail,
-                    subject: `Bus ${busID} Dispatched`,
-                    message: `Bus ${busID} has been dispatched at ${formattedTime}.`
-                };
-    
-                emailjs.send(service_id, template_id, templateParams)
-                    .then(() => console.log(`Email notification sent for Bus ${busID}.`))
-                    .catch((error) => console.error("Email send failed", error));
-            }
-    
-            // ✅ Refresh Dispatch Data
-            await loadDispatchData();
-            showAlert(`Bus ${busID} has been successfully dispatched!`, "success");
-    
-        } catch (error) {
-            console.error(`Error dispatching bus ${busID}:`, error);
-            showAlert(`Error dispatching bus ${busID}: ${error.message}`, "danger");
-        }
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                modalElement.remove();
+                document.querySelector('.modal-backdrop').remove();
+                document.body.classList.remove('modal-open');
+                document.body.style = '';
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
     }
-    
+
+
 
 function showConfirmationModal(busID) {
     // Remove any existing modal to prevent duplicates
@@ -279,32 +361,89 @@ function showConfirmationModal(busID) {
 
     document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-    // Initialize Bootstrap Modal
-    const modalElement = document.getElementById("confirmationModal");
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
+// Initialize Bootstrap Modal
+const modalElement = document.getElementById("confirmationModal");
+const modal = new bootstrap.Modal(modalElement);
+modal.show();
 
-    // Confirm Dispatch Button Click
-    document.getElementById("confirmDispatchBtn").addEventListener("click", async () => {
-        modal.hide(); // Hide the modal
-        await dispatchBus(busID); // Dispatch the Bus
-    });
+// Confirm Dispatch Button Click
+document.getElementById("confirmDispatchBtn").addEventListener("click", async () => {
+    modal.hide(); // Hide the modal
+    await dispatchBus(busID); // Dispatch the Bus
+});
 
-    // Remove modal from the DOM after it is hidden
-    modalElement.addEventListener("hidden.bs.modal", () => {
-        modalElement.remove();
-    });
+// Remove modal from the DOM after it is hidden
+modalElement.addEventListener("hidden.bs.modal", () => {
+    modalElement.remove();
+});
+
 }
 
-    
-// Function to show alerts dynamically
+async function dispatchBus(busID) {
+    try {
+        // Fetch current dispatch data
+        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+        if (!dispatchResponse.ok) {
+            throw new Error(`Server responded with ${dispatchResponse.status}`);
+        }
+
+        const dispatchData = await dispatchResponse.json();
+
+        // Fetch the latest location of the bus
+        const locationResponse = await fetch(`http://localhost:8000/api/get_locations`);
+        if (!locationResponse.ok) {
+            throw new Error(`Location API responded with ${locationResponse.status}`);
+        }
+
+        const locations = await locationResponse.json();
+
+        if (!locations[busID]) {
+            throw new Error(`Location data for bus ${busID} not found.`);
+        }
+
+        const { latitude, longitude } = locations[busID];
+
+        // Schedule the next dispatch (e.g., 1 hour later)
+        const nextDispatchTime = new Date();
+        nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
+
+        // Prepare updated data
+        const updatedData = {
+            status: 1,
+            lastDispatch: dispatchData.nextDispatch,  // Move the previous dispatch time
+            nextDispatch: nextDispatchTime.toISOString(),
+            coordinates: {
+                type: "Point",
+                coordinates: [longitude, latitude]  // MongoDB stores GeoJSON as [longitude, latitude]
+            }
+        };
+
+        // Send update request to the server
+        const updateDispatchResponse = await fetch(`http://localhost:3000/update-dispatch/${busID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData)
+        });
+
+        if (!updateDispatchResponse.ok) {
+            throw new Error(`Update failed with status ${updateDispatchResponse.status}`);
+        }
+
+        console.log(`Bus ${busID} successfully dispatched and updated.`);
+    } catch (error) {
+        console.error(`Error updating dispatch for bus ${busID}:`, error);
+    }
+}
+
+
+ // Function to Show Alert
 function showAlert(message, type) {
-    let alertContainer = document.getElementById("alertContainer");
+    let alertContainer = document.getElementById('alertContainer'); // Use 'let' only once
 
     // Create alert container if it doesn't exist
     if (!alertContainer) {
-        alertContainer = document.createElement("div");
-        alertContainer.id = "alertContainer";
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'alertContainer';
         document.body.prepend(alertContainer); // Add it at the top of the body
     }
 
@@ -313,17 +452,16 @@ function showAlert(message, type) {
             ${message}
         </div>
     `;
+
     alertContainer.innerHTML = alertHtml;
 
     // Auto-dismiss after 3 seconds
     setTimeout(() => {
-        alertContainer.innerHTML = "";
+        const alertElement = alertContainer.querySelector('.alert');
+        if (alertElement) {
+            alertElement.classList.remove('show');
+            alertElement.classList.add('hide');
+            setTimeout(() => alertElement.remove(), 500);
+        }
     }, 3000);
-}
-});
-
-
-// // TO DO
-// 1. Only Operative buses should be displayed in dispatch page
-// 2. Only in terminal buses should be dispatched
-// 3. Use ShowAlert for dispatch success and failure (did the function already, just need to call it)
+}  // ❌ Removed extra `});`

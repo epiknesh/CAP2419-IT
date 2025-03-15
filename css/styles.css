@@ -714,3 +714,12 @@ ul {
 		min-width: 420px;
 	}
 }
+
+.bus-info{
+	margin-right: auto;
+}
+
+.plate_number{
+	color: var(--dark-grey);
+	font-size: 14px;
+}
