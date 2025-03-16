@@ -2,7 +2,7 @@
     "Email_Send": "",
     "Email_Receive": "",
     "Email_Password": "",
-    "url": "http://100.100.13.85:5000/video_feed",
+    "url": "0",
     "ALERT": false,
     "Threshold": 10,
     "Thread": false,
