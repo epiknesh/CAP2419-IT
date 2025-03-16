@@ -14,21 +14,21 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div class="container-fluid d-flex align-items-center">
+            <img src="img/BusMateLogo_White.png" alt="BusMate Logo" style="width: 90px; height: auto;">
             <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
-            <a class="navbar-brand">Hello,<br>BusMate!</a>
-            <div class="notification-tab" onmouseover="showDropdown()" onmouseout="hideDropdown()">
+            <a class="navbar-brand ms-2">Hello,<br>BusMate!</a>
+            <div class="notification-tab ms-auto" onmouseover="showDropdown()" onmouseout="hideDropdown()">
                 <img id="profile-picture1" class="profile-img" src="http://localhost:3000/uploads/default-picture.jpg" alt="Profile">
                 <div id="dropdown-menu" class="dropdown-content">
                     <a href="bushome.html">Home</a>
                     <a href="busrecents.html">Recents</a>
-                    <a href="busprofile.html">Profile</a>
                     <a href="buses.html">Buses</a>
                     <a href="buslogout.html">Logout</a>
                 </div>
             </div>
         </div>
-    </nav>
+    </nav>  
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
