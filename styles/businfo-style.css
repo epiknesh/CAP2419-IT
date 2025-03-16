@@ -148,3 +148,26 @@ img[src="img/BusMateLogo.png"] {
         display: block;
     }
 }
+
+#bus-info table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#bus-info th, #bus-info td {
+    border: 1px solid #3C91E6;
+    padding: 10px;
+    text-align: center;
+}
+
+#bus-info th {
+    background-color: #3C91E6;
+    color: white;
+}
+
+.container {
+    max-width: 80%;
+    margin: 0 auto;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
