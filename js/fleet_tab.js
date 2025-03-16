@@ -36,6 +36,7 @@ fleetTab.addEventListener("click", async function (event) {
     // Proceed with loading fleet data if needed
 
 
+    updateBusLocations();
         const mainContent = document.querySelector('#content main');
 
         if (!document.querySelector("#fleetContainer")) {
@@ -237,23 +238,24 @@ function initializeMap() {
         attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
 }
-
-// Fetch and update bus locations dynamically
 async function updateBusLocations() {
     try {
-        const response = await fetch("http://localhost:8000/api/get_locations");  // Update API URL if needed
+        console.log("📡 Fetching bus locations...");
+        const response = await fetch("http://localhost:8000/api/get_locations");
         const data = await response.json();
+
+        // 🔹 Clear all existing markers before recreating
+        Object.values(busMarkers).forEach(marker => map.removeLayer(marker));
+        busMarkers = {}; // Reset markers object
 
         Object.keys(data).forEach(bus_id => {
             const { latitude, longitude } = data[bus_id];
 
-            if (busMarkers[bus_id]) {
-                busMarkers[bus_id].setLatLng([latitude, longitude]);  // Update marker position
-            } else {
-                busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
-                    .bindPopup(`🚌 <b>Bus ID:</b> ${bus_id}`);
-            }
+            busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
+                .bindPopup(`🚌 <b>Bus ID:</b> ${bus_id}`);
+            console.log(`✅ Created marker for Bus ${bus_id} at [${latitude}, ${longitude}]`);
         });
+
     } catch (error) {
         console.error("❌ Error fetching bus data:", error);
     }
