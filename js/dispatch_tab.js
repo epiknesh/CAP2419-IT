@@ -381,8 +381,9 @@ modalElement.addEventListener("hidden.bs.modal", () => {
 
 async function dispatchBus(busID) {
     try {
-        // Fetch current dispatch data
+        // Fetch the current dispatch data
         const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+
         if (!dispatchResponse.ok) {
             throw new Error(`Server responded with ${dispatchResponse.status}`);
         }
@@ -397,11 +398,21 @@ async function dispatchBus(busID) {
 
         const locations = await locationResponse.json();
 
-        if (!locations[busID]) {
-            throw new Error(`Location data for bus ${busID} not found.`);
+        console.log("Received location data:", locations);
+
+        const busIDAPI = `bus${busID}`;
+
+        if (!locations[busIDAPI]) {
+            throw new Error(`Location data for bus${busID} not found.`);
         }
 
-        const { latitude, longitude } = locations[busID];
+        const { latitude, longitude } = locations[busIDAPI];
+
+        console.log("Full locations object:", locations);
+console.log("Attempting to access busID:", busID);
+console.log("Value at locations[busID]:", locations[busID]);
+console.log("latitude:", latitude);
+console.log("longitude:", longitude);
 
         // Schedule the next dispatch (e.g., 1 hour later)
         const nextDispatchTime = new Date();
@@ -410,31 +421,61 @@ async function dispatchBus(busID) {
         // Prepare updated data
         const updatedData = {
             status: 1,
-            lastDispatch: dispatchData.nextDispatch,  // Move the previous dispatch time
+            lastDispatch: dispatchData.nextDispatch, // Move the previous dispatch time
             nextDispatch: nextDispatchTime.toISOString(),
             coordinates: {
                 type: "Point",
-                coordinates: [longitude, latitude]  // MongoDB stores GeoJSON as [longitude, latitude]
+                coordinates: [longitude, latitude] // MongoDB stores GeoJSON as [longitude, latitude]
             }
         };
 
-        // Send update request to the server
-        const updateDispatchResponse = await fetch(`http://localhost:3000/update-dispatch/${busID}`, {
+        // ✅ Send update request only ONCE
+        const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedData)
         });
 
-        if (!updateDispatchResponse.ok) {
-            throw new Error(`Update failed with status ${updateDispatchResponse.status}`);
+        if (!updateResponse.ok) {
+            throw new Error(`Update failed with status ${updateResponse.status}`);
         }
 
-        console.log(`Bus ${busID} successfully dispatched and updated.`);
+        console.log(`Bus ${busID} dispatched successfully with updated location.`);
+
+        // ✅ Check if dispatch notification is enabled
+        const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
+        const settings = await settingsResponse.json();
+
+        if (settings.dispatch_notif) {
+            // Get the current local time
+            const localDispatchTime = new Date();
+            const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "numeric",
+                hour12: true
+            });
+
+            // ✅ Send email notification
+            const templateParams = {
+                to_email: loggedEmail,
+                subject: `Bus ${busID} Dispatched`,
+                message: `Bus ${busID} has been dispatched at ${formattedTime}.`
+            };
+
+            emailjs.send(service_id, template_id, templateParams)
+                .then(() => console.log(`Email notification sent for Bus ${busID}.`))
+                .catch((error) => console.error("Email send failed", error));
+        }
+
+        // ✅ Refresh Dispatch Data
+        await loadDispatchData();
+        showAlert(`Bus ${busID} has been successfully dispatched!`, "success");
+
     } catch (error) {
-        console.error(`Error updating dispatch for bus ${busID}:`, error);
+        console.error(`Error dispatching bus ${busID}:`, error);
+        showAlert(`Error dispatching bus ${busID}: ${error.message}`, "danger");
     }
 }
-
 
  // Function to Show Alert
 function showAlert(message, type) {
