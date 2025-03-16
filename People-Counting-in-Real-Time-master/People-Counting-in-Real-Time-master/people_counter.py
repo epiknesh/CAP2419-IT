@@ -6,6 +6,7 @@ from utils.mailer import Mailer
 from imutils.video import FPS
 from utils import thread
 from pymongo import MongoClient
+from queue import Queue
 import datetime
 import numpy as np
 import threading
@@ -30,6 +31,17 @@ logger = logging.getLogger(__name__)
 with open("utils/config.json", "r") as file:
     config = json.load(file)
 
+# Initiate the MongoDB client
+client = MongoClient("mongodb+srv://seanbartolome7slm:cap2419it@busmateph.vfi4r.mongodb.net/")
+
+# Replace 'BusMatePH' with your database name
+db = client["BusMatePH"]
+
+# Replace 'capacity' with your collection name
+collection = db["capacity"]
+
+data_queue = Queue()
+
 def parse_arguments():
 	# function to parse the arguments
     ap = argparse.ArgumentParser()
@@ -53,32 +65,87 @@ def send_mail():
 	# function to send the email alerts
 	Mailer().send(config["Email_Receive"])
 
+def log_data_worker():
+    while True:
+        try:
+            # Get the data from the queue
+            capacity = data_queue.get()
+
+            # Define the query to find the document (assuming busID is unique)
+            query = {"busID": 3}
+            
+            # Define the update operation
+            update = {
+                "$set": {
+                    "capacity": capacity,
+                    "date": datetime.datetime.now()  # Update timestamp
+                }
+            }
+
+            # Update the document, insert if it does not exist
+            collection.update_one(query, update, upsert=True)
+            print("Capacity updated successfully:", capacity)
+
+        except Exception as e:
+            print("Error updating MongoDB:", e)
+        
+        finally:
+            data_queue.task_done()  # Mark task as done
+
+# Start the background worker thread
+worker_thread = threading.Thread(target=log_data_worker, daemon=True)
+worker_thread.start()
+
+
 def log_data(capacity):
+	data_queue.put(capacity)
+    # Define the query to find the document (assuming busID is unique)
+    #query = {"busID": 1}
+
+    # Define the update operation
+    #update = {
+        #"$set": {
+            #"capacity": capacity,
+            #"date": datetime.datetime.now()  # Update the timestamp
+        #}
+    #}
+
+    # Update the document, insert if it does not exist
+    #result = collection.update_one(query, update, upsert=True)
+
+    #if result.modified_count:
+        #print("Capacity updated successfully.")
+    #elif result.upserted_id:
+        #print(f"New record inserted with id {result.upserted_id}")
+    #else:
+        #print("No changes made.")
+
+	# THIS FUNCTION INSERTS DATA TO DB EVERYTIME CAPACITY CHANGES			
 	# initiate the MongoDB client
-	client = MongoClient("mongodb+srv://seanbartolome7slm:cap2419it@busmateph.vfi4r.mongodb.net/")
+	# client = MongoClient("mongodb+srv://seanbartolome7slm:cap2419it@busmateph.vfi4r.mongodb.net/")
 
 	# Replace 'mydatabase' with the name of your database
-	db = client["BusMatePH"]
+	# db = client["BusMatePH"]
 
 	# Replace 'mycollection' with the name of your collection
-	collection = db["capacity"]
+	# collection = db["capacity"]
 
 	#Prepare the data for insertion
-	data = {
-			"date": datetime.datetime.now(),
-			"capacity": capacity,
-			"busID": 1
+	#data = {
+	#		"date": datetime.datetime.now(),
+	#		"capacity": capacity,
+	#		"busID": 1
 			#"status": "Open" if capacity < config["Threshold"] else "Closed"
-	}
+	#}
 	
 	#Insert the data into the MongoDB collection
-	result = collection.insert_one(data)
-	print("Data inserted with record id", result.inserted_id)
+	#result = collection.insert_one(data)
+	#print("Data inserted with record id", result.inserted_id)
 	
 	
 	
 	# function to log the counting data
-	#data = [move_in, in_time, move_out, out_time]
+	#data = [move_exit, in_time, move_in, out_time]
 	# transpose the data to align the columns properly
 	#export_data = zip_longest(*data, fillvalue = '')
 
@@ -104,9 +171,9 @@ def people_counter():
 	if not args.get("input", False):
 		logger.info("Logger is working")	
 		logger.info("Starting the live stream..")
-		vs = VideoStream(config["url"]).start() #http://192.168.1.3:5000/video_feed - URL 100.100.13.85:5000
+		#vs = VideoStream(config["url"]).start() #http://192.168.1.3:5000/video_feed - URL 100.100.13.85:5000 
 
-		#vs = VideoStream(int(config["url"])).start() # // THIS IS FOR WEBCAM
+		vs = VideoStream(int(config["url"])).start() # // THIS IS FOR WEBCAM
 
 		time.sleep(2.0)
 
@@ -137,8 +204,8 @@ def people_counter():
 	totalUp = 0
 	# initialize empty lists to store the counting data
 	total = []
-	move_out = []
-	move_in =[]
+	move_in = []
+	move_exit =[]
 	out_time = []
 	in_time = []
 
@@ -173,9 +240,10 @@ def people_counter():
 		# less data we have, the faster we can process it), then convert
 		# the frame from BGR to RGB for dlib
 		frame = imutils.resize(frame, width = 500)
-		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)  # Convert back to BGR for compatibility with other functions
 		rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		# gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		# frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)  # Convert back to BGR for compatibility with other functions
+		# rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 		# if the frame dimensions are empty, set them
 		if W is None or H is None:
@@ -302,10 +370,10 @@ def people_counter():
 					if direction < 0 and centroid[1] < H // 2:
 						totalUp += 1
 						date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-						move_out.append(totalUp)
+						move_in.append(totalUp)
 						out_time.append(date_time)
-						capacity = len(move_in) - len(move_out)
-						logger.info("Total people inside: {}".format(len(move_in) - len(move_out)))
+						capacity = len(move_in) - len(move_exit)
+						logger.info("Total people inside: {}".format(len(move_in) - len(move_exit)))
 						log_data(capacity)
 						to.counted = True
 
@@ -315,10 +383,10 @@ def people_counter():
 					elif direction > 0 and centroid[1] > H // 2:
 						totalDown += 1
 						date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-						move_in.append(totalDown)
+						move_exit.append(totalDown)
 						in_time.append(date_time)
-						capacity = len(move_in) - len(move_out)
-						logger.info("Total people inside: {}".format(len(move_in) - len(move_out)))
+						capacity = len(move_in) - len(move_exit)
+						logger.info("Total people inside: {}".format(len(move_in) - len(move_exit)))
 						log_data(capacity)
 						# if the people limit exceeds over threshold, send an email alert
 						if sum(total) >= config["Threshold"]:
@@ -333,7 +401,7 @@ def people_counter():
 						to.counted = True
 						# compute the sum of total people inside
 						total = []
-						total.append(len(move_in) - len(move_out))
+						total.append(len(move_in) - len(move_exit))
 
 			# store the trackable object in our dictionary
 			trackableObjects[objectID] = to
@@ -347,8 +415,8 @@ def people_counter():
 
 		# construct a tuple of information we will be displaying on the frame
 		info_status = [
-		("Exit", totalUp),
-		("Enter", totalDown),
+		("Enter", totalUp),
+		("Exit", totalDown),
 		("Status", status),
 		]
 
@@ -406,8 +474,8 @@ def people_counter():
 			vs.release()
 	else:
 			vs.stop()
-
 	# close any open windows
+
 	#cv2.destroyAllWindows()
 
 if __name__ == "__main__":
