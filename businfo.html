@@ -33,68 +33,27 @@
         </div>
     </nav>  
 
-    <!-- Container for Search Bar, Location Info, and Map -->
-    <div class="content-container">
-        <!-- Search Bar -->
-        <input type="text" class="search-bar" placeholder="Search for Bus Number">
-        
-        <!-- Location Info -->
-        <div class="location-label">CURRENT LOCATION</div>
-        <p class="location" id="location-coordinates">Fetching location...</p>
-        <p class="address" id="address">Fetching address...</p>
-        
-        <!-- Map -->
-        <div id="map" style="height: 500px;"></div>
-    </div>
-
     <!-- Footer -->
     <div class="footer">&copy; 2025 BusMate. All Rights Reserved.</div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
     <script>
-        let map = L.map("map").setView([14.5995, 120.9842], 13);
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
-
-        let busMarkers = {};  // Store bus markers
-
-        function updateBusLocations() {
-            fetch("http://localhost:8000/api/get_locations")  // Now using port 8000
-                .then(response => response.json())
-                .then(data => {
-                    Object.keys(data).forEach(bus_id => {
-                        const { latitude, longitude } = data[bus_id];
-
-                        if (busMarkers[bus_id]) {
-                            busMarkers[bus_id].setLatLng([latitude, longitude]);
-                        } else {
-                            busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
-                                .bindPopup(`🚌 ${bus_id}`);
-                        }
-                    });
-                })
-                .catch(error => console.error("❌ Error fetching bus data:", error));
-        }
-
-        setInterval(updateBusLocations, 5000);  // Update every 5 seconds
-
         document.addEventListener("DOMContentLoaded", function () {
             const dropdown = document.getElementById("dropdown-menu");
             const notificationTab = document.querySelector(".notification-tab");
 
             notificationTab.addEventListener("mouseover", function () {
-               dropdown.style.display = "block";
-           });
+                dropdown.style.display = "block";
+            });
 
-           dropdown.addEventListener("mouseleave", function () {
-               dropdown.style.display = "none";
+            dropdown.addEventListener("mouseleave", function () {
+                dropdown.style.display = "none";
             });
         });
-
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

@@ -4,6 +4,9 @@ body {
     margin: 0;
     padding: 0;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* Navbar */
@@ -27,10 +30,6 @@ body {
     height: 50px;
     background-color: #e0e0e0;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
 }
 
 .notification-count {
@@ -61,103 +60,6 @@ body {
     height: 50px;
     border-radius: 50%;
     cursor: pointer;
-}
-
-.tab-container {
-    display: flex;
-    width: 100%;
-    max-width: 300px;
-    margin: 30px auto;
-    background-color: #fff;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.tab {
-    flex: 1;
-    text-align: center;
-    padding: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.tab.active {
-    background-color: #e0f0ff;
-    color: #000;
-}
-
-.bus-card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 500px;
-    background-color: #e0f0ff;
-    border-radius: 15px;
-    padding: 15px;
-    margin: 20px auto 40px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.bus-card .header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.bus-card .bus-number {
-    font-size: 14px;
-    font-weight: bold;
-    background-color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.bus-card .latest-loc {
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-}
-
-.schedule-card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 500px;
-    background-color: #e0f0ff;
-    border-radius: 15px;
-    padding: 15px;
-    margin: 20px auto 50px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.schedule-card .header {
-    font-size: 16px;
-    font-weight: bold;
-    background-color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    margin-bottom: 10px;
-}
-
-.schedule-card .schedule-item {
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.schedule-card .schedule-item span:first-child {
-    font-weight: bold;
-}
-
-.hidden {
-    display: none;
 }
 
 /* Footer */
@@ -208,21 +110,21 @@ a {
     display: block;
 }
 
-img[src="img/BusMateLogo.png"] {
-    display: none;
-}
-
 @media (min-width: 769px) {
     .mobile-ui {
         display: none;
     }
 }
 
-/* Mobile Optimized Styles */
+img[src="img/BusMateLogo.png"] {
+    display: none;
+}
+
+/* Responsive Styles */
 @media (max-width: 768px) {
     .navbar {
         background: none;
-        box-shadow: none;
+        box-shadow: none; 
     }
 
     .navbar-brand {
