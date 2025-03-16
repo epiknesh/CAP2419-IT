@@ -53,33 +53,222 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        let map = L.map("map").setView([14.5995, 120.9842], 13);
+const apiKey = "5b3ce3597851110001cf6248ef6021b6165e4d53935261fad6ed7e96"; // OpenRouteService API key
+const profile = "driving-car"; // Travel mode
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
+let userCoords = null; // Store user location
+let busMarkers = {}; // Store bus markers
 
-        let busMarkers = {};  // Store bus markers
+document.addEventListener("DOMContentLoaded", function () {
+    function getLocation() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                  //userCoords = [position.coords.longitude, position.coords.latitude]; // Store user location
+                    userCoords = [121.02310781010837, 14.553511800681616]; // Hardcoded user location
+                    document.getElementById("location-coordinates").textContent = `Lat: ${position.coords.latitude}, Lon: ${position.coords.longitude}`;
 
-        function updateBusLocations() {
-            fetch("http://localhost:8000/api/get_locations")  // Now using port 8000
-                .then(response => response.json())
-                .then(data => {
-                    Object.keys(data).forEach(bus_id => {
-                        const { latitude, longitude } = data[bus_id];
+            
 
-                        if (busMarkers[bus_id]) {
-                            busMarkers[bus_id].setLatLng([latitude, longitude]);
-                        } else {
-                            busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
-                                .bindPopup(`🚌 ${bus_id}`);
-                        }
-                    });
-                })
-                .catch(error => console.error("❌ Error fetching bus data:", error));
+                    // Reverse Geocoding to get user address
+                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById("address").textContent = data.display_name;
+                        })
+                        .catch(error => console.error("❌ Error fetching address:", error));
+
+                    // Add user marker
+                    L.marker([position.coords.latitude, position.coords.longitude]).addTo(map)
+                        .bindPopup("📍 You are here").openPopup();
+                    map.setView([position.coords.latitude, position.coords.longitude], 15);
+                },
+                function (error) {
+                    document.getElementById("location-coordinates").textContent = "Unable to fetch location.";
+                    console.error("❌ Geolocation error:", error);
+                }
+            );
+        } else {
+            document.getElementById("location-coordinates").textContent = "Geolocation is not supported.";
+        }
+    }
+
+    getLocation(); // Get user's current location
+});
+
+// Initialize Map
+let map = L.map("map").setView([14.5995, 120.9842], 13);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+// Fetch and Update Bus Locations
+function updateBusLocations() {
+    fetch("http://localhost:8000/api/get_locations") // API for bus locations
+        .then(response => response.json())
+        .then(data => {
+            Object.keys(data).forEach(bus_id => {
+                const { latitude, longitude } = data[bus_id];
+                const busCoords = [longitude, latitude]; // Format for ORS API
+
+                if (busMarkers[bus_id]) {
+                    busMarkers[bus_id].setLatLng([latitude, longitude]);
+                } else {
+                    busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
+                        .bindPopup(`🚌 Bus ${bus_id}`)
+                        .on("click", function () {
+                            if (userCoords) {
+                                console.log(userCoords);
+                                calculateETA(busCoords, userCoords).then(eta => {
+                                    if (eta !== null) {
+                                        console.log(`ETA for Bus ${bus_id}: ${eta} minutes`);
+                                        alert(`🚌 Bus ${bus_id} ETA: ${eta} minutes (via designated route)`);
+                                    } else {
+                                        alert("Could not calculate ETA.");
+                                    }
+                                });
+                            } else {
+                                alert("User location not found. Please enable location services.");
+                            }
+                        });
+                }
+            });
+        })
+        .catch(error => console.error("❌ Error fetching bus data:", error));
+}
+
+// Fetch new bus locations every 5 seconds
+setInterval(updateBusLocations, 5000);
+
+async function calculateETA(busCoords, userCoords) {
+    const waypoints = [
+        { coords: [121.0453548, 14.4165861], name: "📍 Starmall Alabang" },
+        { coords: [121.0439273, 14.4221584], name: "🛣️ Alabang Viaduct (Northbound)" },
+        { coords: [121.0432, 14.4482], name: "🛣️ Filinvest Entrance to SLEX" },
+        { coords: [121.0391973, 14.4560063], name: "🛣️ Sucat Exit (Main Road)" },
+        { coords: [121.0420633, 14.4874818], name: "🛣️ Bicutan Entry (Skyway Access)" },
+        { coords: [121.016892, 14.540315], name: "🛣️ Magallanes Interchange (Fixed)" },
+        { coords: [121.026021, 14.547193], name: "🛣️ EDSA - Ayala Ave Exit" },
+        { coords: [121.025818, 14.549893], name: "🛣️ Glorietta (Main Road)" },
+        { coords: [121.026577, 14.548915], name: "🛣️ MRT Ayala Station (Near SM Makati)" },
+        { coords: [14.550218982310554, 121.02789195667842], name: "📍 One Ayala (Final Destination)" }
+    ];
+
+
+    // 🛑 Find closest bus stop to the user
+    let closestStop = waypoints.reduce((closest, stop) => {
+        return getDistance(userCoords, stop.coords) < getDistance(userCoords, closest.coords) ? stop : closest;
+    });
+
+    let walkingDistanceKm = getDistance(userCoords, closestStop.coords); // Distance in km
+    let walkingDistanceMeters = Math.round(walkingDistanceKm * 1000); // Convert km to meters
+    let walkingTimeMinutes = Math.round((walkingDistanceKm / 5) * 60); // Assuming 5 km/h walking speed
+
+    console.log(`📍 User Location: ${userCoords}`);
+    console.log(`🚏 Nearest Bus Stop: ${closestStop.name}`);
+    console.log(`🚶 Walking Distance: ${walkingDistanceKm.toFixed(2)} km (~${walkingTimeMinutes} min, ${walkingDistanceMeters}m)`);
+
+    // 🛑 If user is more than 10 min away, provide driving ETA instead of walking
+    if (walkingTimeMinutes > 10) {
+        const driveETA = await getDrivingETA(userCoords, closestStop.coords);
+        alert(`⚠️ You are out of the bus's route.\n🚏 Nearest stop: ${closestStop.name}\n🚗 Driving distance: ~${driveETA} min (${walkingDistanceKm.toFixed(2)} km away)`);
+        return null;
+    }
+
+    // ✅ If user is within 10 min, inform them and calculate bus ETA
+    alert(`🚏 Nearest stop: ${closestStop.name}\n🚶 Walking distance: ~${walkingTimeMinutes} min (${walkingDistanceMeters}m)`);
+
+    const coordinates = [busCoords, closestStop.coords];
+
+    const url = `https://api.openrouteservice.org/v2/directions/driving-car`;
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": apiKey
+            },
+            body: JSON.stringify({
+                coordinates: coordinates,
+                format: "json"
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            console.error("❌ ORS Error:", data.error);
+            alert(`🚨 Route Error: ${data.error.message}`);
+            return null;
         }
 
-        setInterval(updateBusLocations, 5000);  // Update every 5 seconds
+        if (data.routes && data.routes.length > 0) {
+            const etaSeconds = data.routes[0].summary.duration;
+            const etaMinutes = Math.round(etaSeconds / 60);
+
+            alert(`🚏 Nearest stop: ${closestStop.name}\n🚶 Walking distance: ~${walkingTimeMinutes} min (${walkingDistanceMeters}m)\n🚌 Bus ETA: ~${etaMinutes} min`);
+            console.log(`⏳ ETA to nearest stop: ${etaMinutes} minutes`);
+            return etaMinutes;
+        } else {
+            console.error("❌ No route found. Response:", data);
+            alert("❌ No route found.");
+            return null;
+        }
+    } catch (error) {
+        console.error("❌ Error fetching ETA:", error);
+        return null;
+    }
+}
+
+// Function to calculate the driving ETA using OpenRouteService
+async function getDrivingETA(startCoords, endCoords) {
+    const url = `https://api.openrouteservice.org/v2/directions/driving-car`;
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": apiKey
+            },
+            body: JSON.stringify({
+                coordinates: [startCoords, endCoords],
+                format: "json"
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.routes && data.routes.length > 0) {
+            return Math.round(data.routes[0].summary.duration / 60); // Convert seconds to minutes
+        } else {
+            console.error("❌ No driving route found.");
+            return "N/A";
+        }
+    } catch (error) {
+        console.error("❌ Error fetching driving ETA:", error);
+        return "N/A";
+    }
+}
+
+// Function to calculate the distance between two coordinates
+function getDistance(coord1, coord2) {
+    const [lon1, lat1] = coord1;
+    const [lon2, lat2] = coord2;
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+}
+
+
 
         document.addEventListener("DOMContentLoaded", function () {
             const dropdown = document.getElementById("dropdown-menu");
