@@ -266,8 +266,8 @@ const busCard = `
             <div id="schedule-${bus.busID}" class="schedule-card" style="display: none;">
                 <div class="header">🚌 Bus #${bus.busID} Schedule</div>
                 <div class="schedule-item"><span>${formattedNextDispatch}</span> <span>Terminal Departure</span></div>
-                <div class="schedule-item"><span>${stopA}</span> <span>Arrives at End Destination</span></div>
-                <div class="schedule-item"><span>${stopB}</span> <span>Arrives at Terminal Return</span></div>
+                <div class="schedule-item"><span>~${stopA}</span> <span>Arrives at End Destination</span></div>
+                <div class="schedule-item"><span>~${stopB}</span> <span>Arrives at Terminal Return</span></div>
             </div>
         </div>
     </div>
@@ -311,12 +311,19 @@ function updateBusLocations() {
                 const { latitude, longitude } = data[bus_id];
                 const busCoords = [longitude, latitude]; // Format for ORS API
 
-               
+                // 🚌 Define a custom bus icon
+                const busIcon = L.icon({
+                    iconUrl: 'img/bus-icon.png', // Path to your custom icon
+                    iconSize: [45.875, 55.375], // Width and height of the icon
+                    iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
+                    popupAnchor: [0, -35] // Offset for the popup
+                });
 
                 if (busMarkers[bus_id]) {
                     busMarkers[bus_id].setLatLng([latitude, longitude]);
                 } else {
-                    busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
+                    busMarkers[bus_id] = L.marker([latitude, longitude], { icon: busIcon }) // 🆕 Apply custom icon
+                        .addTo(map)
                         .bindPopup(`🚌 ${bus_id}`)
                         .on("click", function () {
                             if (userCoords) {
@@ -324,7 +331,6 @@ function updateBusLocations() {
                                 calculateETA(busCoords, userCoords, bus_id).then(eta => {
                                     if (eta !== null) {
                                         console.log(`ETA for Bus ${bus_id}: ${eta} minutes`);
-                                        
                                     } 
                                 });
                             } else {
@@ -336,6 +342,7 @@ function updateBusLocations() {
         })
         .catch(error => console.error("❌ Error fetching bus data:", error));
 }
+
 
 // Fetch new bus locations every 5 seconds
 setInterval(updateBusLocations, 5000);
@@ -598,6 +605,15 @@ function updateMapBuses(mapId, busId, busData, locElementId) {
         return;
     }
 
+    // 🚌 Define a custom bus icon
+    const busIcon = L.icon({
+                    iconUrl: 'img/bus-icon.png', // Path to your custom icon
+                    iconSize: [45.875, 55.375], // Width and height of the icon
+                    iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
+                    popupAnchor: [0, -35] // Offset for the popup
+                });
+
+
     // 🛑 Ensure previous map instance is removed before initializing a new one
     if (busMaps[busId]) {
         console.warn(`🛑 Map for ${busId} already exists, updating location...`);
@@ -606,7 +622,8 @@ function updateMapBuses(mapId, busId, busData, locElementId) {
         if (cardBusMarkers[busId]) {
             cardBusMarkers[busId].setLatLng([latitude, longitude]);
         } else {
-            cardBusMarkers[busId] = L.marker([latitude, longitude]).addTo(busMaps[busId])
+            cardBusMarkers[busId] = L.marker([latitude, longitude], { icon: busIcon }) // 🆕 Use the custom icon
+                .addTo(busMaps[busId])
                 .bindPopup(`🚌 Bus ${busId}`);
         }
 
@@ -628,8 +645,9 @@ function updateMapBuses(mapId, busId, busData, locElementId) {
         attribution: "&copy; OpenStreetMap contributors"
     }).addTo(busMaps[busId]);
 
-    // Add marker
-    cardBusMarkers[busId] = L.marker([latitude, longitude]).addTo(busMaps[busId])
+    // Add marker using the custom bus icon
+    cardBusMarkers[busId] = L.marker([latitude, longitude], { icon: busIcon }) // 🆕 Use the custom icon
+        .addTo(busMaps[busId])
         .bindPopup(`🚌 Bus ${busId}`);
 
     // Reverse Geocode to get location name
