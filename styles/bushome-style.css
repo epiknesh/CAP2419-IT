@@ -141,6 +141,16 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+.people-capacity{
+    font-size: 14px;
+    background: white;
+    color: #060855;
+    padding: 5px 12px;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    
+}
+
 /* Plate and Driver */
 .bus-details {
     display: flex;
@@ -151,7 +161,7 @@ body {
 .driver-info {
     font-size: 14px;
     background: white;
-    color: #3C91E6;
+    color: #0d1291;
     padding: 5px 12px;
     border-radius: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
