@@ -18,21 +18,15 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid d-flex align-items-center">
-            <img src="img/BusMateLogo_White.png" alt="BusMate Logo" style="width: 90px; height: auto;">
-            <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
-            <a class="navbar-brand ms-2">Hello,<br>BusMate!</a>
-            <div class="notification-tab ms-auto" onmouseover="showDropdown()" onmouseout="hideDropdown()">
-                <img id="profile-picture1" class="profile-img" src="img/busicon.png" alt="Profile">
-                <div id="dropdown-menu" class="dropdown-content">
-                    <a href="bushome.html">Home</a>
-                    <a href="busrecents.html">Recents</a>
-                    <a href="buses.html">Buses Location & Schedule</a>
-                    <a href="businfo.html">Buses Information</a>
-                </div>
+            <!-- Logo and Text Wrapped in a Flex Container -->
+            <div class="d-flex align-items-center">
+                <img src="img/BusMateLogo_White.png" alt="BusMate Logo" style="width: 90px; height: auto;">
+                <img src="img/BusMateLogo.png" alt="BusMate Logo" style="width: 90px; height: auto;">
+                <a class="navbar-brand ms-2" style="white-space: nowrap; font-size: 40px;">Hello, BusMate!</a>
             </div>
         </div>
-    </nav>  
-
+    </nav>
+    
     <!-- Container for Search Bar, Location Info, and Map -->
     <div class="content-container">
         <!-- Search Bar -->
@@ -40,7 +34,6 @@
         
         <!-- Location Info -->
         <div class="location-label">CURRENT LOCATION</div>
-        <p class="location" id="location-coordinates">Fetching location...</p>
         <p class="address" id="address">Fetching address...</p>
         
         <!-- Map -->
@@ -48,141 +41,41 @@
 
         <div class="title-divider"></div>
 
-        <h2 class="bus-tracker-title">🚌 Find Your Ride in Real-Time!</h2>
+        <!-- Bus Tracker Title -->
+<h2 class="bus-tracker-title">🚌 Find Your Ride in Real-Time!</h2>
 
-        <!--buses.html integration-->
-        <div id="bus-cards" class="bus-cards">
-            <!-- Bus 1 -->
-            <!-- <div class="bus-card">
-                <div class="header-row">
-                    <div class="bus-number">BUS # 1</div>
-                    <div class="latest-loc" id="latest-loc">Fetching location...</div>
-                </div>
-                <div id="map1" style="height: 200px;"></div>
-                <button class="view-schedule-btn" onclick="toggleSchedule('schedule1')">View Schedule</button>
-            
-                <div id="schedule1" class="schedule-card" style="display: none;">
-                    <div class="header">BUS # 1 Schedule</div>
-                    <div class="schedule-item">
-                        <span>07:30</span>
-                        <span>Leaves Terminal</span>
-                    </div>
-                    <div class="schedule-item">
-                        <span>08:00</span>
-                        <span>Arrives at Stop A</span>
-                    </div>
-                    <div class="schedule-item">
-                        <span>08:30</span>
-                        <span>Arrives at Stop B</span>
-                    </div>
-                </div>
-            </div> -->
-            <div class="row">
-                <div class="col-md-6 d-block d-md-inline">
-                     <!-- BUS NUMBER 1 -->
-                    <div class="bus-card">
-                        <!-- Bus Information Row -->
-                        <div class="bus-info">
-                            <div class="bus-number">BUS # 1</div>
-                            <div class="plate-number">Plate: ABC-1234</div>
-                        </div>
-                        <!-- Passenger Capacity -->
-                        <div class="people-capacity mt-3 mx-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>👤Passenger Capacity</span>
-                                <span id="capacity-percentage">90%</span>
-                            </div>
-                            <div class="progress mt-2">
-                                <div class="progress-bar bg-danger" style="width:90%;" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-        
-                    
-                        <div class="latest-loc" id="latest-loc">Fetching location...</div>                    
-                        <div id="map1" style="height: 200px; border-radius: 10px;"></div>
-                        <button class="view-schedule-btn" onclick="toggleSchedule('schedule1')">View Schedule</button>
-                    
-                        <!-- Schedule inside bus card -->
-                        <div id="schedule1" class="schedule-card" style="display: none;">
-                            <div class="header">🚌 Bus #1 Schedule</div>
-                            <div class="schedule-item"><span>07:30</span> <span>Leaves Terminal</span></div>
-                            <div class="schedule-item"><span>08:00</span> <span>Arrives at Stop A</span></div>
-                            <div class="schedule-item"><span>08:30</span> <span>Arrives at Stop B</span></div>
-                        </div>
-                    </div>
-                </div>
+<!-- Bus Cards Container -->
+<div class="container mt-4">
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="bus-cards-container">
+        <!-- Bus cards will be dynamically inserted here -->
+    </div>
+</div>
 
-                <div class="col-md-6 d-block d-md-inline">
-                   <!-- BUS NUMBER 2 -->
-                    <div class="bus-card">
-                        <!-- Bus Information Row -->
-                        <div class="bus-info">
-                            <div class="bus-number">BUS # 2</div>
-                            <div class="plate-number">Plate: WOW-6996</div>
-                        </div>
-                         <!-- Passenger Capacity -->
-                         <div class="people-capacity mt-3 mx-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>👤Passenger Capacity</span>
-                                <span id="capacity-percentage">25%</span>
-                            </div>
-                            <div class="progress mt-2">
-                                <div class="progress-bar bg-success" style="width:25%;" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        <!-- <div class="driver-info">👤 Driver: John Doe</div> -->
-                    
-                        <div class="latest-loc" id="latest-loc">Fetching location...</div>
-                    
-                        <div id="map2" style="height: 200px; border-radius: 10px;"></div>
-                    
-                        <button class="view-schedule-btn" onclick="toggleSchedule('schedule2')">View Schedule</button>
-                    
-                        <!-- Schedule inside bus card -->
-                        <div id="schedule2" class="schedule-card" style="display: none;">
-                            <div class="header">🚌 Bus #2 Schedule</div>
-                            <div class="schedule-item"><span>07:30</span> <span>Leaves Terminal</span></div>
-                            <div class="schedule-item"><span>08:00</span> <span>Arrives at Stop A</span></div>
-                            <div class="schedule-item"><span>08:30</span> <span>Arrives at Stop B</span></div>
-                        </div>
-                    </div>
-                </div>
+
+    <!-- ETA Popup Modal -->
+<div class="modal fade" id="etaModal" tabindex="-1" aria-labelledby="etaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="etaModalLabel">Estimated Time of Arrival</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="etaModalBody">
+                <!-- ETA Information will be inserted here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
-
-         
-            <!-- <div class="bus-card">
-                <div class="header-row">
-                    <div class="bus-number">BUS # 2</div>
-                    <div class="latest-loc" id="latest-loc-101">Fetching location...</div>
-                </div>
-                <div id="map2" style="height: 200px;"></div>
-                <button class="view-schedule-btn" onclick="toggleSchedule('schedule2')">View Schedule</button>
-
-                <div id="schedule2" class="schedule-card">
-                    <div class="header">BUS # 2 Schedule</div>
-                    <div class="schedule-item">
-                        <span>09:00</span>
-                        <span>Leaves Terminal</span>
-                    </div>
-                    <div class="schedule-item">
-                        <span>09:30</span>
-                        <span>Arrives at Stop A</span>
-                    </div>
-                    <div class="schedule-item">
-                        <span>10:00</span>
-                        <span>Arrives at Stop B</span>
-                    </div>
-                </div>
-            </div> -->
-        
+</div>
 
     <!-- Footer -->
     <div class="footer">&copy; 2025 BusMate. All Rights Reserved.</div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="js/server.js"></script>
     <script>
         
 const apiKey = "5b3ce3597851110001cf6248ef6021b6165e4d53935261fad6ed7e96"; // OpenRouteService API key
@@ -192,16 +85,13 @@ let userCoords = null; // Store user location
 let busMarkers = {}; // Store bus markers
 
 document.addEventListener("DOMContentLoaded", function () {
+    
     function getLocation() {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 function (position) {
-                  //userCoords = [position.coords.longitude, position.coords.latitude]; // Store user location
-                    userCoords = [121.02310781010837, 14.553511800681616]; // Hardcoded user location
-                    document.getElementById("location-coordinates").textContent = `Lat: ${position.coords.latitude}, Lon: ${position.coords.longitude}`;
-
-            
-
+             // userCoords = [position.coords.longitude, position.coords.latitude]; // Store user location
+                   userCoords = [121.02310781010837, 14.553511800681616]; // Hardcoded user location
                     // Reverse Geocoding to get user address
                     fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`)
                         .then(response => response.json())
@@ -216,17 +106,194 @@ document.addEventListener("DOMContentLoaded", function () {
                     map.setView([position.coords.latitude, position.coords.longitude], 15);
                 },
                 function (error) {
-                    document.getElementById("location-coordinates").textContent = "Unable to fetch location.";
                     console.error("❌ Geolocation error:", error);
                 }
             );
         } else {
-            document.getElementById("location-coordinates").textContent = "Geolocation is not supported.";
+            document.getElementById("address").textContent = "Geolocation is not supported.";
         }
     }
 
     getLocation(); // Get user's current location
+    loadBusCards();
+   
 });
+
+
+
+async function loadBusCards() {
+    const busCardsContainer = document.getElementById("bus-cards-container");
+
+    try {
+        // Fetch bus locations
+        const locationResponse = await fetch("http://localhost:8000/api/get_locations");
+        const locationData = await locationResponse.json();
+
+        // Fetch bus details (plate number, capacity, etc.)
+        const busResponse = await fetch("http://localhost:3000/buses");
+        const busData = await busResponse.json();
+
+        const capacityResponse = await fetch('http://localhost:3000/capacity');
+const capacities = await capacityResponse.json();
+
+    const dispatchResponse = await fetch('http://localhost:3000/dispatch');
+    const dispatches = await dispatchResponse.json();
+
+console.log("📊 Raw Capacities Data:", capacities); // Log all capacity data received
+
+const latestCapacities = capacities.reduce((acc, entry) => {
+    const busID = entry.busID;
+    if (!acc[busID] || new Date(entry.date) > new Date(acc[busID].date)) {
+        acc[busID] = entry;
+    }
+    return acc;
+}, {});
+
+console.log("📅 Latest Capacities by Bus:", latestCapacities); // Log filtered latest capacities per bus
+
+function getBusCapacity(busID) {
+    const entry = latestCapacities[busID]; // Retrieve the specific bus's capacity entry
+    if (!entry) {
+        console.warn(`⚠️ No capacity data found for Bus ${busID}`);
+        return { percentage: 0, capacityClass: "bg-secondary" }; // Default values
+    }
+
+    const maxCapacity = 60;
+    let percentage = (entry.capacity / maxCapacity) * 100;
+    percentage = parseFloat(percentage.toFixed(2)); // Ensure at most 2 decimal places
+    const capacityClass = percentage > 75 ? "bg-danger" : percentage > 40 ? "bg-warning" : "bg-success";
+
+    console.log(`🚌 Bus ${busID}: Capacity ${entry.capacity}/${maxCapacity} (${percentage.toFixed(2)}%) - Class: ${capacityClass}`);
+
+    return { percentage, capacityClass };
+}
+
+
+
+        // Clear existing content before adding new bus cards
+        busCardsContainer.innerHTML = "";
+
+        // Loop through each bus retrieved from locations API
+        Object.keys(locationData).forEach(busKey => {
+            const busCoords = locationData[busKey];
+
+            // Convert "bus1" to just 1
+            const numericBusID = parseInt(busKey.replace("bus", ""), 10);
+            const bus = busData.find(b => b.busID === numericBusID);
+            
+
+            const dispatch = dispatches.find(d => d.busID === numericBusID);
+
+            let formattedNextDispatch = "N/A"; // Default value if no data
+        let stopA = "N/A";
+        let stopB = "N/A";
+
+        if (dispatch && dispatch.nextDispatch) {
+            const nextDispatchDate = new Date(dispatch.nextDispatch);
+
+            // Format time in 12-hour AM/PM format
+            let hours = nextDispatchDate.getHours();
+            let minutes = nextDispatchDate.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12 || 12; // Convert to 12-hour format
+            minutes = minutes.toString().padStart(2, '0'); // Ensure two-digit minutes
+
+            formattedNextDispatch = `${hours}:${minutes} ${ampm}`;
+
+            // 🕒 Calculate Stop A time (30 mins after leaving terminal)
+            const stopADate = new Date(nextDispatchDate.getTime() + 30 * 60000);
+            let stopAHours = stopADate.getHours() % 12 || 12;
+            let stopAMinutes = stopADate.getMinutes().toString().padStart(2, '0');
+            let stopAAPM = stopADate.getHours() >= 12 ? 'PM' : 'AM';
+            stopA = `${stopAHours}:${stopAMinutes} ${stopAAPM}`;
+
+            // 🕒 Calculate Stop B time (30 mins after Stop A)
+            const stopBDate = new Date(stopADate.getTime() + 30 * 60000);
+            let stopBHours = stopBDate.getHours() % 12 || 12;
+            let stopBMinutes = stopBDate.getMinutes().toString().padStart(2, '0');
+            let stopBAPM = stopBDate.getHours() >= 12 ? 'PM' : 'AM';
+            stopB = `${stopBHours}:${stopBMinutes} ${stopBAPM}`;
+        }
+
+            const { percentage, capacityClass } = getBusCapacity(numericBusID);
+
+            if (!bus) return; // Skip if bus details are not found
+
+            const currentBusCoords = busCoords.latitude + ", " + busCoords.longitude;
+        
+
+            // Create bus card HTML
+           // Create bus card HTML
+const busCard = `
+    <div class="col-md-6 d-block d-md-inline">
+        <div class="bus-card">
+            <!-- Bus Information Row -->
+            <div class="bus-info">
+                <div class="bus-number">BUS # ${bus.busID}</div>
+                <div class="plate-number">Plate: ${bus.plateNumber}</div>
+            </div>
+
+            <!-- Passenger Capacity -->
+            <div class="people-capacity mt-3 mx-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>👤 Passenger Capacity</span>
+                    <span id="capacity-percentage">${percentage}%</span>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar ${capacityClass}" style="width:${percentage}%;" role="progressbar"></div>
+                </div>
+            </div>
+
+            <div id="latest-loc-${bus.busID}" style="margin: 10px 0; text-align: center; font-weight: bold;">
+                Fetching location...
+            </div>
+
+            <div id="map-${bus.busID}" style="height: 200px; border-radius: 10px;"></div>
+
+            <!-- 🆕 Generate ETA Button -->
+            <button class="view-schedule-btn" 
+                onclick="calculateETA([${busCoords.longitude}, ${busCoords.latitude}], userCoords, 'bus${numericBusID}')">
+                Get Bus ETA
+            </button>
+
+          
+
+            <!-- View Schedule Button -->
+            <button class="view-schedule-btn" onclick="toggleSchedule('schedule-${bus.busID}')">View Schedule</button>
+
+            <!-- 🚌 Schedule inside bus card -->
+            <div id="schedule-${bus.busID}" class="schedule-card" style="display: none;">
+                <div class="header">🚌 Bus #${bus.busID} Schedule</div>
+                <div class="schedule-item"><span>${formattedNextDispatch}</span> <span>Terminal Departure</span></div>
+                <div class="schedule-item"><span>${stopA}</span> <span>Arrives at End Destination</span></div>
+                <div class="schedule-item"><span>${stopB}</span> <span>Arrives at Terminal Return</span></div>
+            </div>
+        </div>
+    </div>
+`;
+
+       
+
+            // Append to the container
+            busCardsContainer.innerHTML += busCard;
+
+                    setTimeout(() => {
+            const mapElement = document.getElementById(`map-${bus.busID}`);
+            if (mapElement) {
+                const busMap = L.map(mapElement).setView([busCoords.latitude, busCoords.longitude], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(busMap);
+            }
+        }, 100);
+
+        });
+
+    } catch (error) {
+        console.error("❌ Error fetching bus data:", error);
+    }
+}
 
 // Initialize Map
 let map = L.map("map").setView([14.5995, 120.9842], 13);
@@ -244,21 +311,21 @@ function updateBusLocations() {
                 const { latitude, longitude } = data[bus_id];
                 const busCoords = [longitude, latitude]; // Format for ORS API
 
+               
+
                 if (busMarkers[bus_id]) {
                     busMarkers[bus_id].setLatLng([latitude, longitude]);
                 } else {
                     busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
-                        .bindPopup(`🚌 Bus ${bus_id}`)
+                        .bindPopup(`🚌 ${bus_id}`)
                         .on("click", function () {
                             if (userCoords) {
                                 console.log(userCoords);
-                                calculateETA(busCoords, userCoords).then(eta => {
+                                calculateETA(busCoords, userCoords, bus_id).then(eta => {
                                     if (eta !== null) {
                                         console.log(`ETA for Bus ${bus_id}: ${eta} minutes`);
-                                        alert(`🚌 Bus ${bus_id} ETA: ${eta} minutes (via designated route)`);
-                                    } else {
-                                        alert("Could not calculate ETA.");
-                                    }
+                                        
+                                    } 
                                 });
                             } else {
                                 alert("User location not found. Please enable location services.");
@@ -273,7 +340,23 @@ function updateBusLocations() {
 // Fetch new bus locations every 5 seconds
 setInterval(updateBusLocations, 5000);
 
-async function calculateETA(busCoords, userCoords) {
+function showPopupMessage(message) {
+    document.getElementById("etaModalBody").innerHTML = message;
+    let etaModal = new bootstrap.Modal(document.getElementById("etaModal"));
+    etaModal.show();
+}
+
+async function calculateETA(busCoords, userCoords, busID) {
+
+    console.log(`🚌 Bus ID: ${busID}`);
+    console.log(`📍 Bus Coordinates:`, busCoords);
+    console.log(`📍 User Coordinates:`, userCoords);
+
+    if (!busCoords || !userCoords) {
+        console.error("❌ Missing coordinates. Bus or user location is undefined.");
+        alert("Unable to generate ETA. Location data missing.");
+        return;
+    }
     const waypoints = [
         { coords: [121.0453548, 14.4165861], name: "📍 Starmall Alabang" },
         { coords: [121.0439273, 14.4221584], name: "🛣️ Alabang Viaduct (Northbound)" },
@@ -287,15 +370,40 @@ async function calculateETA(busCoords, userCoords) {
         { coords: [14.550218982310554, 121.02789195667842], name: "📍 One Ayala (Final Destination)" }
     ];
 
+    let plateNumber = "Unknown Plate";
+    try {
+    const busResponse = await fetch(`http://localhost:3000/buses`);
+    const busData = await busResponse.json();
+
+    // Log all bus IDs and plate numbers retrieved
+    console.log("🚍 Retrieved Buses from Database:");
+    busData.forEach(bus => console.log(`🆔 Bus ID: ${bus.busID}, 🔖 Plate: ${bus.plateNumber}`));
+
+    // Convert "bus1" to just 1
+    const numericBusID = parseInt(busID.replace("bus", ""), 10);
+    console.log(`🔍 Searching for Bus ID: ${numericBusID}`);
+
+    // Find matching bus
+    const bus = busData.find(b => b.busID === numericBusID);
+    
+    if (bus) {
+        plateNumber = bus.plateNumber;
+        console.log(`✅ Found Bus: 🆔 ${bus.busID}, 🔖 Plate: ${plateNumber}`);
+    } else {
+        console.log(`❌ No bus found with ID: ${numericBusID}`);
+    }
+} catch (error) {
+    console.error("❌ Error fetching bus details:", error);
+}
 
     // 🛑 Find closest bus stop to the user
     let closestStop = waypoints.reduce((closest, stop) => {
         return getDistance(userCoords, stop.coords) < getDistance(userCoords, closest.coords) ? stop : closest;
     });
 
-    let walkingDistanceKm = getDistance(userCoords, closestStop.coords); // Distance in km
-    let walkingDistanceMeters = Math.round(walkingDistanceKm * 1000); // Convert km to meters
-    let walkingTimeMinutes = Math.round((walkingDistanceKm / 5) * 60); // Assuming 5 km/h walking speed
+    let walkingDistanceKm = getDistance(userCoords, closestStop.coords);
+    let walkingDistanceMeters = Math.round(walkingDistanceKm * 1000);
+    let walkingTimeMinutes = Math.round((walkingDistanceKm / 5) * 60);
 
     console.log(`📍 User Location: ${userCoords}`);
     console.log(`🚏 Nearest Bus Stop: ${closestStop.name}`);
@@ -304,15 +412,16 @@ async function calculateETA(busCoords, userCoords) {
     // 🛑 If user is more than 10 min away, provide driving ETA instead of walking
     if (walkingTimeMinutes > 10) {
         const driveETA = await getDrivingETA(userCoords, closestStop.coords);
-        alert(`⚠️ You are out of the bus's route.\n🚏 Nearest stop: ${closestStop.name}\n🚗 Driving distance: ~${driveETA} min (${walkingDistanceKm.toFixed(2)} km away)`);
+        showPopupMessage(`
+            ⚠️ You are out of the bus's route.<br>
+            🚏 Nearest stop: <strong>${closestStop.name}</strong><br>
+            🚗 Driving distance: ~<strong>${driveETA} min</strong> (${walkingDistanceKm.toFixed(2)} km away)
+        `);
         return null;
     }
 
-    // ✅ If user is within 10 min, inform them and calculate bus ETA
-    alert(`🚏 Nearest stop: ${closestStop.name}\n🚶 Walking distance: ~${walkingTimeMinutes} min (${walkingDistanceMeters}m)`);
 
     const coordinates = [busCoords, closestStop.coords];
-
     const url = `https://api.openrouteservice.org/v2/directions/driving-car`;
 
     try {
@@ -332,7 +441,7 @@ async function calculateETA(busCoords, userCoords) {
 
         if (data.error) {
             console.error("❌ ORS Error:", data.error);
-            alert(`🚨 Route Error: ${data.error.message}`);
+            showPopupMessage(`🚨 Route Error: ${data.error.message}`);
             return null;
         }
 
@@ -340,19 +449,26 @@ async function calculateETA(busCoords, userCoords) {
             const etaSeconds = data.routes[0].summary.duration;
             const etaMinutes = Math.round(etaSeconds / 60);
 
-            alert(`🚏 Nearest stop: ${closestStop.name}\n🚶 Walking distance: ~${walkingTimeMinutes} min (${walkingDistanceMeters}m)\n🚌 Bus ETA: ~${etaMinutes} min`);
+            showPopupMessage(`
+                🚏 Nearest stop: <strong>${closestStop.name}</strong><br>
+                🚶 Walking distance: ~<strong>${walkingTimeMinutes} min</strong> (${walkingDistanceMeters}m)<br>
+                🚌 Bus Plate Number: <strong> ${plateNumber}</strong><br>
+                🕒 ETA to Stop: ~<strong>${etaMinutes} min</strong>
+            `);
             console.log(`⏳ ETA to nearest stop: ${etaMinutes} minutes`);
             return etaMinutes;
         } else {
             console.error("❌ No route found. Response:", data);
-            alert("❌ No route found.");
+            showPopupMessage("❌ No route found.");
             return null;
         }
     } catch (error) {
         console.error("❌ Error fetching ETA:", error);
+        showPopupMessage("❌ Error fetching ETA.");
         return null;
     }
 }
+
 
 // Function to calculate the driving ETA using OpenRouteService
 async function getDrivingETA(startCoords, endCoords) {
@@ -440,60 +556,112 @@ async function getDrivingETA(startCoords, endCoords) {
 
 
 
-    // Initialize Leaflet Maps
-    var map1 = L.map('map1').setView([14.5995, 120.9842], 13);
-        var map2 = L.map('map2').setView([14.5995, 120.9842], 13);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map1);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map2);
 
-        var busMarker1, busMarker101;
 
         function updateBusLocationBuses() {
-            fetch("http://localhost:8000/api/get_locations")
-                .then(response => response.json())
-                .then(data => {
-                    if (data["bus1"]) {
-                        updateMapBuses(map1, "bus1", data["bus1"], "latest-loc", busMarker1);
-                    }
-                    if (data["Bus101"]) {
-                        updateMapBuses(map2, "Bus101", data["Bus101"], "latest-loc-101", busMarker101);
-                    }
-                })
-                .catch(error => console.error("❌ Error fetching bus data:", error));
+    fetch("http://localhost:8000/api/get_locations")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            Object.keys(data).forEach(busKey => {
+                const busCoords = data[busKey];
+                console.log(`🔄 Iterating: ${busKey}`);
+console.log(`📌 Bus Coordinates:`, data[busKey]);
+                
+               
+
+                // Convert "bus1" to numeric bus ID (e.g., "bus1" -> 1)
+                const numericBusID = parseInt(busKey.replace("bus", ""), 10);
+
+                console.log(`🔍 Calling updateMapBuses with:`);
+console.log(`   - Map ID: map-${numericBusID}`);
+console.log(`   - Location ID: latest-loc-${numericBusID}`);
+console.log(`   - Bus Key: ${busKey}`);
+
+                // Dynamically update map and location
+               updateMapBuses(`map-${numericBusID}`, busKey, busCoords, `latest-loc-${numericBusID}`);
+            });
+        })
+        .catch(error => console.error("❌ Error fetching bus data:", error));
+}
+
+// Store Leaflet map instances and markers
+let busMaps = {};  // Object to store Leaflet maps per bus
+let cardBusMarkers = {}; // Object to store markers per bus
+
+function updateMapBuses(mapId, busId, busData, locElementId) {
+    const { latitude, longitude } = busData;
+
+    const mapContainer = document.getElementById(mapId);
+    if (!mapContainer) {
+        console.warn(`⚠️ Map container not found for ${busId}`);
+        return;
+    }
+
+    // 🛑 Ensure previous map instance is removed before initializing a new one
+    if (busMaps[busId]) {
+        console.warn(`🛑 Map for ${busId} already exists, updating location...`);
+
+        // Update marker position if map already exists
+        if (cardBusMarkers[busId]) {
+            cardBusMarkers[busId].setLatLng([latitude, longitude]);
+        } else {
+            cardBusMarkers[busId] = L.marker([latitude, longitude]).addTo(busMaps[busId])
+                .bindPopup(`🚌 Bus ${busId}`);
         }
 
-        function updateMapBuses(map, busId, busData, locElementId, marker) {
-            const { latitude, longitude } = busData;
-            if (marker) {
-                marker.setLatLng([latitude, longitude]);
-            } else {
-                marker = L.marker([latitude, longitude]).addTo(map)
-                    .bindPopup(`🚌 ${busId}`);
+        // Move map view to new bus location
+        busMaps[busId].setView([latitude, longitude], 13);
+        return; // Stop further execution
+    }
+
+    // 🛑 Forcefully remove any lingering Leaflet instance
+    if (L.DomUtil.get(mapId) !== null) {
+        L.DomUtil.get(mapId)._leaflet_id = null; // Reset Leaflet instance ID
+    }
+
+    // ✅ Initialize the map only if it does not exist
+    busMaps[busId] = L.map(mapId, { center: [latitude, longitude], zoom: 13 });
+
+    // Add OpenStreetMap tiles
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(busMaps[busId]);
+
+    // Add marker
+    cardBusMarkers[busId] = L.marker([latitude, longitude]).addTo(busMaps[busId])
+        .bindPopup(`🚌 Bus ${busId}`);
+
+    // Reverse Geocode to get location name
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        .then(response => response.json())
+        .then(locationData => {
+            let locationName = "Unknown Location";
+            if (locationData.address) {
+                const { road, suburb, city, state, country } = locationData.address;
+                locationName = [road, suburb, city, state, country].filter(Boolean).join(", ");
             }
-            map.setView([latitude, longitude], 13);
 
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-                .then(response => response.json())
-                .then(locationData => {
-                    let locationName = "Unknown Location";
-                    if (locationData.address) {
-                        const { road, suburb, city, state, country } = locationData.address;
-                        locationName = [road, suburb, city, state, country].filter(Boolean).join(", ");
-                    }
-                    document.getElementById(locElementId).textContent = locationName;
-                })
-                .catch(error => {
-                    console.error("❌ Error fetching location name:", error);
-                    document.getElementById(locElementId).textContent = "Location unavailable";
-                });
-        }
+            // Update the corresponding location element
+            const locElement = document.getElementById(locElementId);
+            if (locElement) {
+                locElement.textContent = locationName;
+            } else {
+                console.warn(`⚠️ Location element not found for ${busId}`);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error fetching location name:", error);
+            const locElement = document.getElementById(locElementId);
+            if (locElement) {
+                locElement.textContent = "Location unavailable";
+            }
+        });
+}
 
-        setInterval(updateBusLocationBuses, 5000);
+
+setInterval(updateBusLocationBuses, 5000);
+        
 
         var map2 = L.map('map2').setView([51.505, -0.09], 13); // Dummy coordinates
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -522,18 +690,7 @@ async function getDrivingETA(startCoords, endCoords) {
             }
         }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const dropdown = document.getElementById("dropdown-menu");
-            const notificationTab = document.querySelector(".notification-tab");
-
-            notificationTab.addEventListener("mouseover", function () {
-               dropdown.style.display = "block";
-           });
-
-           dropdown.addEventListener("mouseleave", function () {
-               dropdown.style.display = "none";
-            });
-        });
+        
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
