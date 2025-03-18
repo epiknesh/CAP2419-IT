@@ -376,9 +376,10 @@ a {
     text-align: center;
     font-size: 1rem;
     margin-top: auto;
-    width: 100%; /* Ensures full width */
+    width: 100vw; /* Ensures full width */
     position: relative; /* Ensures it stays in flow */
     bottom: 0;
+    
 }
 
 @media (min-width: 769px) {

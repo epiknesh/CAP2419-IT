@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Routing Polyline</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Simple Leaflet Routing Polyline Example</h2>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- @mapbox/polyline for decoding -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-polyline/1.1.1/polyline.min.js"></script>
+
+    <script>
+        // Initialize the map
+        console.log("Is polyline available?", typeof polyline);
+        const map = L.map('map').setView([14.5995, 120.9842], 13); // Centered in Manila
+
+        // Load OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Function to fetch route from ORS API
+        async function fetchRoute() {
+            const apiKey = "5b3ce3597851110001cf6248ef6021b6165e4d53935261fad6ed7e96"; // Replace with your OpenRouteService API Key
+            const url = "https://api.openrouteservice.org/v2/directions/driving-car";
+
+            // Example: From Manila Cathedral to Mall of Asia
+            const startCoords = [120.9739, 14.5915];  // Manila Cathedral
+            const endCoords = [120.9803, 14.5353];    // Mall of Asia
+
+            console.log("🚀 Fetching route...");
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": apiKey
+                    },
+                    body: JSON.stringify({
+                        coordinates: [startCoords, endCoords],
+                        format: "json"
+                    })
+                });
+
+                const data = await response.json();
+                console.log("📥 ORS API Response:", data);
+
+                if (data.error) {
+                    console.error("❌ ORS Error:", data.error);
+                    alert(`🚨 Route Error: ${data.error.message}`);
+                    return;
+                }
+
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0].geometry; // Encoded polyline
+                    console.log("Encoded Route:", route);
+
+                    // Decode the polyline
+                    const decodedRoute = polyline.decode(route).map(coord => [coord[0], coord[1]]);
+                    console.log("Decoded Route:", decodedRoute);
+
+                    // Draw the polyline on the map
+                    const routePolyline = L.polyline(decodedRoute, {
+                        color: "blue",
+                        weight: 5
+                    }).addTo(map);
+
+                    // Fit map to route
+                    map.fitBounds(routePolyline.getBounds());
+                } else {
+                    console.error("❌ No route found.");
+                    alert("No route available.");
+                }
+            } catch (error) {
+                console.error("❌ Error fetching route:", error);
+                alert("❌ Error fetching route. Check the console for details.");
+            }
+        }
+
+        // Call function to fetch and display the route
+        fetchRoute();
+    </script>
+
+</body>
+</html>
