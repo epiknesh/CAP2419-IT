@@ -196,33 +196,26 @@ allSideMenu.forEach(item=> {
 // TOGGLE SIDEBAR
 const menuBar = document.querySelector('#content nav .bx.bx-menu');
 const sidebar = document.getElementById('sidebar');
+const brandText = document.querySelector('.brand .text');
+const brandLogo = document.querySelector('.brand img');
 
 // When clicked, toggle the sidebar
 menuBar.addEventListener('click', function () {
-	sidebar.classList.toggle('hide');
-})
+    sidebar.classList.toggle('hide');
+
+    if (sidebar.classList.contains('hide')) {
+        brandText.style.display = 'none'; // Hide text
+        brandLogo.style.height = '43px'; // Make the logo smaller
+    } else {
+        brandText.style.display = 'block'; // Show text
+        brandLogo.style.height = '75px'; // Restore original size
+    }
+});
 
 
 
 
 
-
-
-const searchButton = document.querySelector('#content nav form .form-input button');
-const searchButtonIcon = document.querySelector('#content nav form .form-input button .bx');
-const searchForm = document.querySelector('#content nav form');
-
-searchButton.addEventListener('click', function (e) {
-	if(window.innerWidth < 576) {
-		e.preventDefault();
-		searchForm.classList.toggle('show');
-		if(searchForm.classList.contains('show')) {
-			searchButtonIcon.classList.replace('bx-search', 'bx-x');
-		} else {
-			searchButtonIcon.classList.replace('bx-x', 'bx-search');
-		}
-	}
-})
 
 
 

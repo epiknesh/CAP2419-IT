@@ -238,6 +238,13 @@ function initializeMap() {
         attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
 }
+const busIcon = L.icon({
+    iconUrl: '../img/bus-icon.png', // Path to your custom icon
+    iconSize: [45.875, 55.375], // Width and height of the icon
+    iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
+    popupAnchor: [0, -35] // Offset for the popup
+});
+
 async function updateBusLocations() {
     try {
         console.log("📡 Fetching bus locations...");
@@ -251,8 +258,11 @@ async function updateBusLocations() {
         Object.keys(data).forEach(bus_id => {
             const { latitude, longitude } = data[bus_id];
 
-            busMarkers[bus_id] = L.marker([latitude, longitude]).addTo(map)
+            // 🚌 Create marker with custom bus icon
+            busMarkers[bus_id] = L.marker([latitude, longitude], { icon: busIcon })
+                .addTo(map)
                 .bindPopup(`🚌 <b>Bus ID:</b> ${bus_id}`);
+
             console.log(`✅ Created marker for Bus ${bus_id} at [${latitude}, ${longitude}]`);
         });
 
@@ -260,7 +270,6 @@ async function updateBusLocations() {
         console.error("❌ Error fetching bus data:", error);
     }
 }
-
 // Function to fetch fleet capacity
 // Store buses that have already triggered the email notification to prevent duplicate sends
 const notifiedBuses = new Set();
