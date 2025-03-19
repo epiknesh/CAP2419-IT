@@ -36,20 +36,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 "6": "Cashier"
             };
 
-            // Generate table rows dynamically
-            let tableRows = accounts.map(account => `
-                <tr>
-                    <td>
-                        <img src="img/noprofile.jpg">
-                        ${account.firstName} ${account.lastName}
-                    </td>
-                    <td>${account.email}</td> 
-                    <td>${new Date(account.birthdate).toLocaleDateString()}</td>
-                    <td>${new Date(account.createdAt).toLocaleDateString()}</td>
-                    <td>${roleMapping[account.role] || "Unknown"}</td>
-                    <td><button class="btn btn-danger" onclick="showConfirmationModal('${account._id}')">Remove</button></td>
-                </tr>
-            `).join('');
+                    // Generate table rows dynamically
+        let tableRows = accounts.map(account => `
+            <tr>
+                <td>
+                    <img src="${account.profilePicture || 'img/noprofile.jpg'}" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%;">
+                    ${account.firstName} ${account.lastName}
+                </td>
+                <td>${account.email}</td> 
+                <td>${new Date(account.birthdate).toLocaleDateString()}</td>
+                <td>${new Date(account.createdAt).toLocaleDateString()}</td>
+                <td>${roleMapping[account.role] || "Unknown"}</td>
+                <td><button class="btn btn-danger" onclick="showConfirmationModal('${account._id}')">Remove</button></td>
+            </tr>
+        `).join('');
 
             // Inject content
             mainContent.innerHTML = `
