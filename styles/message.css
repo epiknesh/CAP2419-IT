@@ -1,109 +1,238 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* General Styles */
 body {
   font-family: 'Poppins', sans-serif;
-  background: #f9f9f9;
-}
-
-.head-title {
-  font-size: 36px;
-  font-weight: bold;
+  background: #f1f1f1;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  color: darkslategray;
-  padding: 24px;
+  height: 100vh;
+  width: 100vw;
 }
 
+/* Chat Container */
 .chatbox {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 150px);
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  height: 85vh;
+  width: 90%;
+  max-width: 1200px;
   background: #fff;
+  border-radius: 15px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
+/* Chat Messages Section */
 .chatbox__messages {
   flex: 1;
-  padding: 20px;
+  padding: 15px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #bbb transparent;
 }
 
+/* Scrollbar Styling */
+.chatbox__messages::-webkit-scrollbar {
+  width: 6px;
+}
+.chatbox__messages::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 10px;
+}
+
+/* Message Wrapper */
 .message {
   display: flex;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.message--received {
-  justify-content: flex-start;
-}
-
-.message--sent {
-  justify-content: flex-end;
-}
-
-.message__profile-pic {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-
-.message__content {
-  max-width: 60%;
-  padding: 10px 20px;
-  border-radius: 20px;
-  background: #e0e0e0;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 8px;
+  max-width: 75%;
   position: relative;
 }
 
+/* Fully Align Sent Messages to the Right */
+.message--sent {
+  justify-content: flex-end;
+  align-self: flex-end;
+  flex-direction: row-reverse;
+  align-items: flex-end;
+  width: 100%; /* Ensures full right alignment */
+}
+
+/* Fix Sent Message Bubble Alignment */
 .message--sent .message__content {
-  background: #007bff;
-  color: #fff;
-}
-
-.message__user {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.message__time {
-  display: block;
-  font-size: 12px;
-  color: #888;
-  margin-top: 5px;
-}
-
-.chatbox__input {
+  background: linear-gradient(to right, #0084ff, #007bff);
+  color: white;
+  border-bottom-right-radius: 5px;
+  position: relative;
+  text-align: left;
+  word-wrap: break-word;
+  white-space: normal; /* FIX: Prevents weird height expansion */
+  max-width: 60%; /* Forces bubble to align properly */
+  padding: 10px 14px;
+  line-height: 1.4;
+  margin-left: auto; /* FIX: Ensures full right alignment */
   display: flex;
-  padding: 10px;
-  border-top: 1px solid #ddd;
+  flex-direction: column;
 }
 
-.chatbox__input input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  outline: none;
+/* Lock Sent Messages to the Right (Fixes Left Shifting) */
+.message--sent .message__content {
+  align-self: flex-end;
 }
 
-.chatbox__input button {
+/* Fix Floating Profile Picture for Sent Messages */
+.message--sent .message__profile-pic {
   margin-left: 10px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 20px;
-  background: #007bff;
-  color: #fff;
-  cursor: pointer;
+  margin-right: 0;
+  align-self: flex-end;
 }
 
-.chatbox__input button i {
-  font-size: 20px;
+/* Received Messages */
+.message--received {
+  justify-content: flex-start;
+  align-items: flex-end;
 }
 
-img {
+/* Chat Bubble Styling */
+.message__content {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  max-width: 75%;
+  word-wrap: break-word;
+  white-space: normal;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Received Messages (Gray Bubble) */
+.message--received .message__content {
+  background: #f0f0f0;
+  color: #333;
+  border-bottom-left-radius: 5px;
+}
+
+/* Profile Picture - Fix Floating Issue */
+.message__profile-pic {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
+  align-self: flex-end;
+  margin-bottom: 5px;
+}
+
+/* Received Messages - Profile Pic at Bottom Left */
+.message--received .message__profile-pic {
+  margin-right: 10px;
+  align-self: flex-end;
+}
+
+/* Message Timestamp */
+.message__time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+
+/* Make timestamps visible on received messages */
+.message--received .message__time {
+  color: #666;
+}
+
+/* Input Section */
+.chatbox__input {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-top: 1px solid #ddd;
+  background: white;
+  width: 100%;
+}
+
+/* Input Field */
+.chatbox__input input {
+  flex: 1;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 20px;
+  background: #f3f3f3;
+  outline: none;
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+.chatbox__input input:focus {
+  background: #eaeaea;
+}
+
+/* Send Button */
+.chatbox__input button {
+  margin-left: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 50%;
+  background: #0084ff;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.chatbox__input button:hover {
+  background: #0070e0;
+}
+
+/* Send Icon */
+.chatbox__input button i {
+  font-size: 20px;
+}
+
+/* Date Divider */
+.date-divider {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  padding: 8px 0;
+  margin: 10px 0;
+  background: linear-gradient(to right, #e0e0e0, #f7f7f7, #e0e0e0);
+  border-radius: 10px;
+  display: inline-block;
+  width: 60%;
+  align-self: center;
+}
+
+/* 💡 Mobile Optimization */
+@media screen and (max-width: 600px) {
+  .chatbox {
+    height: 90vh;
+    width: 95%;
+  }
+  .message__content {
+    font-size: 14px;
+    max-width: 85%;
+  }
+  .message__time {
+    font-size: 10px;
+  }
+  .chatbox__input input {
+    font-size: 14px;
+    padding: 10px;
+  }
 }

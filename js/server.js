@@ -530,31 +530,47 @@ app.put('/fuel/:busId', async (req, res) => {
 });
 
 
-  
-  
-
-
-
-// WEB SOCKET (WALKIE-TALKIE)
+  // WEB SOCKET (WALKIE-TALKIE)
 const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8080 });
+// Define Message Schema
+const messageSchema = new mongoose.Schema({
+    sender: String,
+    profilePic: String,
+    message: String,
+    timestamp: { type: Date, default: Date.now }
+});
 
+const Message = mongoose.model('Message', messageSchema);
+
+const wss = new WebSocket.Server({ port: 8080 });
 let clients = [];
 
-wss.on('connection', (ws) => {
+wss.on('connection', async (ws) => {
     clients.push(ws);
     console.log('New client connected');
 
-    ws.on('message', (message) => {
+    // Send previous messages when a new client connects
+    try {
+        const messages = await Message.find().sort({ timestamp: 1 }).limit(50); // Get last 50 messages
+        ws.send(JSON.stringify({ type: "history", messages }));
+    } catch (error) {
+        console.error("Error fetching chat history:", error);
+    }
+
+    ws.on('message', async (message) => {
         try {
-            const messageData = JSON.parse(message); // Ensure it's valid JSON
+            const messageData = JSON.parse(message);
             console.log(`Received message from ${messageData.sender}: ${messageData.message}`);
 
-            // Broadcast message to all other clients
+            // Save message to MongoDB
+            const newMessage = new Message(messageData);
+            await newMessage.save();
+
+            // Broadcast to all connected clients
             clients.forEach(client => {
-                if (client !== ws && client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(messageData)); // Send structured JSON
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(messageData));
                 }
             });
 
@@ -568,8 +584,6 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
     });
 });
-
-console.log('WebSocket server running on ws://localhost:8080');
 
 
 

@@ -1,31 +1,53 @@
 const socket = new WebSocket('ws://localhost:8080');
 
 socket.onmessage = (event) => {
-    let messageData;
-    
+    let data;
     try {
-        messageData = JSON.parse(event.data); // Attempt to parse JSON
+        data = JSON.parse(event.data);
     } catch (error) {
         console.error("Invalid message format:", event.data);
-        return; // Exit if parsing fails
+        return;
     }
 
-    displayReceivedMessage(messageData);
+    if (data.type === "history") {
+        // Load previous messages
+        data.messages.forEach(displayReceivedMessage);
+    } else {
+        displayReceivedMessage(data);
+    }
 };
 
-// Function to display received messages
+
+let lastMessageDate = null; // Keeps track of the last displayed message date
+
 function displayReceivedMessage(messageData) {
     const chatboxMessages = document.querySelector('.chatbox__messages');
+    const messageDate = new Date(messageData.timestamp);
+    const formattedDate = messageDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Check if this is the first message of a new day
+    if (lastMessageDate !== formattedDate) {
+        lastMessageDate = formattedDate; // Update the last recorded date
+
+        // Create a date divider
+        const dateDivider = document.createElement('div');
+        dateDivider.className = 'date-divider';
+        dateDivider.innerText = formattedDate;
+        chatboxMessages.appendChild(dateDivider);
+    }
+
+    // Create message element
     const newMessage = document.createElement('div');
-    newMessage.className = 'message message--received';
+    newMessage.className = messageData.sender === getUserName() ? 'message message--sent' : 'message message--received';
+
     newMessage.innerHTML = `
         <img src="${messageData.profilePic}" alt="Profile Picture" class="message__profile-pic">
         <div class="message__content">
             <p>${messageData.sender}</p>
             <p>${messageData.message}</p>
-            <span class="message__time">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
+            <span class="message__time">${messageDate.toLocaleTimeString()}</span>
         </div>`;
-    
+
     chatboxMessages.appendChild(newMessage);
     chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
 }
@@ -44,14 +66,13 @@ function sendMessage() {
 
     const user = JSON.parse(localStorage.getItem('user')) || {};
     const messageData = {
-        sender: `${user.firstName || 'Unknown'} ${user.lastName || 'User'}`, // Concatenating first and last name
-        profilePic: user.pic || 'img/noprofile.jpg', // Fallback if profile picture is missing
+        sender: `${user.firstName || 'Unknown'} ${user.lastName || 'User'}`,
+        profilePic: user.pic || 'img/noprofile.jpg',
         message: messageText,
         timestamp: new Date().toISOString()
     };
-    
-    socket.send(JSON.stringify(messageData)); // Send as JSON
-    appendSentMessage(messageData);
+
+    socket.send(JSON.stringify(messageData)); // Send message to server
 
     input.value = ''; // Clear input field
 }
@@ -59,17 +80,11 @@ function sendMessage() {
 
 // Function to append sent messages to the chatbox
 function appendSentMessage(messageData) {
-    const chatboxMessages = document.querySelector('.chatbox__messages');
-    const newMessage = document.createElement('div');
-    newMessage.className = 'message message--sent';
-    newMessage.innerHTML = `
-        <img src="${messageData.profilePic}" alt="Profile Picture" class="message__profile-pic">
-        <div class="message__content">
-            <p>${messageData.sender}</p>
-            <p>${messageData.message}</p>
-            <span class="message__time">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
-        </div>`;
-    
-    chatboxMessages.appendChild(newMessage);
-    chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
+    displayReceivedMessage(messageData);
+}
+
+// Helper function to get username
+function getUserName() {
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+    return `${user.firstName || 'Unknown'} ${user.lastName || 'User'}`;
 }
