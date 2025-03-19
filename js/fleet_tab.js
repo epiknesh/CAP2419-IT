@@ -186,7 +186,13 @@ fleetTab.addEventListener("click", async function (event) {
             initializeMap(); // Call function to initialize the map
         }
 
-        await fetchFleetCapacity();
+                // Fetch and update fleet capacity every 10 seconds
+        setInterval(async () => {
+            await fetchFleetCapacity();
+        }, 5000);
+
+        // Initial call to populate the table immediately
+        fetchFleetCapacity();
         await fetchFleetStatus();
         await fetchFleetPersonnel();
 // Fetch initial bus locations and refresh every 5 seconds
