@@ -176,8 +176,8 @@ app.put('/maintenance/:busID', async (req, res) => {
     }
 });
 
-const Dispatch = require('./models/Dispatch'); // Import Bus model
-
+const Dispatch = require('./models/Dispatch');// Import Bus model
+ 
 app.get('/dispatch', async (req, res) => {
     try {
         const dispatch = await Dispatch.find(); // Fetch all bus data
@@ -532,62 +532,79 @@ app.put('/fuel/:busId', async (req, res) => {
 
   // WEB SOCKET (WALKIE-TALKIE)
 const WebSocket = require('ws');
+const Message = require('./models/Message');
 
-// Define Message Schema
-const messageSchema = new mongoose.Schema({
-    sender: String,
-    profilePic: String,
-    message: String,
-    timestamp: { type: Date, default: Date.now }
+
+
+
+
+// 🔹 Cloudinary Storage for Voice Messages
+const voiceStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'voice_messages', // Store in "voice_messages" folder
+        resource_type: 'raw', // Required for audio files
+        format: async () => 'webm', // Use WebM format
+        public_id: (req, file) => Date.now() + '-' + file.originalname
+    },
+});
+const uploadVoice = multer({ storage: voiceStorage });
+
+// 🔹 Handle Voice Message Uploads
+app.post('/upload-voice', uploadVoice.single('voice'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Return the Cloudinary URL
+    res.json({ voiceUrl: req.file.path });
 });
 
-const Message = mongoose.model('Message', messageSchema);
-
+// 🔹 WebSocket Setup
 const wss = new WebSocket.Server({ port: 8080 });
-let clients = [];
 
 wss.on('connection', async (ws) => {
-    clients.push(ws);
-    console.log('New client connected');
+    console.log("🔹 New client connected");
 
-    // Send previous messages when a new client connects
+    // Send chat history
     try {
-        const messages = await Message.find().sort({ timestamp: 1 }).limit(50); // Get last 50 messages
+        const messages = await Message.find().sort({ timestamp: 1 }).limit(50);
         ws.send(JSON.stringify({ type: "history", messages }));
     } catch (error) {
-        console.error("Error fetching chat history:", error);
+        console.error("❌ Error fetching chat history:", error);
     }
 
     ws.on('message', async (message) => {
         try {
             const messageData = JSON.parse(message);
-            console.log(`Received message from ${messageData.sender}: ${messageData.message}`);
+            console.log(`📩 Received message from ${messageData.sender}: ${messageData.message || "[Voice Message]"}`);
 
-            // Save message to MongoDB
-            const newMessage = new Message(messageData);
+            if (!messageData.sender || (!messageData.message && !messageData.voiceMessage) || !messageData.timestamp) {
+                return console.error("❌ Invalid message received:", messageData);
+            }
+
+            // Save to MongoDB
+            const newMessage = new Message({
+                sender: messageData.sender,
+                profilePic: messageData.profilePic,
+                message: messageData.message || null,
+                voiceMessage: messageData.voiceMessage || null,
+                timestamp: messageData.timestamp
+            });
+
             await newMessage.save();
 
-            // Broadcast to all connected clients
-            clients.forEach(client => {
+            // Broadcast to all clients
+            wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify(messageData));
                 }
             });
 
         } catch (error) {
-            console.error("Invalid JSON received:", message);
+            console.error("❌ Error processing message:", error);
         }
     });
 
-    ws.on('close', () => {
-        clients = clients.filter(client => client !== ws);
-        console.log('Client disconnected');
-    });
+    ws.on('close', () => console.log("🔻 Client disconnected"));
 });
-
-
-
-
-
-
-

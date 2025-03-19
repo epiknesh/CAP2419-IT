@@ -53,22 +53,31 @@ body {
 .message {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 8px;
   max-width: 75%;
   position: relative;
 }
 
-/* Fully Align Sent Messages to the Right */
+/* ✅ Fully Align Sent Messages to the Right */
 .message--sent {
   justify-content: flex-end;
   align-self: flex-end;
-  flex-direction: row-reverse;
+  flex-direction: row; /* FIX: Ensures profile pic is on the right */
   align-items: flex-end;
   width: 100%; /* Ensures full right alignment */
 }
 
-/* Fix Sent Message Bubble Alignment */
+/* ✅ Fully Align Received Messages to the Left */
+.message--received {
+  justify-content: flex-start;
+  align-self: flex-start;
+  flex-direction: row; /* Profile pic stays on left */
+  align-items: flex-end;
+  width: 100%;
+}
+
+/* ✅ Fix Sent Message Bubble Alignment */
 .message--sent .message__content {
   background: linear-gradient(to right, #0084ff, #007bff);
   color: white;
@@ -76,70 +85,53 @@ body {
   position: relative;
   text-align: left;
   word-wrap: break-word;
-  white-space: normal; /* FIX: Prevents weird height expansion */
-  max-width: 60%; /* Forces bubble to align properly */
+  white-space: normal;
+  max-width: 60%;
   padding: 10px 14px;
   line-height: 1.4;
-  margin-left: auto; /* FIX: Ensures full right alignment */
   display: flex;
   flex-direction: column;
-}
-
-/* Lock Sent Messages to the Right (Fixes Left Shifting) */
-.message--sent .message__content {
   align-self: flex-end;
+  border-radius: 18px 18px 5px 18px; /* 🟢 Restore rounded corners */
 }
 
-/* Fix Floating Profile Picture for Sent Messages */
-.message--sent .message__profile-pic {
-  margin-left: 10px;
-  margin-right: 0;
-  align-self: flex-end;
-}
-
-/* Received Messages */
-.message--received {
-  justify-content: flex-start;
-  align-items: flex-end;
-}
-
-/* Chat Bubble Styling */
-.message__content {
-  padding: 10px 14px;
-  border-radius: 18px;
-  font-size: 15px;
-  line-height: 1.4;
-  max-width: 75%;
-  word-wrap: break-word;
-  white-space: normal;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-/* Received Messages (Gray Bubble) */
+/* ✅ Fix Received Message Bubble Alignment */
 .message--received .message__content {
   background: #f0f0f0;
   color: #333;
   border-bottom-left-radius: 5px;
+  text-align: left;
+  max-width: 60%;
+  padding: 10px 14px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px 18px 5px 18px; /* 🟢 Restore rounded corners */
 }
 
-/* Profile Picture - Fix Floating Issue */
+/* ✅ Fix Profile Picture Alignment */
+
+/* Sent Messages - Profile Pic on Right */
+.message--sent .message__profile-pic {
+  margin-left: 8px;
+  order: 2; /* Ensures profile pic is after the chat bubble */
+}
+
+/* Received Messages - Profile Pic on Left */
+.message--received .message__profile-pic {
+  margin-right: 8px;
+  order: -1; /* Ensures profile pic is before the chat bubble */
+}
+
+/* ✅ General Profile Picture Styling */
 .message__profile-pic {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  align-self: flex-end;
-  margin-bottom: 5px;
 }
 
-/* Received Messages - Profile Pic at Bottom Left */
-.message--received .message__profile-pic {
-  margin-right: 10px;
-  align-self: flex-end;
-}
-
-/* Message Timestamp */
+/* ✅ Message Timestamp */
 .message__time {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
@@ -148,12 +140,12 @@ body {
   white-space: nowrap;
 }
 
-/* Make timestamps visible on received messages */
+/* ✅ Make timestamps visible on received messages */
 .message--received .message__time {
   color: #666;
 }
 
-/* Input Section */
+/* ✅ Input Section */
 .chatbox__input {
   display: flex;
   align-items: center;
@@ -203,7 +195,7 @@ body {
   font-size: 20px;
 }
 
-/* Date Divider */
+/* ✅ Date Divider */
 .date-divider {
   text-align: center;
   font-size: 14px;
@@ -218,7 +210,23 @@ body {
   align-self: center;
 }
 
-/* 💡 Mobile Optimization */
+.recording {
+  background: red !important; /* 🔴 Change to red while recording */
+  animation: pulse 1.5s infinite alternate; /* 🔴 Optional pulsing effect */
+}
+
+#recordButton {
+  margin-right: 5px; /* 🟢 Adds small space to the right */
+}
+
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+
+/* ✅ Mobile Optimization */
 @media screen and (max-width: 600px) {
   .chatbox {
     height: 90vh;
