@@ -383,7 +383,7 @@ function updateBusLocations() {
 
 
 // Fetch new bus locations every 5 seconds
-setInterval(updateBusLocations, 5000);
+setInterval(updateBusLocations, 2000);
 
 function showPopupMessage(message) {
     document.getElementById("etaModalBody").innerHTML = message;
@@ -770,7 +770,7 @@ function updateMapBuses(mapId, busId, busData, locElementId) {
 }
 
 
-setInterval(updateBusLocationBuses, 5000);
+setInterval(updateBusLocationBuses, 2000);
         
 
         var map2 = L.map('map2').setView([51.505, -0.09], 13); // Dummy coordinates

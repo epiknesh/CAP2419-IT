@@ -189,7 +189,7 @@ fleetTab.addEventListener("click", async function (event) {
                 // Fetch and update fleet capacity every 10 seconds
         setInterval(async () => {
             await fetchFleetCapacity();
-        }, 5000);
+        }, 2000);
 
         // Initial call to populate the table immediately
         fetchFleetCapacity();
