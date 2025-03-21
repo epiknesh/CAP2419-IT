@@ -72,7 +72,7 @@ def log_data_worker():
             capacity = data_queue.get()
 
             # Define the query to find the document (assuming busID is unique)
-            query = {"busID": 3}
+            query = {"busID": 4}
             
             # Define the update operation
             update = {
@@ -171,9 +171,9 @@ def people_counter():
 	if not args.get("input", False):
 		logger.info("Logger is working")	
 		logger.info("Starting the live stream..")
-		vs = VideoStream(config["url"]).start() #http://192.168.1.3:5000/video_feed - URL 100.100.13.85:5000 
+		#vs = VideoStream(config["url"]).start() #http://192.168.1.3:5000/video_feed - URL 100.100.13.85:5000 
 
-		#vs = VideoStream(int(config["url"])).start() # // THIS IS FOR WEBCAM
+		vs = VideoStream(int(config["url"])).start() # // THIS IS FOR WEBCAM
 
 		time.sleep(2.0)
 
@@ -214,6 +214,7 @@ def people_counter():
 
 	if config["Thread"]:
 		vs = thread.ThreadingClass(config["url"])
+		#vs = VideoStream(int(config["url"])).start() # // THIS IS FOR WEBCAM
 
 	# loop over frames from the video stream
 	while True:
@@ -358,16 +359,20 @@ def people_counter():
 				# centroid and the mean of *previous* centroids will tell
 				# us in which direction the object is moving (negative for
 				# 'up' and positive for 'down')
-				y = [c[1] for c in to.centroids]
-				direction = centroid[1] - np.mean(y)
+				#y = [c[1] for c in to.centroids]
+				#direction = centroid[1] - np.mean(y)
+				if len(to.centroids) > 0:
+						direction = centroid[1] - to.centroids[-1][1]  # Compare with the last known position
+				else:
+						direction = 0
 				to.centroids.append(centroid)
-
+				TOLERANCE = 10	#Adjust the tolerance value to match the object's speed
 				# check to see if the object has been counted or not
 				if not to.counted:
 					# if the direction is negative (indicating the object
 					# is moving up) AND the centroid is above the center
 					# line, count the object
-					if direction < 0 and centroid[1] < H // 2:
+					if direction < 0 and centroid[1] < (H // 2 + TOLERANCE):
 						totalUp += 1
 						date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 						move_in.append(totalUp)
@@ -380,7 +385,7 @@ def people_counter():
 					# if the direction is positive (indicating the object
 					# is moving down) AND the centroid is below the
 					# center line, count the object
-					elif direction > 0 and centroid[1] > H // 2:
+					elif direction > 0 and centroid[1] > (H // 2 - TOLERANCE):
 						totalDown += 1
 						date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 						move_exit.append(totalDown)
@@ -399,6 +404,7 @@ def people_counter():
 								email_thread.start()
 								logger.info("Alert sent!")
 						to.counted = True
+						to.last_count_time = time.time()    # Added a Timestamp to the last count time
 						# compute the sum of total people inside
 						total = []
 						total.append(len(move_in) - len(move_exit))
@@ -420,18 +426,18 @@ def people_counter():
 		("Status", status),
 		]
 
-		info_total = [
-		("Total people inside", ', '.join(map(str, total))),
-		]
+		#info_total = [
+		#("Total people inside", ', '.join(map(str, total))),
+		#]
 
 		# display the output
 		for (i, (k, v)) in enumerate(info_status):
 			text = "{}: {}".format(k, v)
 			cv2.putText(frame, text, (10, H - ((i * 20) + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-		for (i, (k, v)) in enumerate(info_total):
-			text = "{}: {}".format(k, v)
-			cv2.putText(frame, text, (265, H - ((i * 20) + 60)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+		#for (i, (k, v)) in enumerate(info_total):
+		#	text = "{}: {}".format(k, v)
+		#	cv2.putText(frame, text, (265, H - ((i * 20) + 60)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
 		# initiate a simple log to save the counting data
 		if config["Log"]:
