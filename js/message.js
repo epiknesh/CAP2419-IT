@@ -74,10 +74,12 @@ newMessage.innerHTML = isSent
 }
 
 
-const sendButton = document.querySelector('.chatbox__input button');
+const sendButton = document.getElementById('sendButton');
 const input = document.querySelector('.chatbox__input input');
 
-sendButton.addEventListener('click', sendMessage);
+sendButton.addEventListener('click', function () {
+    sendMessage();
+});
 input.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') sendMessage();
 });

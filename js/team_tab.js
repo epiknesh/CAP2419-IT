@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <td>${new Date(account.birthdate).toLocaleDateString()}</td>
                 <td>${new Date(account.createdAt).toLocaleDateString()}</td>
                 <td>${roleMapping[account.role] || "Unknown"}</td>
-                <td><button class="btn btn-danger" onclick="showConfirmationModal('${account._id}')">Remove</button></td>
+                <td><button class="btn btn-danger" onclick="showRemoveConfirmationModal('${account._id}')">Remove</button></td>
             </tr>
         `).join('');
 
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Function to show confirmation modal
-function showConfirmationModal(userId) {
+function showRemoveConfirmationModal(userId) {
     // Create the modal HTML dynamically
     const modalHTML = `
         <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="color: black;">

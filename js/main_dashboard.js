@@ -61,13 +61,16 @@ console.log(user);
     const maintenanceContent = document.querySelector("#maintenanceContent tbody");
     const busPercentageBox = document.querySelector(".text-success");
     const incomeTableBody = document.querySelector("#incomeContent tbody"); 
-    const weeklyIncomeBox = document.querySelector(".box-info li:first-child h3"); // Weekly Income display
+    const weeklyIncomeBox = document.querySelector("#weeklyIncome"); // Select element by ID
+    // Weekly Income display
     const dispatchTableBody = document.querySelector("#dispatchContent tbody"); // Dispatch Table
 
     try {
        // Fetch Maintenance Data
 	   const maintenanceResponse = await fetch("http://localhost:3000/maintenance");
 	   const buses = await maintenanceResponse.json();
+
+       buses.sort((a, b) => a.busID - b.busID);
 
 	   let operatingBuses = new Set(); // Store operating bus IDs
 	   let operatingCount = 0;
@@ -120,6 +123,8 @@ console.log(user);
         const incomeResponse = await fetch("http://localhost:3000/income");
         const incomeData = await incomeResponse.json();
 
+        incomeData.sort((a, b) => a.busID - b.busID);
+
         incomeTableBody.innerHTML = ""; // Clear existing data
         let totalWeeklyIncome = 0;
 
@@ -137,11 +142,18 @@ console.log(user);
         });
 
         // Update Weekly Income display
-        weeklyIncomeBox.innerHTML = `₱${totalWeeklyIncome.toLocaleString()}`;
+        weeklyIncomeBox.textContent = `₱${totalWeeklyIncome.toLocaleString()}`;
+
+        // Calculate total income for today
+        let totalIncomeToday = incomeData.reduce((sum, income) => sum + (income.incomeToday || 0), 0);
+
+        // Update the Total Income Today UI
+        document.getElementById("totalIncomeToday").textContent = `₱${totalIncomeToday.toLocaleString()}`;
 
           // Fetch Dispatch Data
         const dispatchResponse = await fetch("http://localhost:3000/dispatch");
         const dispatchData = await dispatchResponse.json();
+        dispatchData.sort((a, b) => a.busID - b.busID);
 
         dispatchTableBody.innerHTML = ""; // Clear previous data
 

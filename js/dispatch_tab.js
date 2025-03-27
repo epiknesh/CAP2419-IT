@@ -69,6 +69,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Get only operative buses (status = 1)
             const operativeBuses = maintenanceData.filter(bus => bus.status === 1).map(bus => bus.busID);
 
+
+
+
             // Fetch dispatch data
             const dispatchResponse = await fetch('http://localhost:3000/dispatch');
             const dispatchData = await dispatchResponse.json();
@@ -100,6 +103,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             // Filter dispatch records for operative buses
             const operativeDispatches = dispatchData.filter(dispatch => operativeBuses.includes(dispatch.busID));
+
+            
+// Sort by bus number (ascending)
+operativeDispatches.sort((a, b) => a.busID - b.busID);
 
             // Function to format time
             const formatTime = (dateString) => {
@@ -416,18 +423,21 @@ console.log("longitude:", longitude);
 
         // Schedule the next dispatch (e.g., 1 hour later)
         const nextDispatchTime = new Date();
-        nextDispatchTime.setHours(nextDispatchTime.getHours() + 1);
+        nextDispatchTime.setHours(nextDispatchTime.getHours());
 
-        // Prepare updated data
-        const updatedData = {
-            status: 1,
-            lastDispatch: dispatchData.nextDispatch, // Move the previous dispatch time
-            nextDispatch: nextDispatchTime.toISOString(),
-            coordinates: {
-                type: "Point",
-                coordinates: [longitude, latitude] // MongoDB stores GeoJSON as [longitude, latitude]
-            }
-        };
+        const roundedLatitude = parseFloat(latitude.toFixed(4));
+const roundedLongitude = parseFloat(longitude.toFixed(4));
+
+const updatedData = {
+    status: 1,
+    lastDispatch: dispatchData.nextDispatch,
+    nextDispatch: nextDispatchTime.toISOString(),
+    coordinates: {
+        type: "Point",
+        coordinates: [roundedLongitude, roundedLatitude] // Store only 4 decimals
+    }
+};
+
 
         // ✅ Send update request only ONCE
         const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
