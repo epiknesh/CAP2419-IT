@@ -245,7 +245,7 @@ function initializeMap() {
     }).addTo(map);
 }
 const busIcon = L.icon({
-    iconUrl: '../img/bus-icon.png', // Path to your custom icon
+    iconUrl: './img/bus-icon.png', // Path to your custom icon
     iconSize: [45.875, 55.375], // Width and height of the icon
     iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
     popupAnchor: [0, -35] // Offset for the popup
@@ -432,8 +432,8 @@ async function fetchFleetPersonnel() {
             tableBody.innerHTML += `
                 <tr>
                     <td>${personnel.busID}</td>
-                    <td>${personnel.controller}</td>
-                    <td>${personnel.driver}</td>
+                    <td>${personnel.controller ? personnel.controller : "Unassigned"}</td>
+                    <td>${personnel.driver ? personnel.driver : "Unassigned"}</td>
                 </tr>
             `;
         });
@@ -654,10 +654,11 @@ function showFleetPersonnelForm() {
 
         document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
             const busId = document.getElementById('busId').value;
-            const busController = document.getElementById('busController').value || null;
-            const busDriver = document.getElementById('busDriver').value || null;
+            const busController = document.getElementById('busController').value || "Unassigned";
+            const busDriver = document.getElementById('busDriver').value || "Unassigned";
 
-            if (busId) {
+
+            if (busId && (busDriver !== "" || busController !== "")) {
                 fetch('http://localhost:3000/update-fleet-personnel', {
                     method: 'POST',
                     headers: {
