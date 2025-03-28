@@ -222,7 +222,7 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
             // Attach event listener to Edit Assignment button
             document.getElementById('editPersonnelBtn')?.addEventListener('click', function (event) {
                 event.preventDefault();
-                showFleetPersonnelForm();
+                showDispatchFleetPersonnelForm();
                 console.log("Edit Assignment button clicked");
             });
 
@@ -233,7 +233,7 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
     }
 
 
-    function showFleetPersonnelForm() {
+    function showDispatchFleetPersonnelForm() {
         Promise.all([
             fetch('http://localhost:3000/buses').then(res => res.json()),
             fetch('http://localhost:3000/accounts').then(res => res.json())
