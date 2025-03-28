@@ -300,6 +300,7 @@ async function fetchFleetCapacity() {
         for (const entry of Object.values(latestCapacities)) {
             const percentage = (entry.capacity / maxCapacity) * 100;
             const formattedDate = new Date(entry.date).toLocaleString("en-US", {
+                timeZone: "UTC",
                 year: "numeric",
                 month: "short",
                 day: "numeric",
