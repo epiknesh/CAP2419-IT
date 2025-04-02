@@ -430,11 +430,15 @@ async function fetchFleetPersonnel() {
         fleetPersonnel.sort((a, b) => a.busID - b.busID);
 
         fleetPersonnel.forEach(personnel => {
+            // Check if controller or driver is null and replace with "Unassigned"
+            const controller = personnel.controllerID === null ? "Unassigned" : personnel.controllerID;
+            const driver = personnel.driverID === null ? "Unassigned" : personnel.driverID;
+
             tableBody.innerHTML += `
                 <tr>
                     <td>${personnel.busID}</td>
-                    <td>${personnel.controller ? personnel.controller : "Unassigned"}</td>
-                    <td>${personnel.driver ? personnel.driver : "Unassigned"}</td>
+                    <td>${controller}</td>
+                    <td>${driver}</td>
                 </tr>
             `;
         });
@@ -443,6 +447,7 @@ async function fetchFleetPersonnel() {
         console.error("Error loading fleet personnel:", error);
     }
 }
+
 
 // Function to show the Fleet Readiness form || Edit Status Button
 function showFleetReadinessStatusForm() {
@@ -595,13 +600,15 @@ function showFleetPersonnelForm() {
     ])
     .then(([buses, accounts]) => {
         const busOptions = buses
-            .sort((a, b) => a.busID - b.busID) // Ensure sorting in frontend
+            .sort((a, b) => a.busID - b.busID)
             .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
             .join('');
+
         const driverOptions = `<option value="">Unassigned</option>` + 
             accounts.filter(acc => acc.role == '2')
                    .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
                    .join('');
+
         const controllerOptions = `<option value="">Unassigned</option>` + 
             accounts.filter(acc => acc.role == '3')
                    .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
@@ -655,17 +662,24 @@ function showFleetPersonnelForm() {
 
         document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
             const busId = document.getElementById('busId').value;
-            const busController = document.getElementById('busController').value || "Unassigned";
-            const busDriver = document.getElementById('busDriver').value || "Unassigned";
+            const busController = document.getElementById('busController').value;
+            const busDriver = document.getElementById('busDriver').value;
+        
+            const formattedData = {
+                busId: busId,
+                driverID: busDriver === "Unassigned" ? null : busDriver, 
+                controllerID: busController === "Unassigned" ? null : busController 
+            };
+            
 
+            if (busId !== "" && busId !== null) {
 
-            if (busId && (busDriver !== "" || busController !== "")) {
                 fetch('http://localhost:3000/update-fleet-personnel', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ busID: Number(busId), driverID: busDriver, controllerID: busController })
+                    body: JSON.stringify(formattedData)
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -693,6 +707,7 @@ function showFleetPersonnelForm() {
     })
     .catch(error => console.error('Error fetching data:', error));
 }
+
 
 async function fetchFleetFuel() {
     try {

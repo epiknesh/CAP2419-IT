@@ -286,8 +286,17 @@ app.get('/accounts', async (req, res) => {
 app.delete('/accounts/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await Accounts.findByIdAndDelete(id);
-        res.status(200).json({ message: "User deleted successfully" });
+
+        // Find and delete the account
+        const deletedAccount = await Accounts.findByIdAndDelete(id);
+        if (!deletedAccount) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Use accountID from the deleted account to remove the matching settings entry
+        await Settings.findOneAndDelete({ accountID: deletedAccount.accountID });
+
+        res.status(200).json({ message: "User and associated settings deleted successfully" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });
@@ -326,13 +335,14 @@ app.get('/fleetPersonnel', async (req, res) => {
         const accounts = await Accounts.find();
 
         const fleetPersonnel = buses.map(bus => {
-            const driver = accounts.find(account => account.accountID === bus.driverID);
-            const controller = accounts.find(account => account.accountID === bus.controllerID);
+            // If driverID or controllerID is null, return "Unassigned"
+            const driver = bus.driverID !== null ? accounts.find(account => account.accountID === bus.driverID) : null;
+            const controller = bus.controllerID !== null ? accounts.find(account => account.accountID === bus.controllerID) : null;
             
             return {
                 busID: bus.busID,
-                driver: driver ? `${driver.firstName} ${driver.lastName}` : 'Unknown',
-                controller: controller ? `${controller.firstName} ${controller.lastName}` : 'Unknown'
+                driver: driver ? `${driver.firstName} ${driver.lastName}` : 'Unassigned',
+                controller: controller ? `${controller.firstName} ${controller.lastName}` : 'Unassigned'
             };
         });
 
@@ -343,26 +353,33 @@ app.get('/fleetPersonnel', async (req, res) => {
     }
 });
 
+
 app.post('/update-fleet-personnel', async (req, res) => {
     try {
         const { busID, driverID, controllerID } = req.body;
-        
+
+        // Ensure driverID and controllerID are either null or valid numbers
+        const validDriverID = driverID === "Unassigned" ? null : Number(driverID) || null;
+        const validControllerID = controllerID === "Unassigned" ? null : Number(controllerID) || null;
+
+        // Update the bus record with validated IDs
         const updatedBus = await Buses.findOneAndUpdate(
             { busID },
-            { driverID: driverID || null, controllerID: controllerID || null },
+            { driverID: validDriverID, controllerID: validControllerID },
             { new: true }
         );
-        
+
         if (!updatedBus) {
             return res.status(404).json({ message: 'Bus ID not found' });
         }
-        
+
         res.status(200).json({ message: 'Fleet personnel updated successfully', updatedBus });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 app.put('/update-profile', async (req, res) => {
     try {
