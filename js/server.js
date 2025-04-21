@@ -362,7 +362,33 @@ app.post('/update-fleet-personnel', async (req, res) => {
         const validDriverID = driverID === "Unassigned" ? null : Number(driverID) || null;
         const validControllerID = controllerID === "Unassigned" ? null : Number(controllerID) || null;
 
-        // Update the bus record with validated IDs
+        // Check if the driver is already assigned to another bus (excluding the current bus)
+        if (validDriverID) {
+            const driverAssigned = await Buses.findOne({
+                driverID: validDriverID,
+                busID: { $ne: busID }  // Exclude the current busID
+            });
+
+            if (driverAssigned) {
+                // If the driver is assigned to another bus, return a warning message
+                return res.status(400).json({ message: `Driver is already assigned to another bus.` });
+            }
+        }
+
+        // Check if the controller is already assigned to another bus (excluding the current bus)
+        if (validControllerID) {
+            const controllerAssigned = await Buses.findOne({
+                controllerID: validControllerID,
+                busID: { $ne: busID }  // Exclude the current busID
+            });
+
+            if (controllerAssigned) {
+                // If the controller is assigned to another bus, return a warning message
+                return res.status(400).json({ message: `Controller is already assigned to another bus.` });
+            }
+        }
+
+        // Proceed with updating the bus record with validated IDs
         const updatedBus = await Buses.findOneAndUpdate(
             { busID },
             { driverID: validDriverID, controllerID: validControllerID },
@@ -379,6 +405,7 @@ app.post('/update-fleet-personnel', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 
 app.put('/update-profile', async (req, res) => {

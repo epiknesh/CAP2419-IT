@@ -240,13 +240,15 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
         ])
         .then(([buses, accounts]) => {
             const busOptions = buses
-                .sort((a, b) => a.busID - b.busID) // Ensure sorting in frontend
+                .sort((a, b) => a.busID - b.busID)
                 .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
                 .join('');
+    
             const driverOptions = `<option value="">Unassigned</option>` + 
                 accounts.filter(acc => acc.role == '2')
                        .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
                        .join('');
+    
             const controllerOptions = `<option value="">Unassigned</option>` + 
                 accounts.filter(acc => acc.role == '3')
                        .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
@@ -274,13 +276,13 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="busDriver" class="form-label">Driver:</label>
-                                        <select class="form-select" id="busDriver" name="busDriver" required>
+                                        <select class="form-select" id="busDriver" name="busDriver">
                                             ${driverOptions}
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="busController" class="form-label">Controller:</label>
-                                        <select class="form-select" id="busController" name="busController" required>
+                                        <select class="form-select" id="busController" name="busController">
                                             ${controllerOptions}
                                         </select>
                                     </div>
@@ -298,45 +300,70 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
     
             document.body.insertAdjacentHTML('beforeend', formHtml);
     
-            document.getElementById('submitFleetPersonnel').addEventListener('click', function () {
+            document.getElementById('submitFleetPersonnel').addEventListener('click', async function () {
                 const busId = document.getElementById('busId').value;
-                const busController = document.getElementById('busController').value || null;
-                const busDriver = document.getElementById('busDriver').value || null;
+                const busDriver = document.getElementById('busDriver').value;
+                const busController = document.getElementById('busController').value;
     
-                if (busId) {
-                    fetch('http://localhost:3000/update-fleet-personnel', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ busID: Number(busId), driverID: busDriver, controllerID: busController })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        showAlert(data.message, 'success');
-                        const editPersonnelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
-                        editPersonnelModal.hide();
-                        document.querySelector('#sidebar .side-menu.top li:nth-child(5) a').click();
-                    })
-                    .catch(error => console.error('Error updating fleet personnel:', error));
-                } else {
-                    showAlert('Please fill in all fields.', 'warning');
+                if (!busId) {
+                    showAlert('⚠️ Please select a bus.', 'warning');
+                    return;
+                }
+    
+               
+    
+                const selectedDriverID = busDriver === "" ? null : busDriver;
+                const selectedControllerID = busController === "" ? null : busController;
+    
+                const payload = {
+                    busID: busId,
+                    driverID: selectedDriverID,
+                    controllerID: selectedControllerID
+                };
+    
+                try {
+            // Send the request to the server
+            const response = await fetch('http://localhost:3000/update-fleet-personnel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                // Success: show success alert, hide modal, and trigger another action (like clicking a sidebar link)
+                showAlert(`✅ ${data.message}`, 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
+                modal.hide();
+                document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();  // Navigate as needed
+            } else {
+                // Failure: show error alert with message from the server
+                showAlert(`❌ ${data.message}`, 'danger');
+            }
+                } catch (err) {
+                    console.error('Error:', err);
+                    showAlert('❌ Failed to update personnel. Please try again later.', 'danger');
                 }
             });
     
             const modalElement = document.getElementById('editFleetPersonnelModal');
-            const editStatusModal = new bootstrap.Modal(modalElement);
-            editStatusModal.show();
+            const editModal = new bootstrap.Modal(modalElement);
+            editModal.show();
     
             modalElement.addEventListener('hidden.bs.modal', function () {
                 modalElement.remove();
-                document.querySelector('.modal-backdrop').remove();
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
                 document.body.classList.remove('modal-open');
                 document.body.style = '';
             });
         })
         .catch(error => console.error('Error fetching data:', error));
     }
+    
 
 
 
