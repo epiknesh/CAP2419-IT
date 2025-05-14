@@ -256,8 +256,22 @@ app.post('/update-income', async (req, res) => {
             return res.status(404).json({ message: 'Bus ID not found' });
         }
 
-        // Update values by adding today's income
-        incomeRecord.incomeToday = incomeToday;
+        const today = new Date().toISOString().split('T')[0];
+        const lastUpdated = incomeRecord.updatedAt
+            ? new Date(incomeRecord.updatedAt).toISOString().split('T')[0]
+            : null;
+
+      
+
+        if (lastUpdated === today) {
+            // If the record is from today, ADD to the current incomeToday
+            incomeRecord.incomeToday += incomeToday;
+        } else {
+            // If the record is from a previous day, REPLACE incomeToday
+            incomeRecord.incomeToday = incomeToday;
+        }
+
+        
         incomeRecord.incomeWeek += incomeToday;
         incomeRecord.incomeMonth += incomeToday;
         incomeRecord.totalIncome += incomeToday;
