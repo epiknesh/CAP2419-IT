@@ -568,11 +568,15 @@ app.get('/fuel', async (req, res) => {
 app.put('/fuel/:busId', async (req, res) => {
     try {
         const { busId } = req.params;
-        const { lastFullTank, currentFuel } = req.body;
+        const { lastRefuelDate, currentFuel, fuelRefilled } = req.body;
 
         const updatedFuel = await Fuel.findOneAndUpdate(
             { busId: Number(busId) },
-            { lastFullTank: new Date(lastFullTank), currentFuel: Number(currentFuel) },
+            {
+                lastRefuelDate: new Date(lastRefuelDate),
+                currentFuel: Number(currentFuel),
+                fuelRefilled: Number(fuelRefilled)
+            },
             { new: true }
         );
 
@@ -586,6 +590,7 @@ app.put('/fuel/:busId', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
 
 
   // WEB SOCKET (WALKIE-TALKIE)

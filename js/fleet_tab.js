@@ -148,19 +148,20 @@ fleetTab.addEventListener("click", async function (event) {
                             </div>
                             <table>
                                 <thead>
-                                    <tr>
-                                        <th>Bus ID</th>
-                                        <th>Last Full Tank</th>
-                                        <th>
-                                            <div>
-                                                Current Fuel Level 
-                                            </div>
-                                            <div class="text-secondary"> 
-                                                <small>Fuel Level after the last trip</small>
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
+    <tr>
+        <th>Bus ID</th>
+        <th>Fuel Refilled (Liters)</th>
+        <th>Last Fuel Refill</th>
+        <th>
+            <div>
+                Remaining Fuel Level
+            </div>
+            <div class="text-secondary"> 
+                <small>Estimated Remaining Fuel Level after the last trip</small>
+            </div>
+        </th>
+    </tr>
+</thead>
                                 <tbody>
                                     <tr>
                                         <td>1</td>
@@ -734,21 +735,30 @@ async function fetchFleetFuel() {
         const tableBody = document.querySelector("#fleetFuel tbody");
         tableBody.innerHTML = ""; // Clear existing data
 
+        // Sort fuel data by busId in ascending order
+        fuelData.sort((a, b) => a.busId - b.busId);
+
         for (const fuel of fuelData) {
             const fuelPercentage = Math.min((fuel.currentFuel / 100) * 100, 100); // Assuming 100L tank
-            const formattedDate = new Date(fuel.lastFullTank).toLocaleString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "numeric",
-                hour12: true
-            });
-
-            // Append fuel data to the table
+            const formattedDate = fuel.lastRefuelDate
+                ? new Date(fuel.lastRefuelDate).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true
+                })
+                : "N/A";
+        
+            const fuelRefilled = fuel.fuelRefilled !== undefined && fuel.fuelRefilled !== null
+                ? `${fuel.fuelRefilled.toFixed(2)} L`
+                : "N/A";
+        
             tableBody.innerHTML += `
                 <tr>
                     <td>${fuel.busId}</td>
+                    <td>${fuelRefilled}</td>
                     <td>${formattedDate}</td>
                     <td>
                         <div class="progress">
@@ -765,24 +775,27 @@ async function fetchFleetFuel() {
                 </tr>
             `;
         }
+
     } catch (error) {
         console.error("Error fetching fleet fuel data:", error);
     }
 }
 
 
-// Function to show the Edit Fuel Report form
+
 async function showFuelReportForm() {
     try {
-        // Fetch available bus IDs from the fuel database
         const response = await fetch('http://localhost:3000/fuel');
-        const fuelData = await response.json();
+        const fuelData = await response.json(); // Store fuel data to use later
 
-        // Generate bus options dynamically
-        let busOptions = '<option value="">Select Bus</option>';
-        fuelData.forEach(bus => {
-            busOptions += `<option value="${bus.busId}">${bus.busId}</option>`;
-        });
+        // Sort busData numerically by busId (assuming busId is a number or numeric string)
+fuelData.sort((a, b) => Number(a.busId) - Number(b.busId));
+
+// Generate bus options
+let busOptions = '<option value="">Select Bus</option>';
+fuelData.forEach(bus => {
+    busOptions += `<option value="${bus.busId}">${bus.busId}</option>`;
+});
 
         const formHtml = `
             <div class="modal fade" id="editFleetFuelModal" tabindex="-1" aria-labelledby="editFleetFuelModalLabel" aria-hidden="true">
@@ -804,17 +817,17 @@ async function showFuelReportForm() {
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="busDate" class="form-label">Last Full Tank:</label>
+                                        <label for="busDate" class="form-label">Last Fuel Refill:</label>
                                         <input type="date" class="form-control" id="busDate" name="busDate" required>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="busFuelLevel" class="form-label">Current Fuel Level:</label>
+                                     <div class="col-md-6 mb-3">
+                                        <label for="fuelRefilled" class="form-label">Fuel Refilled (Liters):</label>
+                                        <input type="number" class="form-control" id="fuelRefilled" name="fuelRefilled" step="0.01" min="0" placeholder="Enter liters refueled">
+                                    </div>
+                                    <div class="col-md-6 mb-3 text-center">
+                                        <label for="busFuelLevel" class="form-label">Remaining Fuel Estimate:</label>
                                         <input type="range" class="form-range" id="busFuelLevel" name="busFuelLevel" min="0" max="100" step="1" value="50" oninput="updateFuelLevel(this.value)">
-                                        
-                                        <!-- Progress Bar -->
                                         <progress id="fuelProgress" value="50" max="100" class="w-100"></progress>
-                                        
-                                        <!-- Display Numeric Value -->
                                         <span id="fuelPercentage">50%</span>
                                     </div>
                                 </div>
@@ -831,31 +844,65 @@ async function showFuelReportForm() {
 
         document.body.insertAdjacentHTML('beforeend', formHtml);
 
+        const modalElement = document.getElementById('editFleetFuelModal');
+        const editFleetFuelModal = new bootstrap.Modal(modalElement);
+        editFleetFuelModal.show();
+
+        // Create map for fast lookup
+        const busDataMap = {};
+        fuelData.forEach(bus => {
+            busDataMap[bus.busId] = bus;
+        });
+
+        // Delay to ensure DOM is fully ready before attaching event listener
+        setTimeout(() => {
+            const busIdSelect = document.getElementById('busId');
+            const busDateInput = document.getElementById('busDate');
+            const fuelRefilledInput = document.getElementById('fuelRefilled');
+            const busFuelLevelInput = document.getElementById('busFuelLevel');
+            const fuelProgress = document.getElementById('fuelProgress');
+            const fuelPercentage = document.getElementById('fuelPercentage');
+
+            busIdSelect.addEventListener('change', () => {
+                const selectedId = busIdSelect.value;
+                const busData = busDataMap[selectedId];
+                if (busData) {
+                    const formattedDate = new Date(busData.lastRefuelDate).toISOString().split('T')[0];
+                    busDateInput.value = formattedDate;
+                    fuelRefilledInput.value = busData.fuelRefilled || '';
+                    busFuelLevelInput.value = busData.currentFuel || 0;
+                    fuelProgress.value = busData.currentFuel || 0;
+                    fuelPercentage.textContent = `${busData.currentFuel || 0}%`;
+                }
+            });
+        }, 100); // Short delay to ensure content is ready
+
         // Event listener for submitting the form
         document.getElementById('submitStatus').addEventListener('click', async function () {
             const busId = document.getElementById('busId').value;
             const busDate = document.getElementById('busDate').value;
             const busFuelLevel = document.getElementById('busFuelLevel').value;
+            const fuelRefilled = parseFloat(document.getElementById('fuelRefilled').value);
 
-            if (!busId || !busDate || !busFuelLevel) {
+            if (!busId || !busDate || !busFuelLevel || isNaN(fuelRefilled)) {
                 showAlert('Please fill in all required fields.', 'warning');
                 return;
             }
 
-            // Update the database with new values
             try {
                 const updateResponse = await fetch(`http://localhost:3000/fuel/${busId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        lastFullTank: busDate,
-                        currentFuel: busFuelLevel
+                        lastRefuelDate: busDate,
+                        currentFuel: busFuelLevel,
+                        fuelRefilled: fuelRefilled
                     })
                 });
 
                 if (updateResponse.ok) {
                     showAlert('Fuel Report Updated', 'success');
-                    const editFleetFuelModal = bootstrap.Modal.getInstance(document.getElementById('editFleetFuelModal'));
+                    const editFleetFuelModal = bootstrap.Modal.getInstance(modalElement);
                     editFleetFuelModal.hide();
                     document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
                 } else {
@@ -867,15 +914,10 @@ async function showFuelReportForm() {
             }
         });
 
-        // Initialize and show modal
-        const modalElement = document.getElementById('editFleetFuelModal');
-        const editFleetFuelModal = new bootstrap.Modal(modalElement);
-        editFleetFuelModal.show();
-
         // Cleanup modal on close
         modalElement.addEventListener('hidden.bs.modal', function () {
             modalElement.remove();
-            document.querySelector('.modal-backdrop').remove();
+            document.querySelector('.modal-backdrop')?.remove();
             document.body.classList.remove('modal-open');
             document.body.style = '';
         });
@@ -884,6 +926,8 @@ async function showFuelReportForm() {
         console.error('Error fetching bus IDs:', error);
     }
 }
+
+
 
 // Function to update fuel progress bar in real time
 function updateFuelLevel(value) {
