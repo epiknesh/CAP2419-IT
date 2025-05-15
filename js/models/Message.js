@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const MessageSchema = new mongoose.Schema({
-    sender: { type: String, required: true }, // Sender's name
-    profilePic: { type: String, required: true }, // Profile picture URL
-    message: { type: String, default: null }, // Text message (optional)
-    voiceMessage: { type: String, default: null }, // Voice message URL (optional)
-    timestamp: { type: Date, default: Date.now } // Message timestamp
+    sender: { type: String, required: true },
+    profilePic: { type: String, required: true },
+    message: { type: String, default: null },
+    voiceMessage: { type: String, default: null },
+    channel: { type: String, required: true }, // NEW: Channel name or ID
+    timestamp: { type: Date, default: Date.now }
 });
 
 // Ensure message OR voiceMessage is present (Not empty messages)

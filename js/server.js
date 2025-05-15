@@ -12,6 +12,7 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
 const fs = require('fs');
+const Channel = require('./models/Channel'); // adjust path as needed
 
 const app = express();
 
@@ -33,52 +34,72 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.post('/register', async (req, res) => {
     try {
-      const { firstName, lastName, birthdate, mobile, email, password, role } = req.body;
-  
-      // Check if the email is already registered
-      const existingUser = await Account.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email already exists' });
-      }
-  
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      // Find the highest existing accountID and increment it
-      const lastAccount = await Account.findOne().sort({ accountID: -1 });
-      const newAccountID = lastAccount ? lastAccount.accountID + 1 : 1;
-  
-      // Create a new account
-      const newAccount = new Account({
-        accountID: newAccountID,
-        firstName,
-        lastName,
-        birthdate,
-        mobile,
-        email,
-        password: hashedPassword,
-        role
-      });
-  
-      // Save the new account to the database
-      await newAccount.save();
-  
-      // Create a new settings document for this account with all notifications set to false by default
-      const newSettings = new Settings({
-        accountID: newAccountID,
-        dispatch_notif: false,
-        capacity_notif: false,
-        eta_notif: false
-      });
-  
-      await newSettings.save();
-  
-      res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID })
+        const { firstName, lastName, birthdate, mobile, email, password, role } = req.body;
+
+        const existingUser = await Account.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const lastAccount = await Account.findOne().sort({ accountID: -1 });
+        const newAccountID = lastAccount ? lastAccount.accountID + 1 : 1;
+
+        const newAccount = new Account({
+            accountID: newAccountID,
+            firstName,
+            lastName,
+            birthdate,
+            mobile,
+            email,
+            password: hashedPassword,
+            role
+        });
+
+        await newAccount.save();
+
+        const newSettings = new Settings({
+            accountID: newAccountID,
+            dispatch_notif: false,
+            capacity_notif: false,
+            eta_notif: false
+        });
+
+        await newSettings.save();
+
+        // Add the new user to "JST Kidlat" channel
+        const globalChannel = await Channel.findOneAndUpdate(
+            { name: 'JST Kidlat' },
+            { $addToSet: { members: newAccountID } }, // Prevent duplicates
+            { new: true }
+        );
+
+        // Map roles to their respective channel names
+        const roleChannelMap = {
+            "1": "Admins",
+            "2": "Drivers",
+            "3": "Controllers",
+            "4": "Dispatchers",
+            "5": "Maintenance",
+            "6": "Cashiers"
+        };
+
+        const roleChannelName = roleChannelMap[role];
+        if (roleChannelName) {
+            await Channel.findOneAndUpdate(
+                { name: roleChannelName },
+                { $addToSet: { members: newAccountID } },
+                { new: true }
+            );
+        }
+
+        res.status(201).json({ message: 'Account registered successfully', accountID: newAccountID });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
-  });
+});
+
 
 
 
@@ -380,11 +401,10 @@ app.post('/update-fleet-personnel', async (req, res) => {
         if (validDriverID) {
             const driverAssigned = await Buses.findOne({
                 driverID: validDriverID,
-                busID: { $ne: busID }  // Exclude the current busID
+                busID: { $ne: busID }
             });
 
             if (driverAssigned) {
-                // If the driver is assigned to another bus, return a warning message
                 return res.status(400).json({ message: `Driver is already assigned to another bus.` });
             }
         }
@@ -393,27 +413,57 @@ app.post('/update-fleet-personnel', async (req, res) => {
         if (validControllerID) {
             const controllerAssigned = await Buses.findOne({
                 controllerID: validControllerID,
-                busID: { $ne: busID }  // Exclude the current busID
+                busID: { $ne: busID }
             });
 
             if (controllerAssigned) {
-                // If the controller is assigned to another bus, return a warning message
                 return res.status(400).json({ message: `Controller is already assigned to another bus.` });
             }
         }
 
-        // Proceed with updating the bus record with validated IDs
+        // Find current bus info (to remove old personnel from group)
+        const currentBus = await Buses.findOne({ busID });
+        if (!currentBus) {
+            return res.status(404).json({ message: 'Bus ID not found' });
+        }
+
+        const prevDriverID = currentBus.driverID;
+        const prevControllerID = currentBus.controllerID;
+
+        // Update the bus with the new personnel
         const updatedBus = await Buses.findOneAndUpdate(
             { busID },
             { driverID: validDriverID, controllerID: validControllerID },
             { new: true }
         );
 
-        if (!updatedBus) {
-            return res.status(404).json({ message: 'Bus ID not found' });
+        // Update the group chat membership for the bus channel
+        const channelName = `Bus ${busID}`;
+        const channel = await Channel.findOne({ name: channelName });
+
+        if (!channel) {
+            return res.status(404).json({ message: `Channel "${channelName}" not found.` });
         }
 
+        // Use a Set to manage unique members
+        const memberSet = new Set(channel.members.map(id => parseInt(id)));
+
+        // Remove previous personnel
+        if (prevDriverID) memberSet.delete(parseInt(prevDriverID));
+        if (prevControllerID) memberSet.delete(parseInt(prevControllerID));
+
+        // Add new personnel (if any)
+        if (validDriverID) memberSet.add(validDriverID);
+        if (validControllerID) memberSet.add(validControllerID);
+
+        // Save the updated member list to the channel
+        await Channel.updateOne(
+            { _id: channel._id },
+            { $set: { members: Array.from(memberSet) } }
+        );
+
         res.status(200).json({ message: 'Fleet personnel updated successfully', updatedBus });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -593,6 +643,28 @@ app.put('/fuel/:busId', async (req, res) => {
 
 
 
+app.get('/channels', async (req, res) => {
+  const accountID = parseInt(req.query.accountID, 10);
+console.log('Parsed accountID:', accountID, typeof accountID);
+
+  if (!accountID) {
+    return res.status(400).json({ message: 'accountID query parameter is required' });
+  }
+
+  try {
+    // Find channels where the accountID is in the members array
+    const userChannels = await Channel.find({ members: accountID });
+    res.json(userChannels);
+    console.log(userChannels);
+  } catch (error) {
+    console.error('Error fetching channels:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+
   // WEB SOCKET (WALKIE-TALKIE)
 const WebSocket = require('ws');
 const Message = require('./models/Message');
@@ -629,40 +701,53 @@ const wss = new WebSocket.Server({ port: 8080 });
 wss.on('connection', async (ws) => {
     console.log("🔹 New client connected");
 
-    // Send chat history
-    try {
-        const messages = await Message.find().sort({ timestamp: 1 }).limit(50);
-        ws.send(JSON.stringify({ type: "history", messages }));
-    } catch (error) {
-        console.error("❌ Error fetching chat history:", error);
-    }
+    // Initialize channels set for this client
+    ws.channels = new Set();
 
     ws.on('message', async (message) => {
         try {
-            const messageData = JSON.parse(message);
-            console.log(`📩 Received message from ${messageData.sender}: ${messageData.message || "[Voice Message]"}`);
+            const data = JSON.parse(message);
 
-            if (!messageData.sender || (!messageData.message && !messageData.voiceMessage) || !messageData.timestamp) {
-                return console.error("❌ Invalid message received:", messageData);
+            // Handle joining a channel
+            if (data.type === "joinChannel") {
+                if (!data.channel) return console.error("❌ No channel specified");
+
+                ws.channels.add(data.channel);
+                console.log(`📥 Client joined channel: ${data.channel}`);
+
+                // Send message history for the channel
+                const messages = await Message.find({ channel: data.channel }).sort({ timestamp: 1 }).limit(50);
+                ws.send(JSON.stringify({ type: "history", channel: data.channel, messages }));
+                return;
             }
 
-            // Save to MongoDB
-            const newMessage = new Message({
-                sender: messageData.sender,
-                profilePic: messageData.profilePic,
-                message: messageData.message || null,
-                voiceMessage: messageData.voiceMessage || null,
-                timestamp: messageData.timestamp
-            });
+            // Handle sending a chat message
+            if (data.type === "chatMessage") {
+                console.log(`📩 Message from ${data.sender} in channel ${data.channel}: ${data.message || "[Voice Message]"}`);
 
-            await newMessage.save();
-
-            // Broadcast to all clients
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(messageData));
+                if (!data.sender || !data.channel || (!data.message && !data.voiceMessage) || !data.timestamp) {
+                    return console.error("❌ Invalid message format:", data);
                 }
-            });
+
+                // Save to MongoDB
+                const newMessage = new Message({
+                    sender: data.sender,
+                    profilePic: data.profilePic,
+                    message: data.message || null,
+                    voiceMessage: data.voiceMessage || null,
+                    timestamp: data.timestamp,
+                    channel: data.channel
+                });
+
+                await newMessage.save();
+
+                // Broadcast only to clients in the same channel
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN && client.channels.has(data.channel)) {
+                        client.send(JSON.stringify(data));
+                    }
+                });
+            }
 
         } catch (error) {
             console.error("❌ Error processing message:", error);

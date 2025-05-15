@@ -592,7 +592,6 @@ function showFleetReadinessStatusForm() {
     });
 }
 
-// TO DO : SHOW ONLY BUSES THAT ARE OPERATIVE
 // Function to show the Fleet Personnel form || Edit Assignment Button
 function showFleetPersonnelForm() {
     Promise.all([
