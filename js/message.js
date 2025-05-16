@@ -4,6 +4,49 @@ const user = JSON.parse(localStorage.getItem('user'));
 
 const currentAccountID = user.accountid;
 
+// Helper to get query param by name
+function getQueryParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const channels = await loadUserChannels();
+
+    const channelToOpen = getQueryParam('channel');
+
+    if (channelToOpen && channels.some(c => c.name === channelToOpen)) {
+      switchChannel(channelToOpen);
+      updateChannelUI(channelToOpen);
+    } else if (channels.length > 0) {
+      switchChannel(channels[0].name);
+      updateChannelUI(channels[0].name);
+    } else {
+      switchChannel('general');
+      updateChannelUI('general');
+    }
+  } catch (err) {
+    console.error(err);
+    switchChannel('general');
+    updateChannelUI('general');
+  }
+});
+
+function updateChannelUI(channelName) {
+  const channelButtons = document.querySelectorAll('#channels-container .channel-button');
+  channelButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.channel === channelName);
+  });
+
+  const channelTitle = document.getElementById('channel-title');
+  if (channelTitle) {
+    channelTitle.textContent = channelName;
+  }
+}
+
+
+
 
 let currentChannel = "general";
 let lastMessageDate = null;
@@ -26,6 +69,8 @@ console.log("Fetched channels:", channels); // Log the channels
     } else {
       switchChannel('general');
     }
+
+    return channels; 
   } catch (error) {
     console.error("Failed to load channels:", error);
     switchChannel('general');
@@ -141,10 +186,6 @@ async function switchChannel(channel) {
 }
 
 
-// Call loadUserChannels on page load
-window.addEventListener('DOMContentLoaded', () => {
-  loadUserChannels();
-});
 
 socket.onopen = () => {
     // Join the default channel on load

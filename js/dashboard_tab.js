@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+    //Import Css 
+    const link  = document.createElement('link');
+    link.rel='stylesheet';
+    link.href='styles/modal.css';
+    document.head.appendChild(link);
+    
     // Ensure the DOM is fully loaded before attaching event listeners
     const dashboardTab = document.querySelector('#sidebar .side-menu.top li:first-child a');
     dashboardTab.addEventListener('click', async function (event) {
@@ -209,6 +215,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         </table>
                     </div>
                 </div>
+
+                 <div id="alertContainer"></div>
                 
             `;
             setTimeout(() => {

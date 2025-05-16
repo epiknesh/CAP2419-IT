@@ -1,4 +1,45 @@
+
+ 
+ const socket = new WebSocket('ws://localhost:8080');
+
+
+
+ socket.addEventListener("open", () => {
+    console.log("WebSocket connection established");
+     socket.send(JSON.stringify({
+    type: "initSession",
+    accountId: JSON.parse(localStorage.getItem('user')).accountid
+}));
+
+});
+
+
+socket.addEventListener("message", (event) => {
+    const data = JSON.parse(event.data);
+   
+
+    console.log(data);
+
+    // Log if the message is from someone else
+    if (data.sender && data.sender !== user.username) {
+        console.log(`New message from ${data.sender} in ${data.channel}`);
+        // Optional: show a toast or badge if you want to notify
+    }
+
+    // Mention handling (optional)
+    if (data.mentions && Array.isArray(data.mentions)) {
+        const isMentioned = data.mentions.some(mention => mention.accountid === user.accountid);
+        if (isMentioned) {
+       showMessageAlert(`You were mentioned by ${data.sender} in ${data.channel}`, "primary", data.channel);
+
+            console.log("MENTIONED");
+        }
+    }
+});
+
+
 document.addEventListener("DOMContentLoaded", async function () {
+ 
 	const user = JSON.parse(localStorage.getItem('user'));
     
     if (!user) {
@@ -259,3 +300,47 @@ switchMode.addEventListener('change', function () {
 		document.body.classList.remove('dark');
 	}
 })
+
+function showMessageAlert(message, type, channelName) {
+  const alertContainer = document.getElementById('alertContainer');
+  if (!alertContainer) {
+    console.error("Alert container not found.");
+    return;
+  }
+
+  const alertHtml = `
+    <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert" style="cursor: pointer;">
+      ${message}
+      <button type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+  `;
+
+  alertContainer.innerHTML = alertHtml;
+
+  const alertElement = alertContainer.querySelector('.alert');
+  const closeButton = alertElement.querySelector('.btn-close');
+
+  closeButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    alertElement.classList.remove('show');
+    alertElement.classList.add('hide');
+    setTimeout(() => alertElement.remove(), 500);
+  });
+
+  alertElement.addEventListener('click', () => {
+    // Redirect to message.html with channel query param
+    if (channelName) {
+      window.location.href = `message.html?channel=${encodeURIComponent(channelName)}`;
+    } else {
+      window.location.href = 'message.html';
+    }
+  });
+
+  setTimeout(() => {
+    if (alertElement) {
+      alertElement.classList.remove('show');
+      alertElement.classList.add('hide');
+      setTimeout(() => alertElement.remove(), 500);
+    }
+  }, 30000);
+}

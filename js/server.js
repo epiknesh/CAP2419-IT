@@ -814,6 +814,29 @@ wss.on('connection', async (ws) => {
             return;
         }
 
+        // Handle initial authentication and auto-join channels
+if (data.type === "initSession") {
+    const { accountId } = data;
+    if (!accountId) {
+        return console.error("❌ Missing accountId in initSession");
+    }
+
+    // Find all channels where this user is a member
+    const userChannels = await Channel.find({ members: accountId });
+
+    userChannels.forEach(channel => {
+        ws.channels.add(channel.name);
+        console.log(`🔗 Auto-joined channel ${channel.name} for account ${accountId}`);
+    });
+
+    // Optionally send back the list of joined channels
+    ws.send(JSON.stringify({
+        type: "joinedChannels",
+        channels: [...ws.channels]
+    }));
+
+    return;
+}
 
             // Handle sending a chat message
             if (data.type === "chatMessage") {
