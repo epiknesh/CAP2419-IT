@@ -189,13 +189,19 @@ function displayReceivedMessage(messageData) {
     }
 
     const isSent = messageData.sender === getUserName();
-    const messageClass = isSent ? "message message--sent" : "message message--received";
+    const isMentioned = Array.isArray(messageData.mentions) &&
+        messageData.mentions.some(m => {
+            console.log('Checking mention accountid:', m.accountid, typeof m.accountid);
+            return Number(m.accountid) === currentAccountID;
+        });
+
+    // Note: Remove mention class from messageClass here
+    let messageClass = isSent ? "message message--sent" : "message message--received";
 
     let messageContent = "";
     if (messageData.message) {
-  messageContent = `<p>${formatMentions(messageData.message, messageData.mentions)}</p>`;
-}
- else if (messageData.voiceMessage) {
+        messageContent = `<p>${formatMentions(messageData.message, messageData.mentions)}</p>`;
+    } else if (messageData.voiceMessage) {
         messageContent = `<audio controls src="${messageData.voiceMessage}"></audio>`;
     }
 
@@ -220,8 +226,17 @@ function displayReceivedMessage(messageData) {
     `;
 
     chatboxMessages.appendChild(newMessage);
+
+    if (isMentioned) {
+        const bubble = newMessage.querySelector('.message__content');
+        if (bubble) bubble.classList.add('message__content--mention');
+    }
+
     chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
 }
+
+
+
 
 const sendButton = document.getElementById('sendButton');
 const input = document.querySelector('.chatbox__input input');
@@ -376,22 +391,26 @@ inputBox.addEventListener('input', () => {
   const textBeforeCursor = inputBox.value.slice(0, cursorPos);
 
   const match = /@(\w*)$/.exec(textBeforeCursor);
-  
 
   if (match) {
     const query = match[1].toLowerCase();
-   const filtered = membersInChannel.filter(member =>
-  member.fullName?.toLowerCase().includes(query)
-);
+    const filtered = membersInChannel.filter(member =>
+      member.fullName?.toLowerCase().includes(query)
+    );
 
-console.log("FILTERED:", filtered);
+    console.log("FILTERED:", filtered);
 
-    showMentionSuggestions(filtered, match[0]);
-    suggestionsBox.style.display = 'block';
+    if (filtered.length > 0) {
+      showMentionSuggestions(filtered, match[0]);
+      suggestionsBox.style.display = 'block';
+    } else {
+      suggestionsBox.style.display = 'none';
+    }
   } else {
-  suggestionsBox.style.display = 'none';
+    suggestionsBox.style.display = 'none';
   }
 });
+
 
 function showMentionSuggestions(users, triggerText) {
   if (!users || users.length === 0) return;
@@ -444,7 +463,7 @@ function insertMention(user) {
 
   // Only add if not already in selectedMentions
   if (!selectedMentions.find(m => m.id === user.accountid)) {
-    selectedMentions.push({ id: user.accountID, name: user.fullName });
+    selectedMentions.push({ accountid: user.accountID, name: user.fullName });
   }
   console.log(selectedMentions);
 
@@ -464,6 +483,5 @@ function formatMentions(text, mentions = []) {
 
   return formattedText;
 }
-
 
 

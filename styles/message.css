@@ -43,6 +43,45 @@ body {
   scrollbar-color: #bbb transparent;
 }
 
+/*
+.message--mention {
+  border: 2px solid #ff9800;
+  box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+  animation: pulseMention 1.2s ease-out;
+}
+  */
+
+.message__content--mention {
+  border: 2px solid #0084ff; /* blue border */
+  box-shadow: 0 0 6px rgba(0, 132, 255, 0.4); /* smaller initial shadow */
+  animation: pulseMention 1.2s ease-out infinite;
+  border-radius: 18px 18px 5px 18px;
+  transition: box-shadow 0.3s ease;
+}
+
+@keyframes pulseMention {
+  0% {
+    box-shadow: 0 0 0 rgba(0, 132, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 132, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(0, 132, 255, 0.5);
+  }
+}
+
+/* This class stops the animation permanently */
+.message__content--mention.stopped {
+  animation: none !important;
+  box-shadow: 0 0 6px rgba(0, 132, 255, 0.6);
+  border: 2px solid #0084ff; /* blue border */
+}
+
+
+
+
+
 /* Scrollbar Styling */
 .chatbox__messages::-webkit-scrollbar {
   width: 6px;
