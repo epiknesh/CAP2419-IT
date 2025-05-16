@@ -757,6 +757,64 @@ wss.on('connection', async (ws) => {
                 return;
             }
 
+         if (data.type === 'update-seenBy') {
+    const updatedMessage = await Message.findByIdAndUpdate(
+        data.messageId,
+        { $addToSet: { seenBy: data.accountId } },
+        { new: true }
+    );
+
+    if (!updatedMessage) {
+        console.error(`Message with id ${data.messageId} not found.`);
+        return;
+    }
+
+    // Broadcast to all clients in the same channel
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN && client.channels.has(updatedMessage.channel)) {
+            client.send(JSON.stringify({
+                type: 'seenUpdate',
+                messageId: updatedMessage._id.toString(),
+                accountId: data.accountId
+            }));
+        }
+    });
+
+    console.log(`✅ Updated seenBy for message ${data.messageId} with accountId ${data.accountId}`);
+    return;
+}
+
+                    if (data.type === "markSeen") {
+            if (!data.channel || !data.accountId) {
+                return console.error("❌ Missing channel or accountId in markSeen");
+            }
+
+            // Update all messages in the channel that don't already include this user in seenBy
+            await Message.updateMany(
+                { 
+                channel: data.channel,
+                seenBy: { $ne: data.accountId } // messages where accountId is NOT in seenBy
+                },
+                { $push: { seenBy: data.accountId } }
+            );
+
+            console.log(`✅ Marked messages as seen by accountId ${data.accountId} in channel ${data.channel}`);
+
+            // Optionally, broadcast an update to clients in the channel if you want to update their UI
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN && client.channels.has(data.channel)) {
+                    client.send(JSON.stringify({ 
+                        type: "seenUpdate", 
+                        channel: data.channel, 
+                        accountId: data.accountId 
+                    }));
+                }
+            });
+
+            return;
+        }
+
+
             // Handle sending a chat message
             if (data.type === "chatMessage") {
                 console.log(`📩 Message from ${data.sender} in channel ${data.channel}: ${data.message || "[Voice Message]"}`);
@@ -779,17 +837,33 @@ wss.on('connection', async (ws) => {
                 await newMessage.save();
 
                 // Broadcast only to clients in the same channel
-                wss.clients.forEach(client => {
-                    if (client.readyState === WebSocket.OPEN && client.channels.has(data.channel)) {
-                        client.send(JSON.stringify(data));
-                    }
-                });
+               // After await newMessage.save();
+const messageToSend = {
+    _id: newMessage._id.toString(), // include the _id
+    sender: newMessage.sender,
+    profilePic: newMessage.profilePic,
+    message: newMessage.message,
+    voiceMessage: newMessage.voiceMessage,
+    timestamp: newMessage.timestamp,
+    channel: newMessage.channel,
+    mentions: newMessage.mentions
+};
+
+wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN && client.channels.has(data.channel)) {
+        client.send(JSON.stringify(messageToSend));
+    }
+});
             }
 
         } catch (error) {
             console.error("❌ Error processing message:", error);
         }
     });
+
+    ws.on('update-seenBy', async ({ messageId, seenBy }) => {
+    await MessageModel.findByIdAndUpdate(messageId, { seenBy });
+});
 
     ws.on('close', () => console.log("🔻 Client disconnected"));
 });

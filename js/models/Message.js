@@ -10,7 +10,8 @@ const MessageSchema = new mongoose.Schema({
   mentions: [{
     name: String,
     accountid: Number
-  }]
+  }],
+  seenBy: [{ type: Number, default: [] }] // ✅ NEW FIELD
 });
 
 

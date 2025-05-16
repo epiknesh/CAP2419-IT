@@ -167,7 +167,6 @@ socket.onmessage = (event) => {
         displayReceivedMessage(data);
     }
 };
-
 function displayReceivedMessage(messageData) {
     if (!messageData || messageData.channel !== currentChannel) return;
 
@@ -190,12 +189,8 @@ function displayReceivedMessage(messageData) {
 
     const isSent = messageData.sender === getUserName();
     const isMentioned = Array.isArray(messageData.mentions) &&
-        messageData.mentions.some(m => {
-            console.log('Checking mention accountid:', m.accountid, typeof m.accountid);
-            return Number(m.accountid) === currentAccountID;
-        });
+        messageData.mentions.some(m => Number(m.accountid) === currentAccountID);
 
-    // Note: Remove mention class from messageClass here
     let messageClass = isSent ? "message message--sent" : "message message--received";
 
     let messageContent = "";
@@ -229,11 +224,34 @@ function displayReceivedMessage(messageData) {
 
     if (isMentioned) {
         const bubble = newMessage.querySelector('.message__content');
-        if (bubble) bubble.classList.add('message__content--mention');
+        if (bubble) {
+            bubble.classList.add('message__content--mention');
+
+            // If user already saw the message, add the 'stopped' class to stop animation
+            if (Array.isArray(messageData.seenBy) && messageData.seenBy.includes(currentAccountID)) {
+                bubble.classList.add('stopped');
+            }
+        }
     }
 
     chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
+
+    // SeenBy Update Section
+    if (!Array.isArray(messageData.seenBy)) {
+        messageData.seenBy = [];
+    }
+
+    if (!messageData.seenBy.includes(currentAccountID)) {
+        messageData.seenBy.push(currentAccountID);
+
+        socket.send(JSON.stringify({
+            type: 'update-seenBy',
+            messageId: messageData._id,
+            accountId: currentAccountID
+        }));
+    }
 }
+
 
 
 
