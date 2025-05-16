@@ -96,22 +96,50 @@ function renderChannels(channels) {
 }
 
 
+let membersInChannel = []; // Populated from backend
+const inputBox = document.getElementById('textMessage');
+const suggestionsBox = document.getElementById('mentionSuggestions');
 
 
 
+// Fetch members when switching channel
+async function fetchChannelMembers(channelName) {
+  try {
+    const res = await fetch(`http://localhost:3000/channel-members?channel=${channelName}`);
+    const members = await res.json();
+    membersInChannel = members; // e.g., [{name: "Juan Dela Cruz", accountid: "1"}, ...]
+    console.log(membersInChannel);
+  } catch (error) {
+    console.error('Failed to fetch channel members:', error);
+    membersInChannel = [];
+  }
+}
 
-function switchChannel(channel) {
+
+
+async function switchChannel(channel) {
   if (channel === currentChannel) return;
 
   currentChannel = channel;
   lastMessageDate = null;
   document.querySelector('.chatbox__messages').innerHTML = '';
 
+  // Clear the input field
+  document.getElementById('textMessage').value = '';
+  document.getElementById('mentionSuggestions').style.display = 'none';
+
+
+  // Clear mentions array if needed
+  selectedMentions = [];
+
+  await fetchChannelMembers(channel);
+
   socket.send(JSON.stringify({
     type: "joinChannel",
     channel: currentChannel
   }));
 }
+
 
 // Call loadUserChannels on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -165,8 +193,9 @@ function displayReceivedMessage(messageData) {
 
     let messageContent = "";
     if (messageData.message) {
-        messageContent = `<p>${messageData.message}</p>`;
-    } else if (messageData.voiceMessage) {
+  messageContent = `<p>${formatMentions(messageData.message, messageData.mentions)}</p>`;
+}
+ else if (messageData.voiceMessage) {
         messageContent = `<audio controls src="${messageData.voiceMessage}"></audio>`;
     }
 
@@ -209,6 +238,11 @@ function sendMessage() {
     const messageText = input.value.trim();
     if (messageText === '') return;
 
+    // Filter out removed mentions before sending
+    const filteredMentions = selectedMentions.filter(mention =>
+        messageText.includes(`@${mention.name}`)
+    );
+
     const user = JSON.parse(localStorage.getItem('user')) || {};
     const messageData = {
         type: "chatMessage",
@@ -217,12 +251,43 @@ function sendMessage() {
         message: messageText,
         voiceMessage: null,
         channel: currentChannel,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        mentions: filteredMentions
     };
+
+    console.log("Sending message with mentions:", messageData.mentions);
 
     socket.send(JSON.stringify(messageData));
     input.value = '';
+    selectedMentions = [];
 }
+
+
+/*
+function extractMentionsFromMessage(message) {
+  const mentionRegex = /@([a-zA-Z]+(?: [a-zA-Z]+)*)(?=\s|$|[.,!?])/g;
+
+  const foundMentions = [];
+  let match;
+
+  while ((match = mentionRegex.exec(message)) !== null) {
+    const mentionText = match[1].trim().toLowerCase();
+
+    const matchedUser = membersInChannel.find(member =>
+      member.fullName.toLowerCase() === mentionText
+    );
+
+    if (matchedUser && !foundMentions.find(m => m.accountid === matchedUser.accountID)) {
+      foundMentions.push({
+        name: matchedUser.fullName,
+        accountid: matchedUser.accountID
+      });
+    }
+  }
+
+  return foundMentions;
+}
+*/
 
 function getUserName() {
     const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -305,5 +370,100 @@ async function startRecording() {
         console.error("❌ Error accessing microphone:", error);
     }
 }
+
+inputBox.addEventListener('input', () => {
+  const cursorPos = inputBox.selectionStart;
+  const textBeforeCursor = inputBox.value.slice(0, cursorPos);
+
+  const match = /@(\w*)$/.exec(textBeforeCursor);
+  
+
+  if (match) {
+    const query = match[1].toLowerCase();
+   const filtered = membersInChannel.filter(member =>
+  member.fullName?.toLowerCase().includes(query)
+);
+
+console.log("FILTERED:", filtered);
+
+    showMentionSuggestions(filtered, match[0]);
+    suggestionsBox.style.display = 'block';
+  } else {
+  suggestionsBox.style.display = 'none';
+  }
+});
+
+function showMentionSuggestions(users, triggerText) {
+  if (!users || users.length === 0) return;
+
+  suggestionsBox.innerHTML = '';
+
+ users.forEach(user => {
+  const item = document.createElement('div'); // CHANGED from 'button' to 'div'
+  item.className = 'mention-suggestion-item';
+  item.onclick = () => insertMention(user);
+
+  const img = document.createElement('img');
+  img.className = 'mention-suggestion-avatar';
+  img.src = user.profilePicture || './img/noprofile.jpg';
+  img.onerror = () => img.src = './img/noprofile.jpg';
+
+  const name = document.createElement('span');
+  name.className = 'mention-suggestion-name';
+  name.textContent = user.fullName;
+
+  item.appendChild(img);
+  item.appendChild(name);
+  suggestionsBox.appendChild(item);
+});
+
+const input = document.getElementById('textMessage');
+suggestionsBox.style.bottom = `${input.offsetHeight + 8}px`; // 8px gap
+suggestionsBox.style.left = `${input.offsetLeft}px`;
+
+}
+
+
+
+let selectedMentions = [];
+
+function insertMention(user) {
+  const mentionText = `@${user.fullName}`;
+  const cursorPos = inputBox.selectionStart;
+  const text = inputBox.value;
+  const match = /@(\w*)$/.exec(text.slice(0, cursorPos));
+
+  if (!match) return;
+
+  const start = cursorPos - match[0].length;
+  const newText = text.slice(0, start) + mentionText + ' ' + text.slice(cursorPos);
+
+  inputBox.value = newText;
+  inputBox.focus();
+  inputBox.selectionStart = inputBox.selectionEnd = start + mentionText.length + 1;
+
+  // Only add if not already in selectedMentions
+  if (!selectedMentions.find(m => m.id === user.accountid)) {
+    selectedMentions.push({ id: user.accountID, name: user.fullName });
+  }
+  console.log(selectedMentions);
+
+  suggestionsBox.style.display = 'none';
+}
+
+
+
+function formatMentions(text, mentions = []) {
+  if (!mentions || mentions.length === 0) return text;
+
+  let formattedText = text;
+  mentions.forEach(mention => {
+    const regex = new RegExp(`@${mention.name}\\b`, 'g');
+    formattedText = formattedText.replace(regex, `<span class="mention">@${mention.name}</span>`);
+  });
+
+  return formattedText;
+}
+
 
 

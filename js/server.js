@@ -655,12 +655,48 @@ console.log('Parsed accountID:', accountID, typeof accountID);
     // Find channels where the accountID is in the members array
     const userChannels = await Channel.find({ members: accountID });
     res.json(userChannels);
-    console.log(userChannels);
+   
   } catch (error) {
     console.error('Error fetching channels:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+app.get('/channel-members', async (req, res) => {
+  const channelName = req.query.channel;
+
+  if (!channelName) {
+    return res.status(400).json({ message: 'channel query parameter is required' });
+  }
+
+  try {
+    const channel = await Channel.findOne({ name: channelName });
+
+    if (!channel) {
+      return res.status(404).json({ message: 'Channel not found' });
+    }
+
+    // Fetch accounts whose accountID is in channel.members
+    const members = await Accounts.find(
+      { accountID: { $in: channel.members } },
+      { _id: 0, accountID: 1, firstName: 1, lastName: 1, role: 1, profilePicture: 1 }
+    );
+
+    // Optionally format full names
+    const formattedMembers = members.map(member => ({
+      accountID: member.accountID,
+      fullName: `${member.firstName} ${member.lastName}`,
+      role: member.role,
+      profilePicture: member.profilePicture
+    }));
+
+    res.json(formattedMembers);
+  } catch (error) {
+    console.error('Error fetching channel members:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 
 
@@ -731,13 +767,14 @@ wss.on('connection', async (ws) => {
 
                 // Save to MongoDB
                 const newMessage = new Message({
-                    sender: data.sender,
-                    profilePic: data.profilePic,
-                    message: data.message || null,
-                    voiceMessage: data.voiceMessage || null,
-                    timestamp: data.timestamp,
-                    channel: data.channel
-                });
+    sender: data.sender,
+    profilePic: data.profilePic,
+    message: data.message || null,
+    voiceMessage: data.voiceMessage || null,
+    timestamp: data.timestamp,
+    channel: data.channel,
+    mentions: data.mentions || [] // ✅ Add this line
+});
 
                 await newMessage.save();
 
