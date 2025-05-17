@@ -2,6 +2,17 @@ const socket = new WebSocket('ws://localhost:8080');
 
 const user = JSON.parse(localStorage.getItem('user'));
 
+
+
+ socket.addEventListener("open", () => {
+    console.log("WebSocket connection established");
+     socket.send(JSON.stringify({
+    type: "initSession",
+    accountId: JSON.parse(localStorage.getItem('user')).accountid
+}));
+
+});
+
 const currentAccountID = user.accountid;
 
 // Helper to get query param by name
@@ -10,11 +21,15 @@ function getQueryParam(name) {
   return params.get(name);
 }
 
+let unreadMentionCounts = {};  // e.g., { "general": 3, "bus 1": 0, ... }
+
 window.addEventListener('DOMContentLoaded', async () => {
   try {
     const channels = await loadUserChannels();
+    
 
     const channelToOpen = getQueryParam('channel');
+   
 
     if (channelToOpen && channels.some(c => c.name === channelToOpen)) {
       switchChannel(channelToOpen);
@@ -31,6 +46,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     switchChannel('general');
     updateChannelUI('general');
   }
+
+   
 });
 
 function updateChannelUI(channelName) {
@@ -77,11 +94,10 @@ console.log("Fetched channels:", channels); // Log the channels
   }
 }
 
-
 function renderChannels(channels) {
   const channelsContainer = document.getElementById('channels-container');
 
-  // Clear previous channels (but preserve home link if needed)
+  // Clear previous channels
   channelsContainer.innerHTML = '';
 
   channels.forEach(channel => {
@@ -106,7 +122,17 @@ function renderChannels(channels) {
       iconClass = 'bx bx-bus';
     }
 
+    // Set inner HTML for icon and channel name (without badge yet)
     a.innerHTML = `<i class='${iconClass}'></i> ${channel.name}`;
+
+    // Create the badge span (initially hidden)
+    const badge = document.createElement('span');
+    badge.classList.add('mention-badge');
+    badge.style.display = 'none';  // hidden initially
+    badge.id = `mention-badge-${channel.name.replace(/\s+/g, '-').toLowerCase()}`; // unique ID for easy updates
+
+    // Append badge after channel name inside the <a>
+    a.appendChild(badge);
 
     // Add 'active' class if it's JST Kidlat (default)
     if (channelNameLower === 'jst kidlat') {
@@ -141,6 +167,7 @@ function renderChannels(channels) {
 }
 
 
+
 let membersInChannel = []; // Populated from backend
 const inputBox = document.getElementById('textMessage');
 const suggestionsBox = document.getElementById('mentionSuggestions');
@@ -160,21 +187,23 @@ async function fetchChannelMembers(channelName) {
   }
 }
 
-
-
 async function switchChannel(channel) {
   if (channel === currentChannel) return;
+
+  // Immediately hide badge and reset count for the channel you're switching to
+  const badge = document.getElementById(`badge-${channel}`);
+  if (badge) {
+    badge.style.display = 'none';
+    badge.textContent = '0';
+    unreadMentionCounts[channel] = 0;
+  }
 
   currentChannel = channel;
   lastMessageDate = null;
   document.querySelector('.chatbox__messages').innerHTML = '';
-
-  // Clear the input field
   document.getElementById('textMessage').value = '';
   document.getElementById('mentionSuggestions').style.display = 'none';
 
-
-  // Clear mentions array if needed
   selectedMentions = [];
 
   await fetchChannelMembers(channel);
@@ -183,7 +212,11 @@ async function switchChannel(channel) {
     type: "joinChannel",
     channel: currentChannel
   }));
+
+ 
 }
+
+
 
 
 
@@ -191,23 +224,24 @@ socket.onopen = () => {
     // Join the default channel on load
     socket.send(JSON.stringify({ type: "joinChannel", channel: currentChannel }));
 };
-
 socket.onmessage = (event) => {
-    let data;
-    try {
-        data = JSON.parse(event.data);
-    } catch (error) {
-        console.error("Invalid message format:", event.data);
-        return;
-    }
+  let data;
+  try {
+    data = JSON.parse(event.data);
+  } catch (error) {
+    console.error("Invalid message format:", event.data);
+    return;
+  }
 
-    if (data.type === "history") {
-        // Load previous messages for the channel
-        data.messages.forEach(displayReceivedMessage);
-    } else {
-        displayReceivedMessage(data);
-    }
+  if (data.type === "history") {
+    data.messages.forEach(displayReceivedMessage);
+  } else {
+    displayReceivedMessage(data);
+  }
+
+  checkUnseenMentionsChannel();  // call once here
 };
+
 function displayReceivedMessage(messageData) {
     if (!messageData || messageData.channel !== currentChannel) return;
 
@@ -282,15 +316,27 @@ function displayReceivedMessage(messageData) {
         messageData.seenBy = [];
     }
 
-    if (!messageData.seenBy.includes(currentAccountID)) {
-        messageData.seenBy.push(currentAccountID);
+    socket.send(JSON.stringify({
+    type: 'update-seenBy',
+    messageId: messageData._id,
+    accountId: currentAccountID
+  }));
 
-        socket.send(JSON.stringify({
-            type: 'update-seenBy',
-            messageId: messageData._id,
-            accountId: currentAccountID
-        }));
+  // Immediately update the unreadMentionCounts locally
+  if (unreadMentionCounts[currentChannel] && unreadMentionCounts[currentChannel] > 0) {
+    unreadMentionCounts[currentChannel] = Math.max(0, unreadMentionCounts[currentChannel] - 1);
+
+    // Update badge UI for current channel
+    const badge = document.getElementById(`mention-badge-${currentChannel.replace(/\s+/g, '-').toLowerCase()}`);
+    if (badge) {
+      if (unreadMentionCounts[currentChannel] > 0) {
+        badge.style.display = 'inline-block';
+        badge.textContent = unreadMentionCounts[currentChannel];
+      } else {
+        badge.style.display = 'none';
+      }
     }
+  }
 }
 
 
@@ -335,33 +381,6 @@ function sendMessage() {
     input.value = '';
     selectedMentions = [];
 }
-
-
-/*
-function extractMentionsFromMessage(message) {
-  const mentionRegex = /@([a-zA-Z]+(?: [a-zA-Z]+)*)(?=\s|$|[.,!?])/g;
-
-  const foundMentions = [];
-  let match;
-
-  while ((match = mentionRegex.exec(message)) !== null) {
-    const mentionText = match[1].trim().toLowerCase();
-
-    const matchedUser = membersInChannel.find(member =>
-      member.fullName.toLowerCase() === mentionText
-    );
-
-    if (matchedUser && !foundMentions.find(m => m.accountid === matchedUser.accountID)) {
-      foundMentions.push({
-        name: matchedUser.fullName,
-        accountid: matchedUser.accountID
-      });
-    }
-  }
-
-  return foundMentions;
-}
-*/
 
 function getUserName() {
     const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -541,6 +560,45 @@ function formatMentions(text, mentions = []) {
   });
 
   return formattedText;
+}
+async function checkUnseenMentionsChannel() {
+  try {
+    const res = await fetch(`http://localhost:3000/api/unseen-mentions/${currentAccountID}`);
+    const unseenMentions = await res.json(); // Expecting message array with mentions and channel fields
+
+    // Reset the unread counts
+    unreadMentionCounts = {};
+
+    unseenMentions.forEach(msg => {
+      if (!msg.seenBy.includes(currentAccountID)) {
+
+        if (!unreadMentionCounts[msg.channel]) {
+          unreadMentionCounts[msg.channel] = 0;
+        }
+        unreadMentionCounts[msg.channel]++;
+      }
+    });
+
+
+
+    // Update UI badges
+    Object.keys(unreadMentionCounts).forEach(channel => {
+      const badge = document.getElementById(`mention-badge-${channel.replace(/\s+/g, '-').toLowerCase()}`);
+      if (badge) {
+        const count = unreadMentionCounts[channel];
+        if (count > 0) {
+          badge.style.display = 'inline-block';
+          badge.textContent = count;
+          console.log("bringing badge back");
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("Failed to fetch unseen mentions:", error);
+  }
 }
 
 

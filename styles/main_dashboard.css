@@ -156,6 +156,24 @@ body {
 #sidebar .side-menu.top li a:hover {
 	color: var(--blue);
 }
+
+/* Default badge styling */
+.mention-badge {
+	background-color: var(--red);
+	color: white;
+	border-radius: 12px;
+	padding: 2px 8px;
+	font-size: 9px;
+	margin-left: 6px;
+	display: none;
+	transition: background-color 0.3s;
+}
+
+/* Hover effect: when hovering the parent link, badge turns bright red */
+.message-link:hover .mention-badge {
+	background-color: red;
+}
+
 #sidebar .side-menu li a .bx {
 	min-width: calc(60px  - ((4px + 6px) * 2));
 	display: flex;

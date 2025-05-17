@@ -697,6 +697,43 @@ app.get('/channel-members', async (req, res) => {
   }
 });
 
+// Example Node.js/Express endpoint
+app.get('/api/unseen-mentions/:accountid', async (req, res) => {
+  const accountId = parseInt(req.params.accountid);
+  console.log("accountId" + accountId);
+  try {
+    const messages = await Message.find({
+      seenBy: { $ne: accountId },
+      mentions: { $elemMatch: { accountid: accountId } }
+    }).exec();
+
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching messages');
+  }
+});
+
+app.post('/api/mark-seen/:accountId/:channel', async (req, res) => {
+  const { accountId, channel } = req.params;
+
+  try {
+    await Message.updateMany(
+      {
+        channel: channel,
+        mentions: { $elemMatch: { accountid: Number(accountId) } },
+        seenBy: { $ne: Number(accountId) }
+      },
+      { $addToSet: { seenBy: Number(accountId) } }
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Failed to mark messages as seen", err);
+    res.sendStatus(500);
+  }
+});
+
+
 
 
 

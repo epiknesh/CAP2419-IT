@@ -51,6 +51,36 @@ body {
 }
   */
 
+.mention-badge {
+  background-color: #DB504A;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 9px;
+  margin-left: 6px;
+  display: inline-block; /* Show by default */
+  transition: background-color 0.3s;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* Optional: on hover, change background */
+.channel-button:hover .mention-badge {
+  background-color: red;
+}
+
+
+
+  .mention-dot {
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-left: 6px;
+}
+
+
 .message__content--mention {
   border: 2px solid #0084ff; /* blue border */
   box-shadow: 0 0 6px rgba(0, 132, 255, 0.4); /* smaller initial shadow */

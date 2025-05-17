@@ -23,6 +23,7 @@ socket.addEventListener("message", (event) => {
     // Log if the message is from someone else
     if (data.sender && data.sender !== user.username) {
         console.log(`New message from ${data.sender} in ${data.channel}`);
+        checkUnseenMentions()
         // Optional: show a toast or badge if you want to notify
     }
 
@@ -41,6 +42,8 @@ socket.addEventListener("message", (event) => {
 document.addEventListener("DOMContentLoaded", async function () {
  
 	const user = JSON.parse(localStorage.getItem('user'));
+
+    checkUnseenMentions();
     
     if (!user) {
         window.location.href = 'login.html'; // Redirect if not logged in
@@ -301,12 +304,47 @@ switchMode.addEventListener('change', function () {
 	}
 })
 
+
+async function checkUnseenMentions() {
+  const currentAccountId = JSON.parse(localStorage.getItem('user')).accountid;
+  console.log(currentAccountId);
+
+  try {
+    const response = await fetch(`http://localhost:3000/api/unseen-mentions/${currentAccountId}`);
+    if (!response.ok) throw new Error('Failed to fetch messages');
+
+    const messages = await response.json();
+    console.log("🔔 Unseen mention messages for account ID " + currentAccountId, messages);
+
+    const badge = document.getElementById('mention-count');
+
+    if (messages.length > 0) {
+      badge.textContent = messages.length;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+  } catch (error) {
+    console.error("Error checking unseen mentions:", error);
+  }
+}
+
+
+  document.addEventListener("DOMContentLoaded", checkUnseenMentions);
+
 function showMessageAlert(message, type, channelName) {
   const alertContainer = document.getElementById('alertContainer');
   if (!alertContainer) {
     console.error("Alert container not found.");
     return;
   }
+
+  // Play notification sound
+  const notificationSound = new Audio('./audio/notification.mp3'); // Make sure this file exists in your project
+  notificationSound.play().catch(e => {
+    console.warn("Audio playback failed:", e);
+  });
 
   const alertHtml = `
     <div class="custom-alert alert alert-${type} alert-dismissible fade show" role="alert" style="cursor: pointer;">
@@ -328,7 +366,6 @@ function showMessageAlert(message, type, channelName) {
   });
 
   alertElement.addEventListener('click', () => {
-    // Redirect to message.html with channel query param
     if (channelName) {
       window.location.href = `message.html?channel=${encodeURIComponent(channelName)}`;
     } else {
