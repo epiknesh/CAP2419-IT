@@ -212,14 +212,13 @@ if (editStatusBtn) {
     });
 }
 
-// Add event listener for the "Edit Assignment" button
 const editFleetBtn = document.getElementById("editPersonnelBtn");
-if (editFleetBtn) {
-    editFleetBtn.addEventListener("click", function (event) {
-        event.preventDefault();
-        showFleetPersonnelForm();
-    });
-}
+editFleetBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    console.log("EDIT BTN CLICKED");
+    showFleetPersonnelForm();
+}, { once: true });
+
 
 // Add event listener for the "Edit Fuel Report" button
 const editFuelBtn = document.getElementById("editFuelBtn");
@@ -594,6 +593,20 @@ function showFleetReadinessStatusForm() {
 
 // Function to show the Fleet Personnel form || Edit Assignment Button
 function showFleetPersonnelForm() {
+        // 🚨 Remove any existing modal before inserting a new one
+    const existingModal = document.getElementById('editFleetPersonnelModal');
+    if (existingModal) {
+        const existingInstance = bootstrap.Modal.getInstance(existingModal);
+        if (existingInstance) {
+            existingInstance.hide();
+        }
+        existingModal.remove();
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+    }
+
     Promise.all([
         fetch('http://localhost:3000/buses').then(res => res.json()),
         fetch('http://localhost:3000/accounts').then(res => res.json())
@@ -620,7 +633,7 @@ function showFleetPersonnelForm() {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
-                        <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close white-text" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form id="fleetPersonnelForm">
@@ -650,7 +663,7 @@ function showFleetPersonnelForm() {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary">Cancel</button>
                         <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
                     </div>
                 </div>
@@ -661,6 +674,8 @@ function showFleetPersonnelForm() {
         document.body.insertAdjacentHTML('beforeend', formHtml);
 
         document.getElementById('submitFleetPersonnel').addEventListener('click', async function () {
+            console.log("🟢 SUBMIT button clicked");
+
             const busId = document.getElementById('busId').value;
             const busDriver = document.getElementById('busDriver').value;
             const busController = document.getElementById('busController').value;
@@ -694,20 +709,70 @@ function showFleetPersonnelForm() {
         const data = await response.json();
 
         if (response.ok) {
-            // Success: show success alert, hide modal, and trigger another action (like clicking a sidebar link)
-            showAlert(`✅ ${data.message}`, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
-            modal.hide();
-            document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();  // Navigate as needed
-        } else {
-            // Failure: show error alert with message from the server
-            showAlert(`❌ ${data.message}`, 'danger');
-        }
+    showAlert(`✅ ${data.message}`, 'success');
+
+    const modalElement = document.getElementById('editFleetPersonnelModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
+    // Listen for the hide completion before removing the modal
+    modalElement.addEventListener('hidden.bs.modal', function handler() {
+        modalElement.remove(); // Remove modal from DOM
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+
+        // Remove the event listener after it runs once
+        modalElement.removeEventListener('hidden.bs.modal', handler);
+    });
+
+    modal.hide(); // Triggers 'hidden.bs.modal' event
+
+    // Optional: trigger sidebar navigation
+    document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+} else {
+    showAlert(`❌ ${data.message}`, 'danger');
+}
+
             } catch (err) {
                 console.error('Error:', err);
                 showAlert('❌ Failed to update personnel. Please try again later.', 'danger');
             }
         });
+
+        // Remove data-bs-dismiss from Cancel and Close buttons
+const cancelButton = document.querySelector('#editFleetPersonnelModal .btn-secondary');
+const closeButton = document.querySelector('#editFleetPersonnelModal .btn-close');
+
+cancelButton.removeAttribute('data-bs-dismiss');
+closeButton.removeAttribute('data-bs-dismiss');
+
+// Define cleanup function to hide modal and remove DOM/backdrop, then trigger sidebar click
+function cleanupModal() {
+    const modalElement = document.getElementById('editFleetPersonnelModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
+    modalElement.addEventListener('hidden.bs.modal', function handler() {
+        modalElement.remove();
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+        // Trigger sidebar click (4th item)
+        document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();
+
+        modalElement.removeEventListener('hidden.bs.modal', handler);
+    });
+
+    modal.hide();
+}
+
+// Attach the cleanup handler to Cancel and Close buttons
+cancelButton.addEventListener('click', cleanupModal);
+closeButton.addEventListener('click', cleanupModal);
+
+
 
         const modalElement = document.getElementById('editFleetPersonnelModal');
         const editModal = new bootstrap.Modal(modalElement);

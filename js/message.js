@@ -191,7 +191,8 @@ async function switchChannel(channel) {
   if (channel === currentChannel) return;
 
   // Immediately hide badge and reset count for the channel you're switching to
-  const badge = document.getElementById(`badge-${channel}`);
+  const badge = document.getElementById(`mention-badge-${channel.replace(/\s+/g, '-').toLowerCase()}`);
+
   if (badge) {
     badge.style.display = 'none';
     badge.textContent = '0';
@@ -212,6 +213,7 @@ async function switchChannel(channel) {
     type: "joinChannel",
     channel: currentChannel
   }));
+
 
  
 }

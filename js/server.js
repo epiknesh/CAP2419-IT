@@ -388,6 +388,48 @@ app.get('/fleetPersonnel', async (req, res) => {
     }
 });
 
+async function sendAutomatedAssignmentMessage({ role, newPersonnelID, busID }) {
+    if (!newPersonnelID) return;
+
+    const user = await Account.findOne({ accountID: newPersonnelID });
+    if (!user) return;
+
+    const channelName = role === 'driver' ? 'Drivers' : 'Controllers';
+
+    // Build message
+    const mentionText = `@${user.firstName} ${user.lastName}`;
+    const systemMessage = `${mentionText}, you have been assigned to Bus ${busID}.`;
+
+    const messageData = new Message({
+        sender: 'Automated Message',
+        profilePic: 'https://res.cloudinary.com/doecgbux4/image/upload/v1747541122/profile_pictures/1747541119385-chatbot.jpg.png', // Replace with system/default icon
+        message: systemMessage,
+        channel: channelName,
+        mentions: [{
+            name: `${user.firstName} ${user.lastName}`,
+            accountid: user.accountID
+        }]
+    });
+
+    await messageData.save();
+
+    // Broadcast via WebSocket
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN && client.channels.has(channelName)) {
+            client.send(JSON.stringify({
+                type: "chatMessage",
+                sender: messageData.sender,
+                profilePic: messageData.profilePic,
+                message: messageData.message,
+                timestamp: messageData.timestamp,
+                channel: channelName,
+                mentions: messageData.mentions
+            }));
+        }
+    });
+
+    console.log(`📢 Automated message sent to ${channelName}: ${systemMessage}`);
+}
 
 app.post('/update-fleet-personnel', async (req, res) => {
     try {
@@ -461,6 +503,27 @@ app.post('/update-fleet-personnel', async (req, res) => {
             { _id: channel._id },
             { $set: { members: Array.from(memberSet) } }
         );
+
+        console.log(validDriverID);
+        console.log(prevControllerID);
+
+        if (validDriverID !== prevDriverID) {
+    await sendAutomatedAssignmentMessage({
+        role: 'driver',
+        newPersonnelID: validDriverID,
+        busID: busID
+    });
+    console.log("calling driver");
+}
+
+if (validControllerID !== prevControllerID) {
+    await sendAutomatedAssignmentMessage({
+        role: 'controller',
+        newPersonnelID: validControllerID,
+        busID: busID
+    });
+    console.log("calling controller");
+}
 
         res.status(200).json({ message: 'Fleet personnel updated successfully', updatedBus });
 
