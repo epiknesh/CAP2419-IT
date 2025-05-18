@@ -394,42 +394,77 @@ async function sendAutomatedAssignmentMessage({ role, newPersonnelID, busID }) {
     const user = await Account.findOne({ accountID: newPersonnelID });
     if (!user) return;
 
-    const channelName = role === 'driver' ? 'Drivers' : 'Controllers';
-
-    // Build message
+    const systemChannel = role === 'driver' ? 'Drivers' : 'Controllers';
+    const busChannel = `Bus ${busID}`;
     const mentionText = `@${user.firstName} ${user.lastName}`;
+
+    // System message to Drivers/Controllers
     const systemMessage = `${mentionText}, you have been assigned to Bus ${busID}.`;
 
-    const messageData = new Message({
+    const systemMessageData = new Message({
         sender: 'Automated Message',
-        profilePic: 'https://res.cloudinary.com/doecgbux4/image/upload/v1747541122/profile_pictures/1747541119385-chatbot.jpg.png', // Replace with system/default icon
+        profilePic: 'https://res.cloudinary.com/doecgbux4/image/upload/v1747541122/profile_pictures/1747541119385-chatbot.jpg.png',
         message: systemMessage,
-        channel: channelName,
+        channel: systemChannel,
         mentions: [{
             name: `${user.firstName} ${user.lastName}`,
             accountid: user.accountID
         }]
     });
 
-    await messageData.save();
+    await systemMessageData.save();
 
-    // Broadcast via WebSocket
+    // Broadcast to Drivers/Controllers
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN && client.channels.has(channelName)) {
+        if (client.readyState === WebSocket.OPEN && client.channels.has(systemChannel)) {
             client.send(JSON.stringify({
                 type: "chatMessage",
-                sender: messageData.sender,
-                profilePic: messageData.profilePic,
-                message: messageData.message,
-                timestamp: messageData.timestamp,
-                channel: channelName,
-                mentions: messageData.mentions
+                sender: systemMessageData.sender,
+                profilePic: systemMessageData.profilePic,
+                message: systemMessageData.message,
+                timestamp: systemMessageData.timestamp,
+                channel: systemChannel,
+                mentions: systemMessageData.mentions
             }));
         }
     });
 
-    console.log(`📢 Automated message sent to ${channelName}: ${systemMessage}`);
+    console.log(`📢 Assignment message sent to ${systemChannel}: ${systemMessage}`);
+
+    // Welcome message to Bus X
+    const welcomeMessage = `Welcome to the ${busChannel} channel, ${mentionText}.`;
+
+    const busMessageData = new Message({
+        sender: 'Automated Message',
+        profilePic: 'https://res.cloudinary.com/doecgbux4/image/upload/v1747541122/profile_pictures/1747541119385-chatbot.jpg.png',
+        message: welcomeMessage,
+        channel: busChannel,
+        mentions: [{
+            name: `${user.firstName} ${user.lastName}`,
+            accountid: user.accountID
+        }]
+    });
+
+    await busMessageData.save();
+
+    // Broadcast to Bus X channel
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN && client.channels.has(busChannel)) {
+            client.send(JSON.stringify({
+                type: "chatMessage",
+                sender: busMessageData.sender,
+                profilePic: busMessageData.profilePic,
+                message: busMessageData.message,
+                timestamp: busMessageData.timestamp,
+                channel: busChannel,
+                mentions: busMessageData.mentions
+            }));
+        }
+    });
+
+    console.log(`🚌 Welcome message sent to ${busChannel}: ${welcomeMessage}`);
 }
+
 
 app.post('/update-fleet-personnel', async (req, res) => {
     try {
