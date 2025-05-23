@@ -110,6 +110,13 @@ fleetMaintenanceRows += `
         <td>${bus.schedule ? new Date(bus.schedule).toLocaleDateString('en-US') : 'N/A'}</td>
         <td>${bus.assignedStaff || 'Unassigned'}</td>
         <td><span class="status ${conditionClass}">${conditionText}</span></td>
+        <td>
+            <i class='bx bxs-note' style='color:#8ea096; font-size:24px; cursor:pointer;'
+            data-bs-toggle="modal" 
+            data-bs-target="#moreReportModal"
+            data-bs-id="${bus.busID}">
+            </i>
+        </td>
     </tr>
 `;
 
@@ -173,7 +180,8 @@ fleetMaintenanceRows += `
                                         <th>Date Reported</th>
                                         <th>Scheduled Maintenance</th>
                                         <th>Assigned Staff</th>
-                                        <th>Vehicle Condition</th>
+                                        <th>Issue Severity</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -202,10 +210,78 @@ fleetMaintenanceRows += `
             editStatusBtn.addEventListener('click', function (event) {
                 event.preventDefault();
                 showFleetReadinessForm();
-              });
+            });
+
+            // Add event listener for the "More Report" icon
+            const moreReportIcons = document.querySelectorAll('.bxs-note');
+            moreReportIcons.forEach(icon => {
+                icon.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const busId = this.getAttribute('data-bs-id');
+                    // Fetch and display more report details here
+                    // For now, just log the bus ID
+                    console.log(`More report for Bus ID: ${busId}`);
+                    showMoreReportModal(busId);
+                });
+            });
         
         });
 });
+
+// Function to Show More Report Modal
+function showMoreReportModal(busId) {
+    // Fetch more report details from the server
+    const modalHtml = `
+        <div class="modal fade" id="moreReportModal" tabindex="-1" aria-labelledby="moreReportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header" style="background-color:rgb(248, 225, 16); color: black;">
+                        <h5 class="modal-title" id="moreReportModalLabel">Bus ${busId}</h5>
+                        <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date Reported</th>
+                                    <th>Issue</th>
+                                    <th>Issue Severity</th>
+                                    <th>Date Fixed</th>
+                                </tr>
+                            </thead>
+                                <tbody>
+                                  <!-- Report details will be injected here -->  
+                                  <!-- Example row, replace with actual data -->
+                                    <tr>
+                                        <td>2023-10-01</td>
+                                        <td>Engine Overheating</td>
+                                        <td><span class="status maintenance-major">Major</span></td>
+                                        <td>2023-10-05</td>
+                                    </tr>
+                                </tbody>
+                            </table>            
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>                
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+     const modalElement = document.getElementById('moreReportModal');
+        const moreReportModal = new bootstrap.Modal(modalElement);
+        moreReportModal.show();
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            document.querySelector('.modal-backdrop').remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+}
+
 async function showFleetMaintenanceReportForm() {
     try {
         // Fetch bus IDs from maintenance database
@@ -477,14 +553,6 @@ function showFleetReadinessForm() {
             });
         });
 }
-
-
-
-
-
-
-
-
 
 
 // Function to Show Alert

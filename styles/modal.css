@@ -14,6 +14,11 @@
   color: #F4F6F7;
 }
 
+.modal-header-report{
+  background-color: #d7d94f;
+  color: #F4F6F7;
+}
+
 #alertContainer {
   position: fixed;
   bottom: 20px;
