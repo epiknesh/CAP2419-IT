@@ -219,12 +219,14 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
                 });
             });
 
-            // Attach event listener to Edit Assignment button
-            document.getElementById('editPersonnelBtn')?.addEventListener('click', function (event) {
-                event.preventDefault();
-                showDispatchFleetPersonnelForm();
-                console.log("Edit Assignment button clicked");
-            });
+           
+            const editFleetBtn = document.getElementById("editPersonnelBtn");
+editFleetBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    console.log("EDIT BTN CLICKED");
+    showDispatchFleetPersonnelForm();
+}, { once: true });
+
 
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -233,137 +235,204 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
     }
 
 
-    function showDispatchFleetPersonnelForm() {
-        Promise.all([
-            fetch('http://localhost:3000/buses').then(res => res.json()),
-            fetch('http://localhost:3000/accounts').then(res => res.json())
-        ])
-        .then(([buses, accounts]) => {
-            const busOptions = buses
-                .sort((a, b) => a.busID - b.busID)
-                .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
-                .join('');
-    
-            const driverOptions = `<option value="">Unassigned</option>` + 
-                accounts.filter(acc => acc.role == '2')
-                       .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
-                       .join('');
-    
-            const controllerOptions = `<option value="">Unassigned</option>` + 
-                accounts.filter(acc => acc.role == '3')
-                       .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
-                       .join('');
-    
-            const formHtml = `
-            <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
-                            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="fleetPersonnelForm">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="busId" class="form-label">Bus ID:</label>
-                                        <select class="form-select" id="busId" name="busId" required>
-                                            <option value="" selected disabled>Select Bus</option>
-                                            ${busOptions}
-                                        </select>
-                                    </div>
+   // Function to show the Fleet Personnel form || Edit Assignment Button
+function showDispatchFleetPersonnelForm() {
+        // 🚨 Remove any existing modal before inserting a new one
+    const existingModal = document.getElementById('editFleetPersonnelModal');
+    if (existingModal) {
+        const existingInstance = bootstrap.Modal.getInstance(existingModal);
+        if (existingInstance) {
+            existingInstance.hide();
+        }
+        existingModal.remove();
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+    }
+
+    Promise.all([
+        fetch('http://localhost:3000/buses').then(res => res.json()),
+        fetch('http://localhost:3000/accounts').then(res => res.json())
+    ])
+    .then(([buses, accounts]) => {
+        const busOptions = buses
+            .sort((a, b) => a.busID - b.busID)
+            .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
+            .join('');
+
+        const driverOptions = `<option value="">Unassigned</option>` + 
+            accounts.filter(acc => acc.role == '2')
+                   .map(driver => `<option value="${driver.accountID}">${driver.firstName} ${driver.lastName}</option>`)
+                   .join('');
+
+        const controllerOptions = `<option value="">Unassigned</option>` + 
+            accounts.filter(acc => acc.role == '3')
+                   .map(controller => `<option value="${controller.accountID}">${controller.firstName} ${controller.lastName}</option>`)
+                   .join('');
+
+        const formHtml = `
+        <div class="modal fade" id="editFleetPersonnelModal" tabindex="-1" aria-labelledby="editFleetPersonnelModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editFleetPersonnelModalLabel">Edit Fleet Personnel</h5>
+                        <button type="button" class="btn-close white-text" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="fleetPersonnelForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="busId" class="form-label">Bus ID:</label>
+                                    <select class="form-select" id="busId" name="busId" required>
+                                        <option value="" selected disabled>Select Bus</option>
+                                        ${busOptions}
+                                    </select>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="busDriver" class="form-label">Driver:</label>
-                                        <select class="form-select" id="busDriver" name="busDriver">
-                                            ${driverOptions}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="busController" class="form-label">Controller:</label>
-                                        <select class="form-select" id="busController" name="busController">
-                                            ${controllerOptions}
-                                        </select>
-                                    </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="busDriver" class="form-label">Driver:</label>
+                                    <select class="form-select" id="busDriver" name="busDriver">
+                                        ${driverOptions}
+                                    </select>
                                 </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
-                        </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="busController" class="form-label">Controller:</label>
+                                    <select class="form-select" id="busController" name="busController">
+                                        ${controllerOptions}
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary">Cancel</button>
+                        <button type="button" class="btn btn-success" id="submitFleetPersonnel">Submit</button>
                     </div>
                 </div>
             </div>
-            `;
-    
-            document.body.insertAdjacentHTML('beforeend', formHtml);
-    
-            document.getElementById('submitFleetPersonnel').addEventListener('click', async function () {
-                const busId = document.getElementById('busId').value;
-                const busDriver = document.getElementById('busDriver').value;
-                const busController = document.getElementById('busController').value;
-    
-                if (!busId) {
-                    showAlert('⚠️ Please select a bus.', 'warning');
-                    return;
-                }
-    
-               
-    
-                const selectedDriverID = busDriver === "" ? null : busDriver;
-                const selectedControllerID = busController === "" ? null : busController;
-    
-                const payload = {
-                    busID: busId,
-                    driverID: selectedDriverID,
-                    controllerID: selectedControllerID
-                };
-    
-                try {
-            // Send the request to the server
-            const response = await fetch('http://localhost:3000/update-fleet-personnel', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-    
-            const data = await response.json();
-    
-            if (response.ok) {
-                // Success: show success alert, hide modal, and trigger another action (like clicking a sidebar link)
-                showAlert(`✅ ${data.message}`, 'success');
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editFleetPersonnelModal'));
-                modal.hide();
-                document.querySelector('#sidebar .side-menu.top li:nth-child(4) a').click();  // Navigate as needed
-            } else {
-                // Failure: show error alert with message from the server
-                showAlert(`❌ ${data.message}`, 'danger');
+        </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+
+        document.getElementById('submitFleetPersonnel').addEventListener('click', async function () {
+            console.log("🟢 SUBMIT button clicked");
+
+            const busId = document.getElementById('busId').value;
+            const busDriver = document.getElementById('busDriver').value;
+            const busController = document.getElementById('busController').value;
+
+            if (!busId) {
+                showAlert('⚠️ Please select a bus.', 'warning');
+                return;
             }
-                } catch (err) {
-                    console.error('Error:', err);
-                    showAlert('❌ Failed to update personnel. Please try again later.', 'danger');
-                }
-            });
-    
-            const modalElement = document.getElementById('editFleetPersonnelModal');
-            const editModal = new bootstrap.Modal(modalElement);
-            editModal.show();
-    
-            modalElement.addEventListener('hidden.bs.modal', function () {
-                modalElement.remove();
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) backdrop.remove();
-                document.body.classList.remove('modal-open');
-                document.body.style = '';
-            });
-        })
-        .catch(error => console.error('Error fetching data:', error));
-    }
-    
+
+           
+
+            const selectedDriverID = busDriver === "" ? null : busDriver;
+            const selectedControllerID = busController === "" ? null : busController;
+
+            const payload = {
+                busID: busId,
+                driverID: selectedDriverID,
+                controllerID: selectedControllerID
+            };
+
+            try {
+        // Send the request to the server
+        const response = await fetch('http://localhost:3000/update-fleet-personnel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+    showAlert(`✅ ${data.message}`, 'success');
+
+    const modalElement = document.getElementById('editFleetPersonnelModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
+    // Listen for the hide completion before removing the modal
+    modalElement.addEventListener('hidden.bs.modal', function handler() {
+        modalElement.remove(); // Remove modal from DOM
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+
+        // Remove the event listener after it runs once
+        modalElement.removeEventListener('hidden.bs.modal', handler);
+    });
+
+    modal.hide(); // Triggers 'hidden.bs.modal' event
+
+    // Optional: trigger sidebar navigation
+    document.querySelector('#sidebar .side-menu.top li:nth-child(5) a').click();
+} else {
+    showAlert(`❌ ${data.message}`, 'danger');
+}
+
+            } catch (err) {
+                console.error('Error:', err);
+                showAlert('❌ Failed to update personnel. Please try again later.', 'danger');
+            }
+        });
+
+        // Remove data-bs-dismiss from Cancel and Close buttons
+const cancelButton = document.querySelector('#editFleetPersonnelModal .btn-secondary');
+const closeButton = document.querySelector('#editFleetPersonnelModal .btn-close');
+
+cancelButton.removeAttribute('data-bs-dismiss');
+closeButton.removeAttribute('data-bs-dismiss');
+
+// Define cleanup function to hide modal and remove DOM/backdrop, then trigger sidebar click
+function cleanupModal() {
+    const modalElement = document.getElementById('editFleetPersonnelModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
+    modalElement.addEventListener('hidden.bs.modal', function handler() {
+        modalElement.remove();
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+        // Trigger sidebar click (4th item)
+        document.querySelector('#sidebar .side-menu.top li:nth-child(5) a').click();
+
+        modalElement.removeEventListener('hidden.bs.modal', handler);
+    });
+
+    modal.hide();
+}
+
+// Attach the cleanup handler to Cancel and Close buttons
+cancelButton.addEventListener('click', cleanupModal);
+closeButton.addEventListener('click', cleanupModal);
+
+
+
+        const modalElement = document.getElementById('editFleetPersonnelModal');
+        const editModal = new bootstrap.Modal(modalElement);
+        editModal.show();
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style = '';
+        });
+    })
+    .catch(error => console.error('Error fetching data:', error));
+}
+
 
 
 

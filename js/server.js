@@ -161,33 +161,71 @@ app.get('/maintenance', async (req, res) => {
     }
 });
 
+async function sendAutomatedMaintenanceMessage({ assignedStaff, busID }) {
+    if (!assignedStaff) return;
 
-// Fetch all maintenance records (for populating Bus ID dropdown)
-app.get('/maintenance', async (req, res) => {
-    try {
-        const buses = await Maintenance.find({}, 'busID'); // Fetch only bus IDs
-        res.status(200).json(buses);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
+    const [firstName, lastName] = assignedStaff.split(" ");
+    const user = await Account.findOne({ firstName, lastName });
 
-// Update maintenance record for a specific bus
+    if (!user) return;
+
+    const channel = 'Maintenance';
+    const mentionText = `@${user.firstName} ${user.lastName}`;
+    const messageText = `${mentionText}, you have been assigned to perform maintenance on Bus ${busID}. Please review the updated report and prepare accordingly.`;
+
+    const maintenanceMessage = new Message({
+        sender: 'Automated Message',
+        profilePic: 'https://res.cloudinary.com/doecgbux4/image/upload/v1747541122/profile_pictures/1747541119385-chatbot.jpg.png',
+        message: messageText,
+        channel,
+        mentions: [{
+            name: `${user.firstName} ${user.lastName}`,
+            accountid: user.accountID
+        }]
+    });
+
+    await maintenanceMessage.save();
+
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN && client.channels.has(channel)) {
+            client.send(JSON.stringify({
+                type: "chatMessage",
+                sender: maintenanceMessage.sender,
+                profilePic: maintenanceMessage.profilePic,
+                message: maintenanceMessage.message,
+                timestamp: maintenanceMessage.timestamp,
+                channel,
+                mentions: maintenanceMessage.mentions
+            }));
+        }
+    });
+
+    console.log(`🔧 Maintenance assignment message sent to ${channel}: ${messageText}`);
+}
+
+
+
 app.put('/maintenance/:busID', async (req, res) => {
     try {
         const { busID } = req.params;
         const { status, issue, schedule, assignedStaff, vehicle_condition } = req.body;
 
-        // Update the maintenance record
         const updatedMaintenance = await Maintenance.findOneAndUpdate(
-            { busID: busID },
+            { busID },
             { status, issue, schedule, assignedStaff, vehicle_condition },
             { new: true }
         );
 
         if (!updatedMaintenance) {
             return res.status(404).json({ message: 'Bus not found in maintenance records' });
+        }
+
+        // 🔔 Send notification if a staff is assigned
+        if (assignedStaff) {
+            await sendAutomatedMaintenanceMessage({
+                assignedStaff,
+                busID
+            });
         }
 
         res.status(200).json({ message: 'Maintenance record updated successfully', updatedMaintenance });
@@ -197,17 +235,6 @@ app.put('/maintenance/:busID', async (req, res) => {
     }
 });
 
-const Dispatch = require('./models/Dispatch');// Import Bus model
- 
-app.get('/dispatch', async (req, res) => {
-    try {
-        const dispatch = await Dispatch.find(); // Fetch all bus data
-        res.status(200).json(dispatch);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
 
 
 

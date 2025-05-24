@@ -284,18 +284,34 @@ function showMoreReportModal(busId) {
 
 async function showFleetMaintenanceReportForm() {
     try {
-        // Fetch bus IDs from maintenance database
-        const response = await fetch('http://localhost:3000/maintenance');
-        const buses = await response.json();
+        // Fetch maintenance bus data
+        const busResponse = await fetch('http://localhost:3000/maintenance');
+        const buses = await busResponse.json();
 
-        // Filter buses that are under maintenance (status = 2) and sort numerically
+        // Filter and sort buses with status = 2 (under maintenance)
         const filteredBuses = buses
             .filter(bus => bus.status === 2)
-            .sort((a, b) => a.busID - b.busID); // Sort numerically
+            .sort((a, b) => a.busID - b.busID);
 
-        // Generate dropdown options dynamically
-        const busOptions = filteredBuses.map(bus => `<option value="${bus.busID}">${bus.busID}</option>`).join('');
+        // Fetch accounts and filter role = 5 (maintenance users)
+        const accountsResponse = await fetch('http://localhost:3000/accounts');
+        const accounts = await accountsResponse.json();
+        const maintenanceUsers = accounts.filter(account => account.role === '5');
 
+        // Generate bus options
+        const busOptions = filteredBuses
+            .map(bus => `<option value="${bus.busID}">${bus.busID}</option>`)
+            .join('');
+
+        // Generate maintainee options
+        const maintaineeOptions = maintenanceUsers
+            .map(user => {
+                const fullName = `${user.firstName} ${user.lastName}`;
+                return `<option value="${fullName}">${fullName}</option>`;
+            })
+            .join('');
+
+        // Modal form HTML
         const formHtml = `
             <div class="modal fade" id="editMaintenanceModal" tabindex="-1" aria-labelledby="editMaintenanceModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -326,7 +342,10 @@ async function showFleetMaintenanceReportForm() {
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="assignedMaintainee" class="form-label">Assigned Maintenance:</label>
-                                        <input type="text" class="form-control" id="assignedMaintainee" name="assignedMaintainee" placeholder="Enter assigned technician">
+                                        <select class="form-select" id="assignedMaintainee" name="assignedMaintainee">
+                                            <option value="">Select Technician</option>
+                                            ${maintaineeOptions}
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="mb-3">
@@ -338,7 +357,6 @@ async function showFleetMaintenanceReportForm() {
                                         <option value="1">Minor</option>
                                     </select>
                                 </div>
-                                
                             </form>
                         </div>
                         <div class="modal-footer">
@@ -352,13 +370,39 @@ async function showFleetMaintenanceReportForm() {
 
         document.body.insertAdjacentHTML('beforeend', formHtml);
 
+        // Map bus data by busID
+        const busDataMap = {};
+        filteredBuses.forEach(bus => {
+            busDataMap[bus.busID] = bus;
+        });
+
+        // Auto-fill fields when Bus ID changes
+        document.getElementById('busId').addEventListener('change', function () {
+            const selectedBusId = this.value;
+            const selectedBus = busDataMap[selectedBusId];
+
+            if (selectedBus) {
+                document.getElementById('issue').value = selectedBus.issue || '';
+                document.getElementById('scheduleMaintenance').value = selectedBus.schedule
+                    ? new Date(selectedBus.schedule).toISOString().split('T')[0]
+                    : '';
+                document.getElementById('assignedMaintainee').value = selectedBus.assignedStaff || '';
+                document.getElementById('vehicleCondition').value = selectedBus.vehicle_condition?.toString() || '';
+            } else {
+                document.getElementById('issue').value = '';
+                document.getElementById('scheduleMaintenance').value = '';
+                document.getElementById('assignedMaintainee').value = '';
+                document.getElementById('vehicleCondition').value = '';
+            }
+        });
+
+        // Submit handler
         document.getElementById('submitReport').addEventListener('click', async function () {
             const busId = document.getElementById('busId').value;
             const issue = document.getElementById('issue').value;
             const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
             const assignedMaintainee = document.getElementById('assignedMaintainee').value;
             const vehicleCondition = document.getElementById('vehicleCondition').value;
-       
 
             if (!busId || !issue || !vehicleCondition) {
                 showAlert('Please fill in all required fields.', 'warning');
@@ -380,10 +424,9 @@ async function showFleetMaintenanceReportForm() {
                 });
 
                 if (response.ok) {
-                    
-                    const editMaintenanceModal = bootstrap.Modal.getInstance(document.getElementById('editMaintenanceModal'));
-                    editMaintenanceModal.hide(); // Hide modal
-                    document.querySelector('#sidebar .side-menu.top li:nth-child(6) a').click(); // Refresh tab content
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editMaintenanceModal'));
+                    modal.hide();
+                    document.querySelector('#sidebar .side-menu.top li:nth-child(6) a').click(); // Reload content
                 } else {
                     showAlert('Error updating maintenance record.', 'danger');
                 }
@@ -393,22 +436,26 @@ async function showFleetMaintenanceReportForm() {
             }
         });
 
+        // Show modal
         const modalElement = document.getElementById('editMaintenanceModal');
-        const editMaintenanceModal = new bootstrap.Modal(modalElement);
-        editMaintenanceModal.show();
+        const modalInstance = new bootstrap.Modal(modalElement);
+        modalInstance.show();
 
+        // Clean up after modal is hidden
         modalElement.addEventListener('hidden.bs.modal', function () {
             modalElement.remove();
-            document.querySelector('.modal-backdrop').remove();
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
             document.body.classList.remove('modal-open');
             document.body.style = '';
         });
 
     } catch (error) {
-        console.error('Error fetching maintenance data:', error);
-        showAlert('Failed to load maintenance data.', 'danger');
+        console.error('Error loading form:', error);
+        showAlert('Failed to load form data.', 'danger');
     }
 }
+
 
 
 
@@ -460,7 +507,10 @@ function showFleetReadinessForm() {
                                             </div>
                                             <div class="col-md-6 mb-3" id="assignedMaintaineeContainer">
                                                 <label for="assignedMaintainee" class="form-label">Assigned Maintenance:</label>
-                                                <input type="text" class="form-control" id="assignedMaintainee" name="assignedMaintainee" placeholder="Enter assigned technician">
+                                                <select class="form-select" id="assignedMaintainee" name="assignedMaintainee">
+    <option value="">Select Technician</option>
+</select>
+
                                             </div>
                                         </div>
                                         <div class="mb-3">
@@ -483,6 +533,27 @@ function showFleetReadinessForm() {
                     </div>
                 </div>
             `;
+
+            // Fetch all accounts and filter for role 5 (maintenance users)
+fetch('http://localhost:3000/accounts')
+    .then(response => response.json())
+    .then(accounts => {
+        const maintenanceUsers = accounts.filter(user => user.role === "5");
+        const maintaineeSelect = document.getElementById('assignedMaintainee');
+
+        maintenanceUsers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.accountID;
+            option.textContent = `${user.firstName} ${user.lastName}`;
+            maintaineeSelect.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Failed to load maintenance accounts:', error);
+        showAlert('Could not load maintenance user list.', 'warning');
+    });
+
+
             
             document.body.insertAdjacentHTML('beforeend', formHtml);
             
@@ -503,7 +574,9 @@ function showFleetReadinessForm() {
                 const issue = document.getElementById('issue').value;
                 const vehicleCondition = document.getElementById('vehicleCondition').value;
                 const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
-                const assignedMaintainee = document.getElementById('assignedMaintainee').value;
+                const assignedMaintaineeSelect = document.getElementById('assignedMaintainee');
+const assignedMaintainee = assignedMaintaineeSelect.options[assignedMaintaineeSelect.selectedIndex].text;
+
 
                 if (!busId || !busStatus) {
                     showAlert('Please fill in all required fields.', 'warning');

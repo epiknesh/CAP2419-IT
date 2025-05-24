@@ -100,18 +100,40 @@ function renderChannels(channels) {
   // Clear previous channels
   channelsContainer.innerHTML = '';
 
-  channels.forEach(channel => {
+  const roleChannels = ['Admins', 'Drivers', 'Controllers', 'Dispatchers', 'Maintenance', 'Cashiers'];
+  const roleChannelsLower = roleChannels.map(r => r.toLowerCase());
+
+  // Sort channels
+  const sortedChannels = [...channels].sort((a, b) => {
+    const nameA = a.name.toLowerCase();
+    const nameB = b.name.toLowerCase();
+
+    if (nameA === 'jst kidlat') return -1;
+    if (nameB === 'jst kidlat') return 1;
+
+    const isRoleA = roleChannelsLower.includes(nameA);
+    const isRoleB = roleChannelsLower.includes(nameB);
+
+    const isBusA = /^bus \d+$/i.test(a.name);
+    const isBusB = /^bus \d+$/i.test(b.name);
+
+    if (isRoleA && !isRoleB) return -1;
+    if (!isRoleA && isRoleB) return 1;
+
+    if (isBusA && !isBusB) return 1;
+    if (!isBusA && isBusB) return -1;
+
+    return a.name.localeCompare(b.name); // fallback alphabetical
+  });
+
+  // Render sorted channels
+  sortedChannels.forEach(channel => {
     const a = document.createElement('a');
     a.href = "#";
     a.classList.add('channel-button');
     a.dataset.channel = channel.name;
 
-    // Determine icon based on channel name/type
     let iconClass = 'bx bx-chat';
-
-    const roleChannels = ['Admins', 'Drivers', 'Controllers', 'Dispatchers', 'Maintenance', 'Cashiers'];
-    const roleChannelsLower = roleChannels.map(r => r.toLowerCase());
-
     const channelNameLower = channel.name.toLowerCase();
 
     if (channelNameLower === 'jst kidlat' || channelNameLower === 'general') {
@@ -122,19 +144,15 @@ function renderChannels(channels) {
       iconClass = 'bx bx-bus';
     }
 
-    // Set inner HTML for icon and channel name (without badge yet)
     a.innerHTML = `<i class='${iconClass}'></i> ${channel.name}`;
 
-    // Create the badge span (initially hidden)
     const badge = document.createElement('span');
     badge.classList.add('mention-badge');
-    badge.style.display = 'none';  // hidden initially
-    badge.id = `mention-badge-${channel.name.replace(/\s+/g, '-').toLowerCase()}`; // unique ID for easy updates
+    badge.style.display = 'none';
+    badge.id = `mention-badge-${channel.name.replace(/\s+/g, '-').toLowerCase()}`;
 
-    // Append badge after channel name inside the <a>
     a.appendChild(badge);
 
-    // Add 'active' class if it's JST Kidlat (default)
     if (channelNameLower === 'jst kidlat') {
       a.classList.add('active');
       const channelTitle = document.getElementById('channel-title');
@@ -144,21 +162,17 @@ function renderChannels(channels) {
     }
 
     a.addEventListener('click', () => {
-      // Remove active class from all channel buttons
       document.querySelectorAll('#channels-container .channel-button').forEach(el => {
         el.classList.remove('active');
       });
 
-      // Add active class to the clicked one
       a.classList.add('active');
 
-      // Update channel title
       const channelTitle = document.getElementById('channel-title');
       if (channelTitle) {
         channelTitle.textContent = channel.name;
       }
 
-      // Trigger channel switch logic
       switchChannel(channel.name);
     });
 
