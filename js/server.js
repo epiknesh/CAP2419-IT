@@ -235,6 +235,18 @@ app.put('/maintenance/:busID', async (req, res) => {
     }
 });
 
+const Dispatch = require('./models/Dispatch'); 
+
+app.get('/dispatch', async (req, res) => {
+    try {
+        const dispatch = await Dispatch.find(); 
+        res.status(200).json(dispatch);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 
 

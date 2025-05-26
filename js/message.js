@@ -32,15 +32,22 @@ window.addEventListener('DOMContentLoaded', async () => {
    
 
     if (channelToOpen && channels.some(c => c.name === channelToOpen)) {
-      switchChannel(channelToOpen);
-      updateChannelUI(channelToOpen);
-    } else if (channels.length > 0) {
-      switchChannel(channels[0].name);
-      updateChannelUI(channels[0].name);
-    } else {
-      switchChannel('general');
-      updateChannelUI('general');
-    }
+  switchChannel(channelToOpen);
+  updateChannelUI(channelToOpen);
+} else {
+  const jstKidlatChannel = channels.find(c => c.name.toLowerCase() === 'jst kidlat');
+  if (jstKidlatChannel) {
+    switchChannel(jstKidlatChannel.name);
+    updateChannelUI(jstKidlatChannel.name);
+  } else if (channels.length > 0) {
+    switchChannel(channels[0].name);
+    updateChannelUI(channels[0].name);
+  } else {
+    switchChannel('general');
+    updateChannelUI('general');
+  }
+}
+
   } catch (err) {
     console.error(err);
     switchChannel('general');
