@@ -10,6 +10,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const fleetTab = document.querySelector('#sidebar .side-menu.top li:nth-child(4) a');
 
+    // Import Chart.js for passenger graph
+    const chartScript = document.createElement('script');
+    chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    chartScript.onload = () => {
+        console.log("Chart.js loaded");
+        renderPassengerChart(); // Call your chart rendering function here
+    };
+    document.head.appendChild(chartScript);
+
 // Ensure fleetBtn triggers fleetTab when clicked
 if (fleetBtn && fleetTab) {
     fleetBtn.addEventListener("click", function () {
@@ -78,6 +87,15 @@ fleetTab.addEventListener("click", async function (event) {
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <div class="table-data">
+                        <div class="order position-relative" id="passengerGraph">
+                            <div class="head">
+                                <h3>Passenger Graph</h3>
+                            </div>
+                            <canvas id="passengerChart" style="height: 400px;"></canvas>
                         </div>
                     </div>
 
@@ -183,7 +201,7 @@ fleetTab.addEventListener("click", async function (event) {
                 <div id="alertContainer"></div>
 
             `;
-            
+            renderPassengerChart (); // Call function to render the passenger chart
             initializeMap(); // Call function to initialize the map
         }
 
@@ -1002,7 +1020,58 @@ function updateFuelLevel(value) {
     fuelPercentage.textContent = `${value}%`; // Update displayed percentage
 }
 
+function renderPassengerChart() {
+    const ctx = document.getElementById("passengerChart");
+  if (!ctx) {
+    console.error("Canvas not found!");
+    return;
+  }
 
+  const xValues = [
+    "08:00", "09:00", "10:00", "11:00", "12:00",
+    "13:00", "14:00", "15:00"];
+    
+  const yValues = [7, 8, 8, 9, 9, 9, 10, 11];
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: xValues,
+      datasets: [{
+        label: "Passenger Count",
+        data: yValues,
+        fill: true,
+        backgroundColor: "rgba(0, 0, 255, 0.1)",
+        borderColor: "rgba(0, 0, 255, 1)",
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Passenger Load per Hour"
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Time"
+          }
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "Passenger Count"
+          }
+        }
+      }
+    }
+  });
+}
 
 // Function to Show Alert
 function showAlert(message, type) {
