@@ -262,12 +262,19 @@ function initializeMap() {
         attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
 }
-const busIcon = L.icon({
-    iconUrl: './img/bus-icon.png', // Path to your custom icon
-    iconSize: [45.875, 55.375], // Width and height of the icon
-    iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
-    popupAnchor: [0, -35] // Offset for the popup
-});
+
+// Async function to get direction
+async function getBusDirection(numericBusID) {
+    try {
+        const response = await fetch(`http://localhost:3000/dispatch/${numericBusID}`);
+        if (!response.ok) throw new Error(`Dispatch not found for Bus ${numericBusID}`);
+        const data = await response.json();
+        return data.direction;
+    } catch (error) {
+        console.warn(`⚠️ Direction fetch failed for Bus ${numericBusID}:`, error);
+        return 1; // Default to southbound (1) if direction cannot be determined
+    }
+}
 
 async function updateBusLocations() {
     try {
@@ -279,21 +286,34 @@ async function updateBusLocations() {
         Object.values(busMarkers).forEach(marker => map.removeLayer(marker));
         busMarkers = {}; // Reset markers object
 
-        Object.keys(data).forEach(bus_id => {
+        // 🔁 Process each bus
+        for (const bus_id of Object.keys(data)) {
             const { latitude, longitude } = data[bus_id];
+            const numericBusID = parseInt(bus_id.replace(/[^\d]/g, ''), 10);
 
-            // 🚌 Create marker with custom bus icon
+            const direction = await getBusDirection(numericBusID);
+            const iconUrl = direction === 2 ? './img/bus-icon2.png' : './img/bus-icon.png';
+
+            const busIcon = L.icon({
+                iconUrl,
+                iconSize: [45.875, 55.375],
+                iconAnchor: [22.9, 55.375],
+                popupAnchor: [0, -35]
+            });
+
+            // 🚌 Create marker with direction-specific icon
             busMarkers[bus_id] = L.marker([latitude, longitude], { icon: busIcon })
                 .addTo(map)
                 .bindPopup(`🚌 <b>Bus ID:</b> ${bus_id}`);
 
-            console.log(`✅ Created marker for Bus ${bus_id} at [${latitude}, ${longitude}]`);
-        });
+            console.log(`✅ Created marker for Bus ${bus_id} at [${latitude}, ${longitude}] with direction ${direction}`);
+        }
 
     } catch (error) {
         console.error("❌ Error fetching bus data:", error);
     }
 }
+
 // Function to fetch fleet capacity
 // Store buses that have already triggered the email notification to prevent duplicate sends
 const notifiedBuses = new Set();
