@@ -148,7 +148,12 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
                                 <h6 class="plate_number">${plateNumber}</h6>     
                             </div>
                                 
-                                <button class="btn btn-primary mt-3 m-2 dispatch-btn" data-busid="${dispatch.busID}">Dispatch</button>
+                               <button class="btn btn-primary mt-3 m-2 dispatch-btn"
+        data-busid="${dispatch.busID}"
+        data-status="${dispatch.status}">
+    ${dispatch.status === 1 ? 'Declare Arrived' : 'Dispatch'}
+</button>
+
                             </div>
                             <table>
                                 <thead>
@@ -161,7 +166,14 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
                                 </thead>
                                 <tbody class="table">
                                     <tr>
-                                        <td><span class="status ${dispatch.status === 1 ? 'in-transit' : 'in-terminal'}">${dispatch.status === 1 ? 'In Transit' : 'In Terminal'}</span></td>
+                                        <td>
+    <span class="status ${dispatch.status === 1 ? 'in-transit' : 'in-terminal'}">
+        ${dispatch.status === 1 
+            ? `In Transit - ${dispatch.direction === 1 ? 'Southbound' : 'Northbound'}`
+            : 'In Terminal'}
+    </span>
+</td>
+
                                         <td>${formatTime(dispatch.nextDispatch)}</td>
                                         <td>${formatTime(dispatch.lastDispatch)}</td>
                                         <td>[${dispatch.coordinates.coordinates[1]}, ${dispatch.coordinates.coordinates[0]}]</td>
@@ -210,14 +222,15 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
 
             document.querySelector('#content main').innerHTML = dispatchContent;
 
-            // Attach event listeners to dispatch buttons
             document.querySelectorAll('.dispatch-btn').forEach(button => {
-                button.addEventListener('click', async function () {
-                    const busID = this.getAttribute('data-busid');
-                    showConfirmationModal(busID);
-                   
-                });
-            });
+    button.addEventListener('click', async function () {
+        const busID = this.getAttribute('data-busid');
+        const currentStatus = parseInt(this.getAttribute('data-status'));
+
+        handleDispatchClick(busID, currentStatus);
+    });
+});
+
 
            
             const editFleetBtn = document.getElementById("editPersonnelBtn");
@@ -433,26 +446,82 @@ closeButton.addEventListener('click', cleanupModal);
     .catch(error => console.error('Error fetching data:', error));
 }
 
-
-
-
-function showConfirmationModal(busID) {
-    // Remove any existing modal to prevent duplicates
-    const existingModal = document.getElementById("confirmationModal");
-    if (existingModal) {
-        existingModal.remove();
+async function getDispatchDirection(busID) {
+    const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+    if (!dispatchResponse.ok) {
+        throw new Error(`Server responded with ${dispatchResponse.status}`);
     }
+
+    const dispatchData = await dispatchResponse.json();
+    const [longitude, latitude] = dispatchData.coordinates.coordinates;
+
+    const southRef = { lat: 14.55021898231055, lng: 121.02789195667842 };
+    const northRef = { lat: 14.416473794324464, lng: 121.04621052990954 };
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const toRad = deg => (deg * Math.PI) / 180;
+        const R = 6371;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    const distToSouth = getDistance(latitude, longitude, southRef.lat, southRef.lng);
+    const distToNorth = getDistance(latitude, longitude, northRef.lat, northRef.lng);
+
+    const direction = distToSouth < distToNorth ? 1 : 2;
+
+    return {
+        direction,
+        dispatchData,
+        locationName: distToSouth < distToNorth ? "One Ayala" : "Starmall Alabang"
+    };
+}
+
+
+async function handleDispatchClick(busID, currentStatus) {
+    if (currentStatus === 1) {
+        showConfirmationModal(busID, currentStatus); // Arrival doesn't need direction
+    } else {
+        try {
+            const { direction, locationName } = await getDispatchDirection(busID);
+            showConfirmationModal(busID, currentStatus, direction, locationName);
+        } catch (err) {
+            console.error("Error getting direction:", err);
+            showAlert("Failed to fetch dispatch direction", "danger");
+        }
+    }
+}
+
+
+
+
+function showConfirmationModal(busID, currentStatus, direction = null, locationName = null)
+{
+    const actionText = currentStatus === 1 ? 'declare this bus as arrived' : 'dispatch this bus';
+    const confirmLabel = currentStatus === 1 ? 'Confirm Arrival' : 'Confirm Dispatch';
+
+    const existingModal = document.getElementById("confirmationModal");
+    if (existingModal) existingModal.remove();
 
     const modalHTML = `
         <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="color: black;">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="confirmationModalLabel">Confirm Dispatch</h5>
+                        <h5 class="modal-title" id="confirmationModalLabel">${confirmLabel}</h5>
                     </div>
                     <div class="modal-body">
-                        Are you sure you want to dispatch Bus ${busID}?
-                    </div>
+    ${
+        currentStatus === 1
+            ? `Are you sure you want to declare Bus ${busID} as arrived?`
+            : `The bus’s current location is close to ${locationName}. Are you sure you want to dispatch Bus ${busID} <strong>${direction === 1 ? 'Southbound' : 'Northbound'}</strong>?`
+    }
+</div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-primary" id="confirmDispatchBtn">Confirm</button>
@@ -464,78 +533,133 @@ function showConfirmationModal(busID) {
 
     document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-// Initialize Bootstrap Modal
-const modalElement = document.getElementById("confirmationModal");
-const modal = new bootstrap.Modal(modalElement);
-modal.show();
+    const modalElement = document.getElementById("confirmationModal");
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
 
-// Confirm Dispatch Button Click
-document.getElementById("confirmDispatchBtn").addEventListener("click", async () => {
-    modal.hide(); // Hide the modal
-    await dispatchBus(busID); // Dispatch the Bus
+    document.getElementById("confirmDispatchBtn").addEventListener("click", async () => {
+    modal.hide();
+    if (currentStatus === 1) {
+        await declareBusArrived(busID);
+    } else {
+        await dispatchBus(busID);
+    }
 });
 
-// Remove modal from the DOM after it is hidden
-modalElement.addEventListener("hidden.bs.modal", () => {
-    modalElement.remove();
-});
-
+    modalElement.addEventListener("hidden.bs.modal", () => {
+        modalElement.remove();
+    });
 }
 
-async function dispatchBus(busID) {
-    try {
-        // Fetch the current dispatch data
-        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
 
+async function declareBusArrived(busID) {
+    try {
+        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
         if (!dispatchResponse.ok) {
             throw new Error(`Server responded with ${dispatchResponse.status}`);
         }
 
         const dispatchData = await dispatchResponse.json();
 
-        // Fetch the latest location of the bus
         const locationResponse = await fetch(`http://localhost:8000/api/get_locations`);
         if (!locationResponse.ok) {
-            throw new Error(`Location API responded with ${locationResponse.status}`);
+            throw new Error(`Location API error: ${locationResponse.status}`);
         }
 
         const locations = await locationResponse.json();
+        const busKey = `bus${busID}`;
 
-        console.log("Received location data:", locations);
-
-        const busIDAPI = `bus${busID}`;
-
-        if (!locations[busIDAPI]) {
-            throw new Error(`Location data for bus${busID} not found.`);
+        if (!locations[busKey]) {
+            throw new Error(`Location for bus${busID} not found`);
         }
 
-        const { latitude, longitude } = locations[busIDAPI];
+        const { latitude, longitude } = locations[busKey];
+        const roundedLatitude = parseFloat(latitude.toFixed(4));
+        const roundedLongitude = parseFloat(longitude.toFixed(4));
 
-        console.log("Full locations object:", locations);
-console.log("Attempting to access busID:", busID);
-console.log("Value at locations[busID]:", locations[busID]);
-console.log("latitude:", latitude);
-console.log("longitude:", longitude);
+        const updatedData = {
+            status: 2, // Mark as arrived
+            coordinates: {
+                type: "Point",
+                coordinates: [roundedLongitude, roundedLatitude]
+            }
+        };
 
-        // Schedule the next dispatch (e.g., 1 hour later)
+        const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData)
+        });
+
+        if (!updateResponse.ok) {
+            throw new Error(`Update failed: ${updateResponse.status}`);
+        }
+
+        // Refresh Dispatch Data instead of full reload
+        await loadDispatchData();
+        showAlert(`Bus ${busID} has been marked as arrived.`, "success");
+
+    } catch (error) {
+        console.error("Error declaring arrival:", error);
+        showAlert(`Error declaring arrival: ${error.message}`, "danger");
+    }
+}
+
+
+
+async function dispatchBus(busID) {
+    try {
+        // Fetch the current dispatch data
+        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+        if (!dispatchResponse.ok) {
+            throw new Error(`Server responded with ${dispatchResponse.status}`);
+        }
+
+        const dispatchData = await dispatchResponse.json();
+
+        // Use stored coordinates from the dispatch data
+        const [longitude, latitude] = dispatchData.coordinates.coordinates;
+
+        // Reference coordinates
+        const southRef = { lat: 14.55021898231055, lng: 121.02789195667842 };
+        const northRef = { lat: 14.416473794324464, lng: 121.04621052990954 };
+
+        // Function to calculate distance using Haversine formula
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const toRad = deg => (deg * Math.PI) / 180;
+            const R = 6371; // Radius of Earth in km
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        // Calculate distances
+        const distToSouth = getDistance(latitude, longitude, southRef.lat, southRef.lng);
+        const distToNorth = getDistance(latitude, longitude, northRef.lat, northRef.lng);
+
+        // Determine direction
+        const direction = distToSouth < distToNorth ? 1 : 2;
+
+        // Schedule the next dispatch
         const nextDispatchTime = new Date();
         nextDispatchTime.setHours(nextDispatchTime.getHours());
 
-        const roundedLatitude = parseFloat(latitude.toFixed(4));
-const roundedLongitude = parseFloat(longitude.toFixed(4));
+        const updatedData = {
+            status: 1,
+            lastDispatch: dispatchData.nextDispatch,
+            nextDispatch: nextDispatchTime.toISOString(),
+            direction: direction,
+            coordinates: {
+                type: "Point",
+                coordinates: [parseFloat(longitude.toFixed(4)), parseFloat(latitude.toFixed(4))]
+            }
+        };
 
-const updatedData = {
-    status: 1,
-    lastDispatch: dispatchData.nextDispatch,
-    nextDispatch: nextDispatchTime.toISOString(),
-    coordinates: {
-        type: "Point",
-        coordinates: [roundedLongitude, roundedLatitude] // Store only 4 decimals
-    }
-};
-
-
-        // ✅ Send update request only ONCE
+        // Send update request
         const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -546,14 +670,13 @@ const updatedData = {
             throw new Error(`Update failed with status ${updateResponse.status}`);
         }
 
-        console.log(`Bus ${busID} dispatched successfully with updated location.`);
+        console.log(`Bus ${busID} dispatched successfully with updated direction.`);
 
-        // ✅ Check if dispatch notification is enabled
+        // Notification check
         const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
         const settings = await settingsResponse.json();
 
         if (settings.dispatch_notif) {
-            // Get the current local time
             const localDispatchTime = new Date();
             const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
                 hour: "numeric",
@@ -561,7 +684,6 @@ const updatedData = {
                 hour12: true
             });
 
-            // ✅ Send email notification
             const templateParams = {
                 to_email: loggedEmail,
                 subject: `Bus ${busID} Dispatched`,
@@ -569,11 +691,10 @@ const updatedData = {
             };
 
             emailjs.send(service_id, template_id, templateParams)
-                .then(() => console.log(`Email notification sent for Bus ${busID}.`))
+                .then(() => console.log(`Email sent for Bus ${busID}.`))
                 .catch((error) => console.error("Email send failed", error));
         }
 
-        // ✅ Refresh Dispatch Data
         await loadDispatchData();
         showAlert(`Bus ${busID} has been successfully dispatched!`, "success");
 
@@ -582,6 +703,7 @@ const updatedData = {
         showAlert(`Error dispatching bus ${busID}: ${error.message}`, "danger");
     }
 }
+
 
  // Function to Show Alert
 function showAlert(message, type) {

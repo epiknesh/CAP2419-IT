@@ -425,3 +425,16 @@ img[src="img/BusMateLogo.png"] {
     }
 }
 
+.info.legend {
+    background: white;
+    padding: 10px;
+    line-height: 1.5;
+    font-size: 14px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+
+.info.legend h4 {
+    margin: 0 0 5px;
+    font-weight: bold;
+}

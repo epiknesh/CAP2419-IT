@@ -252,13 +252,21 @@ app.get('/dispatch', async (req, res) => {
 
 app.put('/dispatch/:busID', async (req, res) => {
     try {
-        const { status, lastDispatch, nextDispatch, coordinates } = req.body;
+        const { status, lastDispatch, nextDispatch, coordinates, direction } = req.body;
 
         console.log(`🛠️ Updating Dispatch for Bus ID ${req.params.busID}`);
 
         const updatedDispatch = await Dispatch.findOneAndUpdate(
-            { busID: req.params.busID }, // Find by busID
-            { $set: { status, lastDispatch, nextDispatch, coordinates } },
+            { busID: req.params.busID },
+            {
+                $set: {
+                    status,
+                    lastDispatch,
+                    nextDispatch,
+                    coordinates,
+                    direction
+                }
+            },
             { new: true }
         );
 

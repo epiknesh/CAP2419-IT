@@ -320,25 +320,54 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
 }).addTo(map);
 
-// Fetch and Update Bus Locations
+const legend = L.control({ position: 'bottomleft' });
+
+legend.onAdd = function (map) {
+    const div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML += '<h4>Legend</h4>';
+    div.innerHTML += '<div><img src="./img/bus-icon.png" width="30"/> Southbound</div>';
+    div.innerHTML += '<div><img src="./img/bus-icon2.png" width="30"/> Northbound</div>';
+    return div;
+};
+
+legend.addTo(map);
 function updateBusLocations() {
     fetch("http://localhost:8000/api/get_locations") // API for bus locations
         .then(response => response.json())
-        .then(data => {
-            Object.keys(data).forEach(bus_id => {
+        .then(async (data) => {
+            for (const bus_id of Object.keys(data)) {
                 const { latitude, longitude } = data[bus_id];
-                const busCoords = [longitude, latitude]; // Format for ORS API
+                const busCoords = [longitude, latitude];
 
-                // 🚌 Define a custom bus icon
+                // ✅ Extract numeric bus ID from "bus1", "bus2", etc.
+                const numericBusID = parseInt(bus_id.replace(/[^\d]/g, ''), 10);
+
+                // 🚌 Fetch dispatch data to determine direction
+                let direction = 1; // Default southbound
+                try {
+                    const dispatchRes = await fetch(`http://localhost:3000/dispatch/${numericBusID}`);
+                    if (dispatchRes.ok) {
+                        const dispatchData = await dispatchRes.json();
+                        direction = dispatchData.direction;
+                    } else {
+                        console.warn(`No dispatch data found for Bus ${numericBusID}`);
+                    }
+                } catch (err) {
+                    console.error(`Error fetching direction for Bus ${numericBusID}:`, err);
+                }
+
+                // 🎯 Choose icon based on direction
+                const iconUrl = direction === 2 ? 'img/bus-icon2.png' : 'img/bus-icon.png';
                 const busIcon = L.icon({
-                    iconUrl: 'img/bus-icon.png', // Path to your custom icon
-                    iconSize: [45.875, 55.375], // Width and height of the icon
-                    iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
-                    popupAnchor: [0, -35] // Offset for the popup
+                    iconUrl: iconUrl,
+                    iconSize: [45.875, 55.375],
+                    iconAnchor: [22.9, 55.375],
+                    popupAnchor: [0, -35]
                 });
 
                 if (busMarkers[bus_id]) {
                     busMarkers[bus_id].setLatLng([latitude, longitude]);
+                    busMarkers[bus_id].setIcon(busIcon);
                 } else {
                     const popupContent = `
                         <div style="text-align: center;">
@@ -358,14 +387,11 @@ function updateBusLocations() {
                         setTimeout(() => {
                             document.getElementById(`popup-btn-${bus_id}`).addEventListener("click", function () {
                                 if (userCoords) {
-                                    console.log(userCoords);
                                     calculateETA(busCoords, userCoords, bus_id).then(eta => {
                                         if (eta !== null) {
                                             console.log(`ETA for Bus ${bus_id}: ${eta} minutes`);
                                         }
                                     });
-
-                                    // 🛑 Close pop-up after clicking the button
                                     map.closePopup();
                                 } else {
                                     alert("User location not found. Please enable location services.");
@@ -374,10 +400,11 @@ function updateBusLocations() {
                         }, 100);
                     });
                 }
-            });
+            }
         })
         .catch(error => console.error("❌ Error fetching bus data:", error));
 }
+
 
 
 // Fetch new bus locations every 5 seconds
@@ -390,6 +417,24 @@ function showPopupMessage(message) {
 }
 
 async function calculateETA(busCoords, userCoords, busID) {
+
+    let direction = null;
+try {
+    const dispatchResponse = await fetch(`http://localhost:3000/dispatch`);
+    const dispatches = await dispatchResponse.json();
+    const numericBusID = parseInt(busID.replace("bus", ""), 10);
+    const dispatch = dispatches.find(d => d.busID === numericBusID);
+    
+    if (dispatch) {
+        direction = dispatch.direction;
+        console.log(`🧭 Bus Direction: ${direction === 1 ? "Southbound" : "Northbound"}`);
+    } else {
+        console.warn("⚠️ Dispatch not found for bus");
+    }
+} catch (error) {
+    console.error("❌ Error fetching dispatch:", error);
+}
+
 
     console.log(`🚌 Bus ID: ${busID}`);
     console.log(`📍 Bus Coordinates:`, busCoords);
@@ -690,83 +735,94 @@ let cardBusMarkers = {}; // Object to store markers per bus
 function updateMapBuses(mapId, busId, busData, locElementId) {
     const { latitude, longitude } = busData;
 
+    const numericBusID = parseInt(busId.replace(/[^\d]/g, ''), 10);
+
     const mapContainer = document.getElementById(mapId);
     if (!mapContainer) {
         console.warn(`⚠️ Map container not found for ${busId}`);
         return;
     }
 
-    // 🚌 Define a custom bus icon
-    const busIcon = L.icon({
-                    iconUrl: 'img/bus-icon.png', // Path to your custom icon
-                    iconSize: [45.875, 55.375], // Width and height of the icon
-                    iconAnchor: [22.9, 55.375], // Point of the icon that corresponds to marker’s location
-                    popupAnchor: [0, -35] // Offset for the popup
-                });
+    // 🧭 Default to southbound if direction fetch fails
+    let direction = 1;
 
+    fetch(`http://localhost:3000/dispatch/${numericBusID}`)
+        .then(res => {
+            if (!res.ok) throw new Error(`No dispatch for bus ${numericBusID}`);
+            return res.json();
+        })
+        .then(dispatchData => {
+            direction = dispatchData.direction;
+        })
+        .catch(err => {
+            console.warn(`⚠️ Could not fetch direction for Bus ${busId}:`, err);
+        })
+        .finally(() => {
+            // 🎯 Choose correct icon based on direction
+            const iconUrl = direction === 2 ? 'img/bus-icon2.png' : 'img/bus-icon.png';
+            const busIcon = L.icon({
+                iconUrl: iconUrl,
+                iconSize: [45.875, 55.375],
+                iconAnchor: [22.9, 55.375],
+                popupAnchor: [0, -35]
+            });
 
-    // 🛑 Ensure previous map instance is removed before initializing a new one
-    if (busMaps[busId]) {
-        console.warn(`🛑 Map for ${busId} already exists, updating location...`);
+            if (busMaps[busId]) {
+                console.warn(`🛑 Map for ${busId} already exists, updating location...`);
 
-        // Update marker position if map already exists
-        if (cardBusMarkers[busId]) {
-            cardBusMarkers[busId].setLatLng([latitude, longitude]);
-        } else {
-            cardBusMarkers[busId] = L.marker([latitude, longitude], { icon: busIcon }) // 🆕 Use the custom icon
+                if (cardBusMarkers[busId]) {
+                    cardBusMarkers[busId].setLatLng([latitude, longitude]);
+                    cardBusMarkers[busId].setIcon(busIcon);
+                } else {
+                    cardBusMarkers[busId] = L.marker([latitude, longitude], { icon: busIcon })
+                        .addTo(busMaps[busId])
+                        .bindPopup(`🚌 Bus ${busId}`);
+                }
+
+                busMaps[busId].setView([latitude, longitude], 13);
+                return;
+            }
+
+            if (L.DomUtil.get(mapId) !== null) {
+                L.DomUtil.get(mapId)._leaflet_id = null;
+            }
+
+            busMaps[busId] = L.map(mapId, { center: [latitude, longitude], zoom: 13 });
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors"
+            }).addTo(busMaps[busId]);
+
+            cardBusMarkers[busId] = L.marker([latitude, longitude], { icon: busIcon })
                 .addTo(busMaps[busId])
                 .bindPopup(`🚌 Bus ${busId}`);
-        }
 
-        // Move map view to new bus location
-        busMaps[busId].setView([latitude, longitude], 13);
-        return; // Stop further execution
-    }
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                .then(response => response.json())
+                .then(locationData => {
+                    let locationName = "Unknown Location";
+                    if (locationData.address) {
+                        const { road, suburb, city, state, country } = locationData.address;
+                        locationName = [road, suburb, city, state, country].filter(Boolean).join(", ");
+                    }
 
-    // 🛑 Forcefully remove any lingering Leaflet instance
-    if (L.DomUtil.get(mapId) !== null) {
-        L.DomUtil.get(mapId)._leaflet_id = null; // Reset Leaflet instance ID
-    }
-
-    // ✅ Initialize the map only if it does not exist
-    busMaps[busId] = L.map(mapId, { center: [latitude, longitude], zoom: 13 });
-
-    // Add OpenStreetMap tiles
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(busMaps[busId]);
-
-    // Add marker using the custom bus icon
-    cardBusMarkers[busId] = L.marker([latitude, longitude], { icon: busIcon }) // 🆕 Use the custom icon
-        .addTo(busMaps[busId])
-        .bindPopup(`🚌 Bus ${busId}`);
-
-    // Reverse Geocode to get location name
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-        .then(response => response.json())
-        .then(locationData => {
-            let locationName = "Unknown Location";
-            if (locationData.address) {
-                const { road, suburb, city, state, country } = locationData.address;
-                locationName = [road, suburb, city, state, country].filter(Boolean).join(", ");
-            }
-
-            // Update the corresponding location element
-            const locElement = document.getElementById(locElementId);
-            if (locElement) {
-                locElement.textContent = locationName;
-            } else {
-                console.warn(`⚠️ Location element not found for ${busId}`);
-            }
-        })
-        .catch(error => {
-            console.error("❌ Error fetching location name:", error);
-            const locElement = document.getElementById(locElementId);
-            if (locElement) {
-                locElement.textContent = "Location unavailable";
-            }
+                    const locElement = document.getElementById(locElementId);
+                    if (locElement) {
+                        locElement.textContent = locationName;
+                    } else {
+                        console.warn(`⚠️ Location element not found for ${busId}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error fetching location name:", error);
+                    const locElement = document.getElementById(locElementId);
+                    if (locElement) {
+                        locElement.textContent = "Location unavailable";
+                    }
+                });
         });
 }
+
 
 
 setInterval(updateBusLocationBuses, 2000);
