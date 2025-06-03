@@ -203,13 +203,40 @@ async function sendAutomatedMaintenanceMessage({ assignedStaff, busID }) {
     console.log(`🔧 Maintenance assignment message sent to ${channel}: ${messageText}`);
 }
 
-
-
+const MaintenanceHistory = require('./models/MaintenanceHistory'); // Import Bus model
 app.put('/maintenance/:busID', async (req, res) => {
     try {
         const { busID } = req.params;
         const { status, issue, schedule, assignedStaff, vehicle_condition } = req.body;
 
+        // Fetch the current maintenance record
+        const currentMaintenance = await Maintenance.findOne({ busID });
+
+        if (!currentMaintenance) {
+            return res.status(404).json({ message: 'Bus not found in maintenance records' });
+        }
+
+        const wasUnderMaintenance = currentMaintenance.status === 2;
+        const isNowOperating = status === 1;
+
+        // If transitioning from under maintenance to operating, save to history BEFORE updating
+        if (wasUnderMaintenance && isNowOperating) {
+            const maintenanceHistoryEntry = new MaintenanceHistory({
+                busID: currentMaintenance.busID,
+                status: currentMaintenance.status,
+                issue: currentMaintenance.issue || 'No issue specified',
+                schedule: currentMaintenance.schedule,
+                assignedStaff: currentMaintenance.assignedStaff,
+                vehicle_condition: typeof currentMaintenance.vehicle_condition === 'number'
+                    ? currentMaintenance.vehicle_condition
+                    : -1, // fallback value
+                dateFixed: new Date()
+            });
+
+            await maintenanceHistoryEntry.save();
+        }
+
+        // Update the current maintenance record
         const updatedMaintenance = await Maintenance.findOneAndUpdate(
             { busID },
             { status, issue, schedule, assignedStaff, vehicle_condition },
@@ -217,7 +244,7 @@ app.put('/maintenance/:busID', async (req, res) => {
         );
 
         if (!updatedMaintenance) {
-            return res.status(404).json({ message: 'Bus not found in maintenance records' });
+            return res.status(404).json({ message: 'Maintenance record not found' });
         }
 
         // 🔔 Send notification if a staff is assigned
@@ -228,10 +255,26 @@ app.put('/maintenance/:busID', async (req, res) => {
             });
         }
 
-        res.status(200).json({ message: 'Maintenance record updated successfully', updatedMaintenance });
+        res.status(200).json({
+            message: 'Maintenance record updated successfully',
+            updatedMaintenance
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get maintenance history for a specific busID
+app.get('/maintenance/history/:busID', async (req, res) => {
+    try {
+        const { busID } = req.params;
+        const history = await MaintenanceHistory.find({ busID }).sort({ dateFixed: -1 }); // latest first
+        res.status(200).json(history);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch maintenance history' });
     }
 });
 

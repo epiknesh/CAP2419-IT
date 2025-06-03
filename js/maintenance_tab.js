@@ -282,6 +282,100 @@ function showMoreReportModal(busId) {
         });
 }
 
+function showMoreReportModal(busId) {
+    // Build the base modal structure
+    const modalHtml = `
+        <div class="modal fade" id="moreReportModal" tabindex="-1" aria-labelledby="moreReportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header" style="background-color:rgb(248, 225, 16); color: black;">
+                        <h5 class="modal-title" id="moreReportModalLabel">Bus ${busId}</h5>
+                        <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date Reported</th>
+                                    <th>Issue</th>
+                                    <th>Issue Severity</th>
+                                    <th>Assigned Maintenance</th>
+                                    <th>Date Fixed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportDetailsBody">
+                                <tr><td colspan="5">Loading...</td></tr>
+                            </tbody>
+                        </table>            
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>                
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modalElement = document.getElementById('moreReportModal');
+    const moreReportModal = new bootstrap.Modal(modalElement);
+    moreReportModal.show();
+
+    // Fetch real data from server
+  
+    fetch(`http://localhost:3000/maintenance/history/${busId}`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = modalElement.querySelector('#reportDetailsBody');
+            tbody.innerHTML = ''; // Clear loading row
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No maintenance history available.</td></tr>';
+                return;
+            }
+
+            data.forEach(entry => {
+                const severityClass = entry.vehicle_condition === 2
+                    ? 'maintenance-major'
+                    : entry.vehicle_condition === 1
+                        ? 'maintenance-minor'
+                        : 'maintenance-normal';
+
+                const row = `
+                    <tr>
+                        <td>${new Date(entry.schedule).toLocaleDateString()}</td>
+                        <td>${entry.issue}</td>
+                        <td><span class="status ${severityClass}">${getSeverityText(entry.vehicle_condition)}</span></td>
+                        <td>${entry.assignedStaff || 'Unassigned'}</td>
+                        <td>${new Date(entry.dateFixed).toLocaleDateString()}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            const tbody = modalElement.querySelector('#reportDetailsBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-danger">Failed to load data</td></tr>';
+        });
+
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        modalElement.remove();
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+    });
+}
+
+// Helper function for severity label
+function getSeverityText(value) {
+    if (value === 3) return 'Major';
+    if (value === 2) return 'Moderate';
+    return 'Minor';
+}
+
+
 async function showFleetMaintenanceReportForm() {
     try {
         // Fetch maintenance bus data
