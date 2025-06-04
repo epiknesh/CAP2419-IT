@@ -201,14 +201,29 @@ fleetTab.addEventListener("click", async function (event) {
                 <div id="alertContainer"></div>
 
             `;
-            renderPassengerChart (); // Call function to render the passenger chart
+             // Call function to render the passenger chart
             initializeMap(); // Call function to initialize the map
         }
+
+       
+
+
+setTimeout(() => {
+ renderPassengerChart(); 
+
+}, 0);
+
 
                 // Fetch and update fleet capacity every 10 seconds
         setInterval(async () => {
             await fetchFleetCapacity();
+           
         }, 2000);
+
+        // Fetch and update fleet capacity every 10 minutes
+setInterval(async () => {
+   renderPassengerChart(); 
+}, 600000); 
 
         // Initial call to populate the table immediately
         fetchFleetCapacity();
@@ -1040,58 +1055,74 @@ function updateFuelLevel(value) {
     fuelPercentage.textContent = `${value}%`; // Update displayed percentage
 }
 
-function renderPassengerChart() {
-    const ctx = document.getElementById("passengerChart");
-  if (!ctx) {
+let passengerChartInstance = null;
+
+async function renderPassengerChart() {
+  const canvas = document.getElementById("passengerChart");
+  if (!canvas) {
     console.error("Canvas not found!");
     return;
   }
 
-  const xValues = [
-    "08:00", "09:00", "10:00", "11:00", "12:00",
-    "13:00", "14:00", "15:00"];
-    
-  const yValues = [7, 8, 8, 9, 9, 9, 10, 11];
+  const ctx = canvas.getContext("2d");
+  if (passengerChartInstance) {
+    passengerChartInstance.destroy();
+  }
 
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: xValues,
-      datasets: [{
-        label: "Passenger Count",
-        data: yValues,
-        fill: true,
-        backgroundColor: "rgba(0, 0, 255, 0.1)",
-        borderColor: "rgba(0, 0, 255, 1)",
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        title: {
-          display: true,
-          text: "Passenger Load per Hour"
-        }
+  try {
+    const response = await fetch("http://localhost:3000/capacity-history/averages/latest");
+    const data = await response.json();
+    console.log("Fetched Data:", data);
+
+    const hours = Array.from({ length: 18 }, (_, i) => i + 5); // [5..22]
+    const labels = hours.map(h => `${h.toString().padStart(2, '0')}:00`);
+    const yValues = hours.map(hour => {
+      const match = data.find(d => d._id === hour);
+      return match ? Math.round(match.avgCapacity * 100) / 100 : 0; // rounded for cleaner display
+    });
+
+    passengerChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Average Passenger Count",
+          data: yValues,
+          fill: true,
+          backgroundColor: "rgba(0, 0, 255, 0.1)",
+          borderColor: "rgba(0, 0, 255, 1)",
+          tension: 0.4
+        }]
       },
-      scales: {
-        x: {
+      options: {
+        responsive: true,
+        plugins: {
           title: {
             display: true,
-            text: "Time"
+            text: "Average Passenger Load per Hour (Latest per Bus)"
+          },
+          tooltip: {
+            callbacks: {
+              label: context => ` ${context.raw} passengers`
+            }
           }
         },
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Passenger Count"
+        scales: {
+          x: {
+            title: { display: true, text: "Time of Day" }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: "Passenger Count" }
           }
         }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error("Error rendering passenger chart:", error);
+  }
 }
+
 
 // Function to Show Alert
 function showAlert(message, type) {

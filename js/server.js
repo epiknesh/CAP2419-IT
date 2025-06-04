@@ -278,6 +278,125 @@ app.get('/maintenance/history/:busID', async (req, res) => {
     }
 });
 
+const CapacityHistory = require('./models/CapacityHistory');
+
+app.post('/capacity-history', async (req, res) => {
+    try {
+        const { busID, hour, capacity } = req.body;
+
+        // Ensure valid hour
+        if (hour < 5 || hour > 22) {
+            return res.status(400).json({ message: 'Hour must be between 5 and 22 (5AM to 10PM)' });
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // normalize to midnight
+
+        // Check if an entry already exists for this hour today
+        const existing = await CapacityHistory.findOne({ busID, date: today, hour });
+
+        if (existing) {
+            // Update the capacity if already exists
+            existing.capacity = capacity;
+            await existing.save();
+            return res.status(200).json({ message: 'Capacity updated successfully', data: existing });
+        }
+
+        // Otherwise, create new record
+        const entry = new CapacityHistory({
+            busID,
+            date: today,
+            hour,
+            capacity
+        });
+
+        await entry.save();
+
+        res.status(201).json({ message: 'Capacity history recorded', data: entry });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to record capacity history' });
+    }
+});
+/*
+const cron = require('node-cron');
+
+
+// This runs every hour between 5AM and 10PM
+cron.schedule('0 5-22 * * *', async () => {
+    const buses = [1, 2, 3]; // Replace with your actual bus IDs or fetch dynamically
+
+    const now = new Date();
+    const hour = now.getHours();
+    now.setHours(0, 0, 0, 0); // normalize to start of today
+
+    for (const busID of buses) {
+        const capacity = await getRealTimeCapacity(busID); // you must define this
+
+        await CapacityHistory.findOneAndUpdate(
+            { busID, date: now, hour },
+            { $set: { capacity } },
+            { upsert: true }
+        );
+
+        console.log(`Logged capacity for bus ${busID} at hour ${hour}`);
+    }
+});
+
+*/
+
+app.get('/capacity-history/averages/latest', async (req, res) => {
+  try {
+    const results = await CapacityHistory.aggregate([
+      // 1. Sort to get most recent entries first per busID and hour
+      { $sort: { date: -1 } },
+
+      // 2. Group to get the latest entry per busID and hour
+      {
+        $group: {
+          _id: { busID: "$busID", hour: "$hour" },
+          latestEntry: { $first: "$$ROOT" }
+        }
+      },
+
+      // 3. Group by hour and average the capacities
+      {
+        $group: {
+          _id: "$_id.hour",
+          avgCapacity: { $avg: "$latestEntry.capacity" }
+        }
+      },
+
+      // 4. Sort by hour ascending
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json(results);
+  } catch (error) {
+    console.error("Capacity average fetch error:", error);
+    res.status(500).json({ message: "Error fetching capacity averages" });
+  }
+});
+
+app.get('/capacity-history/:busID/:date', async (req, res) => {
+    try {
+        const { busID, date } = req.params;
+        const queryDate = new Date(date);
+        queryDate.setHours(0, 0, 0, 0);
+
+        const logs = await CapacityHistory.find({
+            busID,
+            date: queryDate
+        }).sort({ hour: 1 }); // sort chronologically
+
+        res.status(200).json(logs);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to retrieve capacity history' });
+    }
+});
+
+
 const Dispatch = require('./models/Dispatch'); 
 
 app.get('/dispatch', async (req, res) => {
@@ -439,6 +558,16 @@ app.get('/capacity', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+async function getRealTimeCapacity(busID) {
+  try {
+    const result = await Capacity.findOne({ busID });
+    return result ? result.capacity : 0;
+  } catch (error) {
+    console.error(`Failed to get real-time capacity for bus ${busID}:`, error);
+    return 0;
+  }
+}
 
 const Buses = require('./models/Bus'); 
 
