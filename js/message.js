@@ -80,7 +80,7 @@ const sidebar = document.getElementById('sidebar');
 async function loadUserChannels() {
   try {
     // Assuming currentAccountID is defined globally or passed in
-    const response = await fetch(`http://localhost:3000/channels?accountID=${currentAccountID}`);
+    const response = await fetch(`/channels?accountID=${currentAccountID}`);
     const channels = await response.json();
 
 console.log("Fetched channels:", channels); // Log the channels
@@ -198,7 +198,7 @@ const suggestionsBox = document.getElementById('mentionSuggestions');
 // Fetch members when switching channel
 async function fetchChannelMembers(channelName) {
   try {
-    const res = await fetch(`http://localhost:3000/channel-members?channel=${channelName}`);
+    const res = await fetch(`/channel-members?channel=${channelName}`);
     const members = await res.json();
     membersInChannel = members; // e.g., [{name: "Juan Dela Cruz", accountid: "1"}, ...]
     console.log(membersInChannel);
@@ -415,7 +415,7 @@ async function sendVoiceMessage(audioBlob) {
     formData.append("voice", audioBlob, "voice_message.webm");
 
     try {
-        const response = await fetch("http://localhost:3000/upload-voice", {
+        const response = await fetch("/upload-voice", {
             method: "POST",
             body: formData
         });
@@ -586,7 +586,7 @@ function formatMentions(text, mentions = []) {
 }
 async function checkUnseenMentionsChannel() {
   try {
-    const res = await fetch(`http://localhost:3000/api/unseen-mentions/${currentAccountID}`);
+    const res = await fetch(`/api/unseen-mentions/${currentAccountID}`);
     const unseenMentions = await res.json(); // Expecting message array with mentions and channel fields
 
     // Reset the unread counts

@@ -70,7 +70,7 @@ function submitRegistration() {
 
     $.ajax({
         type: 'POST',
-        url: 'http://localhost:3000/register', // Change the URL if needed
+        url: '/register', // Change the URL if needed
         contentType: 'application/json',
         data: JSON.stringify(accountData),
         success: function(response) {

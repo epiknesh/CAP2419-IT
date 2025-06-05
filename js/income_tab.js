@@ -103,7 +103,7 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
 });
 
 function fetchIncomeData() {
-  fetch('http://localhost:3000/income')
+  fetch('/income')
     .then(response => response.json())
     .then(data => {
       const busIncomeTable = document.getElementById("busIncomeTable");
@@ -178,7 +178,7 @@ function fetchIncomeData() {
 }
 
 function showIncomeForm() {
-  fetch('http://localhost:3000/income')
+  fetch('/income')
       .then(response => response.json())
       .then(data => {
         const busOptions = data
@@ -225,7 +225,7 @@ function showIncomeForm() {
               const income = document.getElementById('income').value;
               
               if (busId && income) {
-                  fetch('http://localhost:3000/update-income', {
+                  fetch('/update-income', {
                       method: 'POST',
                       headers: {
                           'Content-Type': 'application/json'
@@ -300,7 +300,7 @@ function showEditIncomeForm(busID, currentIncome) {
     if (!isNaN(newIncome)) {
       const incomeDiff = newIncome - currentIncome;
 
-      fetch('http://localhost:3000/update-income', {
+      fetch('/update-income', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ busID: Number(busID), incomeToday: incomeDiff })

@@ -281,7 +281,7 @@ function initializeMap() {
 // Async function to get direction
 async function getBusDirection(numericBusID) {
     try {
-        const response = await fetch(`http://localhost:3000/dispatch/${numericBusID}`);
+        const response = await fetch(`/dispatch/${numericBusID}`);
         if (!response.ok) throw new Error(`Dispatch not found for Bus ${numericBusID}`);
         const data = await response.json();
         return data.direction;
@@ -335,7 +335,7 @@ const notifiedBuses = new Set();
 
 async function fetchFleetCapacity() {
     try {
-        const response = await fetch('http://localhost:3000/capacity');
+        const response = await fetch('/capacity');
         const capacities = await response.json();
 
         const latestCapacities = capacities.reduce((acc, entry) => {
@@ -413,7 +413,7 @@ async function fetchFleetCapacity() {
 async function sendCapacityEmail(busID, formattedDate) {
     try {
         // Fetch user's notification settings
-        const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
+        const settingsResponse = await fetch(`/settings/${accountID}`);
         const settings = await settingsResponse.json();
 
         // Only send email if capacity notifications are enabled
@@ -436,7 +436,7 @@ async function sendCapacityEmail(busID, formattedDate) {
 // Function to fetch fleet status and maintenance
 async function fetchFleetStatus() {
     try {
-        const response = await fetch("http://localhost:3000/maintenance");
+        const response = await fetch("/maintenance");
         const buses = await response.json();
 
         const fleetStatusTable = document.querySelector("#fleetStatus tbody");
@@ -475,7 +475,7 @@ async function fetchFleetStatus() {
 // Function to fetch fleet personnel
 async function fetchFleetPersonnel() {
     try {
-        const response = await fetch('http://localhost:3000/fleetPersonnel');
+        const response = await fetch('/fleetPersonnel');
         const fleetPersonnel = await response.json();
         const tableBody = document.getElementById('fleetPersonnelTable');
         tableBody.innerHTML = '';
@@ -504,7 +504,7 @@ async function fetchFleetPersonnel() {
 
 // Function to show the Fleet Readiness form || Edit Status Button
 function showFleetReadinessStatusForm() {
-    fetch('http://localhost:3000/maintenance')
+    fetch('/maintenance')
     .then(response => response.json())
     .then(buses => {
         buses.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
@@ -610,7 +610,7 @@ function showFleetReadinessStatusForm() {
             };
 
             try {
-                const response = await fetch(`http://localhost:3000/maintenance/${busId}`, {
+                const response = await fetch(`/maintenance/${busId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updateData)
@@ -661,8 +661,8 @@ function showFleetPersonnelForm() {
     }
 
     Promise.all([
-        fetch('http://localhost:3000/buses').then(res => res.json()),
-        fetch('http://localhost:3000/accounts').then(res => res.json())
+        fetch('/buses').then(res => res.json()),
+        fetch('/accounts').then(res => res.json())
     ])
     .then(([buses, accounts]) => {
         const busOptions = buses
@@ -751,7 +751,7 @@ function showFleetPersonnelForm() {
 
             try {
         // Send the request to the server
-        const response = await fetch('http://localhost:3000/update-fleet-personnel', {
+        const response = await fetch('/update-fleet-personnel', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -846,7 +846,7 @@ closeButton.addEventListener('click', cleanupModal);
 
 async function fetchFleetFuel() {
     try {
-        const response = await fetch('http://localhost:3000/fuel'); // Adjust API endpoint if needed
+        const response = await fetch('/fuel'); // Adjust API endpoint if needed
         const fuelData = await response.json();
 
         const tableBody = document.querySelector("#fleetFuel tbody");
@@ -902,7 +902,7 @@ async function fetchFleetFuel() {
 
 async function showFuelReportForm() {
     try {
-        const response = await fetch('http://localhost:3000/fuel');
+        const response = await fetch('/fuel');
         const fuelData = await response.json(); // Store fuel data to use later
 
         // Sort busData numerically by busId (assuming busId is a number or numeric string)
@@ -1007,7 +1007,7 @@ fuelData.forEach(bus => {
             }
 
             try {
-                const updateResponse = await fetch(`http://localhost:3000/fuel/${busId}`, {
+                const updateResponse = await fetch(`/fuel/${busId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1070,7 +1070,7 @@ async function renderPassengerChart() {
   }
 
   try {
-    const response = await fetch("http://localhost:3000/capacity-history/averages/latest");
+    const response = await fetch("/capacity-history/averages/latest");
     const data = await response.json();
     console.log("Fetched Data:", data);
 

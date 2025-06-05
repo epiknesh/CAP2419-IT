@@ -111,7 +111,7 @@ console.log(user);
 
     try {
        // Fetch Maintenance Data
-	   const maintenanceResponse = await fetch("http://localhost:3000/maintenance");
+	   const maintenanceResponse = await fetch("/maintenance");
 	   const buses = await maintenanceResponse.json();
 
        buses.sort((a, b) => a.busID - b.busID);
@@ -164,7 +164,7 @@ console.log(user);
 
 
         // Fetch Income Data
-        const incomeResponse = await fetch("http://localhost:3000/income");
+        const incomeResponse = await fetch("/income");
         const incomeData = await incomeResponse.json();
 
         incomeData.sort((a, b) => a.busID - b.busID);
@@ -195,7 +195,7 @@ console.log(user);
         document.getElementById("totalIncomeToday").textContent = `₱${totalIncomeToday.toLocaleString()}`;
 
           // Fetch Dispatch Data
-        const dispatchResponse = await fetch("http://localhost:3000/dispatch");
+        const dispatchResponse = await fetch("/dispatch");
         const dispatchData = await dispatchResponse.json();
         dispatchData.sort((a, b) => a.busID - b.busID);
 
@@ -310,7 +310,7 @@ async function checkUnseenMentions() {
   console.log(currentAccountId);
 
   try {
-    const response = await fetch(`http://localhost:3000/api/unseen-mentions/${currentAccountId}`);
+    const response = await fetch(`/api/unseen-mentions/${currentAccountId}`);
     if (!response.ok) throw new Error('Failed to fetch messages');
 
     const messages = await response.json();

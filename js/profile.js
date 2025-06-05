@@ -57,7 +57,7 @@ async function uploadProfilePicture(event) {
     formData.append("id", user.id);
 
     try {
-        const response = await fetch('http://localhost:3000/upload-profile-picture', {
+        const response = await fetch('/upload-profile-picture', {
             method: 'POST',
             body: formData
         });
@@ -103,7 +103,7 @@ async function updateProfile() {
     };
 
     try {
-        const response = await fetch('http://localhost:3000/update-profile', {
+        const response = await fetch('/update-profile', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)

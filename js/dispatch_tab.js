@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function loadDispatchData() {
         try {
             // Fetch operative buses from the maintenance database
-            const maintenanceResponse = await fetch('http://localhost:3000/maintenance');
+            const maintenanceResponse = await fetch('/maintenance');
             const maintenanceData = await maintenanceResponse.json();
 
             // Get only operative buses (status = 1)
@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
             // Fetch dispatch data
-            const dispatchResponse = await fetch('http://localhost:3000/dispatch');
+            const dispatchResponse = await fetch('/dispatch');
             const dispatchData = await dispatchResponse.json();
 
             // Fetch bus data to get plate numbers
-        const busesResponse = await fetch('http://localhost:3000/buses');
+        const busesResponse = await fetch('/buses');
         const busesData = await busesResponse.json();
 
         // Create a mapping: { busID: plateNumber }
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         // Fetch fleet personnel data
-        const personnelResponse = await fetch('http://localhost:3000/fleetPersonnel');
+        const personnelResponse = await fetch('/fleetPersonnel');
         const fleetPersonnelData = await personnelResponse.json();
 
         // Create a mapping: { busID: {controller, driver} }
@@ -265,8 +265,8 @@ function showDispatchFleetPersonnelForm() {
     }
 
     Promise.all([
-        fetch('http://localhost:3000/buses').then(res => res.json()),
-        fetch('http://localhost:3000/accounts').then(res => res.json())
+        fetch('/buses').then(res => res.json()),
+        fetch('/accounts').then(res => res.json())
     ])
     .then(([buses, accounts]) => {
         const busOptions = buses
@@ -355,7 +355,7 @@ function showDispatchFleetPersonnelForm() {
 
             try {
         // Send the request to the server
-        const response = await fetch('http://localhost:3000/update-fleet-personnel', {
+        const response = await fetch('/update-fleet-personnel', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -447,7 +447,7 @@ closeButton.addEventListener('click', cleanupModal);
 }
 
 async function getDispatchDirection(busID) {
-    const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+    const dispatchResponse = await fetch(`/dispatch/${busID}`);
     if (!dispatchResponse.ok) {
         throw new Error(`Server responded with ${dispatchResponse.status}`);
     }
@@ -554,7 +554,7 @@ function showConfirmationModal(busID, currentStatus, direction = null, locationN
 
 async function declareBusArrived(busID) {
     try {
-        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+        const dispatchResponse = await fetch(`/dispatch/${busID}`);
         if (!dispatchResponse.ok) {
             throw new Error(`Server responded with ${dispatchResponse.status}`);
         }
@@ -585,7 +585,7 @@ async function declareBusArrived(busID) {
             }
         };
 
-        const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
+        const updateResponse = await fetch(`/dispatch/${busID}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedData)
@@ -610,7 +610,7 @@ async function declareBusArrived(busID) {
 async function dispatchBus(busID) {
     try {
         // Fetch the current dispatch data
-        const dispatchResponse = await fetch(`http://localhost:3000/dispatch/${busID}`);
+        const dispatchResponse = await fetch(`/dispatch/${busID}`);
         if (!dispatchResponse.ok) {
             throw new Error(`Server responded with ${dispatchResponse.status}`);
         }
@@ -660,7 +660,7 @@ async function dispatchBus(busID) {
         };
 
         // Send update request
-        const updateResponse = await fetch(`http://localhost:3000/dispatch/${busID}`, {
+        const updateResponse = await fetch(`/dispatch/${busID}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedData)
@@ -673,7 +673,7 @@ async function dispatchBus(busID) {
         console.log(`Bus ${busID} dispatched successfully with updated direction.`);
 
         // Notification check
-        const settingsResponse = await fetch(`http://localhost:3000/settings/${accountID}`);
+        const settingsResponse = await fetch(`/settings/${accountID}`);
         const settings = await settingsResponse.json();
 
         if (settings.dispatch_notif) {

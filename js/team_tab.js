@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
         `;
 
         try {
-            const response = await fetch('http://localhost:3000/accounts'); 
+            const response = await fetch('/accounts'); 
             const accounts = await response.json();
 
             // Role mapping
@@ -128,7 +128,7 @@ function showRemoveConfirmationModal(userId) {
     // Handle removal confirmation
     document.getElementById('confirmRemoveBtn').addEventListener('click', async function () {
         try {
-            const response = await fetch(`http://localhost:3000/accounts/${userId}`, { method: "DELETE" });
+            const response = await fetch(`/accounts/${userId}`, { method: "DELETE" });
             if (response.ok) {
                 
                 location.reload();

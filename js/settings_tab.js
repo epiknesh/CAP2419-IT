@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
   settingsTab.addEventListener('click', function (event) {
     event.preventDefault();
 
-    fetch(`http://localhost:3000/settings/${accountID}`)
+    fetch(`/settings/${accountID}`)
       .then(res => res.json())
       .then(settings => {
         const mainContent = document.querySelector('#content main');
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
               .catch((error) => console.error('Email send failed', error));
 
             // Update the setting in database via API
-            fetch(`http://localhost:3000/settings/${accountID}`, {
+            fetch(`/settings/${accountID}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ [notifField]: this.checked })

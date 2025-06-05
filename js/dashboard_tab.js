@@ -13,13 +13,13 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Fetch data from the database
         try {
-            const maintenanceResponse = await fetch("http://localhost:3000/maintenance");
+            const maintenanceResponse = await fetch("/maintenance");
             const buses = await maintenanceResponse.json();
 
-            const incomeResponse = await fetch("http://localhost:3000/income");
+            const incomeResponse = await fetch("/income");
             const incomeData = await incomeResponse.json();
 
-            const dispatchResponse = await fetch("http://localhost:3000/dispatch");
+            const dispatchResponse = await fetch("/dispatch");
             const dispatchData = await dispatchResponse.json();
 
             let operatingBuses = new Set(); // Store operating bus IDs

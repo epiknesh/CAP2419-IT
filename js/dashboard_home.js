@@ -1,12 +1,12 @@
 async function fetchBusData() {
     try {
-        const response = await fetch('http://localhost:3000/maintenance'); // Fetch maintenance data
+        const response = await fetch('/maintenance'); // Fetch maintenance data
         const busData = await response.json();
         updateFleetStatus(busData);
         updateMaintenanceTable(busData);
 
         // Fetch Dispatch Data
-        const dispatchResponse = await fetch('http://localhost:3000/dispatch');
+        const dispatchResponse = await fetch('/dispatch');
         let dispatchData = await dispatchResponse.json();
 
         // Filter out inoperative buses based on maintenance status

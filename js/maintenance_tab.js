@@ -38,7 +38,7 @@
 
             // Fetch maintenance data from the server
             try {
-                const response = await fetch('http://localhost:3000/maintenance'); // API call to server
+                const response = await fetch('/maintenance'); // API call to server
                 const maintenanceData = await response.json();
 
                 maintenanceData.sort((a, b) => a.busID - b.busID);
@@ -323,7 +323,7 @@ function showMoreReportModal(busId) {
 
     // Fetch real data from server
   
-    fetch(`http://localhost:3000/maintenance/history/${busId}`)
+    fetch(`/maintenance/history/${busId}`)
         .then(res => res.json())
         .then(data => {
             const tbody = modalElement.querySelector('#reportDetailsBody');
@@ -379,7 +379,7 @@ function getSeverityText(value) {
 async function showFleetMaintenanceReportForm() {
     try {
         // Fetch maintenance bus data
-        const busResponse = await fetch('http://localhost:3000/maintenance');
+        const busResponse = await fetch('/maintenance');
         const buses = await busResponse.json();
 
         // Filter and sort buses with status = 2 (under maintenance)
@@ -388,7 +388,7 @@ async function showFleetMaintenanceReportForm() {
             .sort((a, b) => a.busID - b.busID);
 
         // Fetch accounts and filter role = 5 (maintenance users)
-        const accountsResponse = await fetch('http://localhost:3000/accounts');
+        const accountsResponse = await fetch('/accounts');
         const accounts = await accountsResponse.json();
         const maintenanceUsers = accounts.filter(account => account.role === '5');
 
@@ -511,7 +511,7 @@ async function showFleetMaintenanceReportForm() {
             };
 
             try {
-                const response = await fetch(`http://localhost:3000/maintenance/${busId}`, {
+                const response = await fetch(`/maintenance/${busId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updateData)
@@ -554,7 +554,7 @@ async function showFleetMaintenanceReportForm() {
 
 
 function showFleetReadinessForm() {
-    fetch('http://localhost:3000/maintenance')
+    fetch('/maintenance')
         .then(response => response.json())
         .then(buses => {
             buses.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
@@ -629,7 +629,7 @@ function showFleetReadinessForm() {
             `;
 
             // Fetch all accounts and filter for role 5 (maintenance users)
-fetch('http://localhost:3000/accounts')
+fetch('/accounts')
     .then(response => response.json())
     .then(accounts => {
         const maintenanceUsers = accounts.filter(user => user.role === "5");
@@ -686,7 +686,7 @@ const assignedMaintainee = assignedMaintaineeSelect.options[assignedMaintaineeSe
                 };
 
                 try {
-                    const response = await fetch(`http://localhost:3000/maintenance/${busId}`, {
+                    const response = await fetch(`/maintenance/${busId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(updateData)
