@@ -1,4 +1,7 @@
-const socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const hostname = window.location.hostname;
+const port = window.location.port ? `:${window.location.port}` : '';
+const socket = new WebSocket(`${protocol}://${hostname}${port}`);
 
 
 const user = JSON.parse(localStorage.getItem('user'));

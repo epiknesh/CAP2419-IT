@@ -22,7 +22,7 @@ async function fetchBusData() {
 
 async function fetchIncomeData() {
     try {
-        const response = await fetch('http://localhost:3000/income'); // Fetch income data
+        const response = await fetch('/income'); // Fetch income data
         const incomeData = await response.json();
 
         // Update income table with all buses

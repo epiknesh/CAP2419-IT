@@ -1098,7 +1098,10 @@ app.post('/upload-voice', uploadVoice.single('voice'), async (req, res) => {
 });
 
 // 🔹 WebSocket Setup
-const wss = new WebSocket.Server({ port: 8080 });
+const server = http.createServer(app); // Replaces app.listen()
+
+// Attach WebSocket to the same server
+const wss = new WebSocket.Server({ server });
 
 wss.on('connection', async (ws) => {
     console.log("🔹 New client connected");
