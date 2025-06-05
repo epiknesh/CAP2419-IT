@@ -24,6 +24,9 @@ app.use(bodyParser.json());
 // GPS routes under /api
 app.use("/api", gpsServer);
 
+const http = require('http');
+
+
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -42,7 +45,7 @@ app.get('/', (req, res) => {
 
 // **Start Server**
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.post('/register', async (req, res) => {
     try {
