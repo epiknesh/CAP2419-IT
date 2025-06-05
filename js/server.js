@@ -32,12 +32,12 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log('MongoDB Connected'))
 .catch(err => console.error('MongoDB Connection Error:', err));
 
-// Serve static files from /public (or wherever main_dashboard.html is)
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the root directory
+app.use(express.static(path.join(__dirname, '..')));
 
-// Route root (/) to main_dashboard.html
+// Route "/" to main_dashboard.html in the parent folder
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'main_dashboard.html'));
+  res.sendFile(path.join(__dirname, '..', 'main_dashboard.html'));
 });
 
 // **Start Server**
