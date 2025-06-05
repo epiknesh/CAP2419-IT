@@ -1,14 +1,14 @@
 const express = require("express");
+const router = express.Router();  // <-- use Router, NOT full app
 const cors = require("cors");
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+// You can apply middleware to router if needed
+router.use(express.json());
+router.use(cors());
 
 let busLocations = {};  // Store bus locations
 
-// ✅ API: Receive GPS data from Raspberry Pi
-app.post("/api/update_location", (req, res) => {
+router.post("/update_location", (req, res) => {
     const { bus_id, latitude, longitude, hdop } = req.body;
     
     if (!bus_id || !latitude || !longitude) {
@@ -26,13 +26,10 @@ app.post("/api/update_location", (req, res) => {
     res.json({ success: true, message: "GPS data received" });
 });
 
-// ✅ API: Serve bus locations to frontend
-app.get("/api/get_locations", (req, res) => {
+router.get("/get_locations", (req, res) => {
     res.json(busLocations);
 });
 
-// Start backend on Port 8000
-const PORT = 8000;
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ Backend running at http://localhost:${PORT}`);
-});
+// No app.listen here — main server will listen
+
+module.exports = router;  // <-- export router, not app

@@ -13,6 +13,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
 const fs = require('fs');
 const Channel = require('./models/Channel'); // adjust path as needed
+const gpsServer = require('./gpsServer');
 
 const app = express();
 
