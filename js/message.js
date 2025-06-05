@@ -1,4 +1,5 @@
-const socket = new WebSocket('ws://localhost:8080');
+const socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+
 
 const user = JSON.parse(localStorage.getItem('user'));
 
