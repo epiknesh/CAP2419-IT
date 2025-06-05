@@ -42,7 +42,7 @@ app.use(express.static(path.join(__dirname, '..')));
 
 // Route "/" to main_dashboard.html in the parent folder
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'main_dashboard.html'));
+  res.sendFile(path.join(__dirname, '..', 'bushome.html'));
 });
 
 // **Start Server**
