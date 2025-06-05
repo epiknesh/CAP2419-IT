@@ -26,6 +26,8 @@ app.use("/api", gpsServer);
 
 const http = require('http');
 
+// 🔹 WebSocket Setup
+const server = http.createServer(app); // Replaces app.listen()
 
 
 // MongoDB Connection
@@ -1100,8 +1102,6 @@ app.post('/upload-voice', uploadVoice.single('voice'), async (req, res) => {
     res.json({ voiceUrl: req.file.path });
 });
 
-// 🔹 WebSocket Setup
-const server = http.createServer(app); // Replaces app.listen()
 
 // Attach WebSocket to the same server
 const wss = new WebSocket.Server({ server });
