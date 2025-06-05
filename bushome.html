@@ -702,7 +702,7 @@ function showAlert(message, type) {
 
 
         function updateBusLocationBuses() {
-    fetch("http://localhost:8000/api/get_locations")
+    fetch("/api/get_locations")
         .then(response => response.json())
         .then(data => {
             console.log(data);
