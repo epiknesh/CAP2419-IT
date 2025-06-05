@@ -164,14 +164,14 @@ async function loadBusCards() {
 
     try {
         // Fetch bus locations
-        const locationResponse = await fetch("http://localhost:8000/api/get_locations");
+        const locationResponse = await fetch("/api/get_locations");
         const locationData = await locationResponse.json();
 
         // Fetch bus details (plate number, capacity, etc.)
-        const busResponse = await fetch("http://localhost:3000/buses");
+        const busResponse = await fetch("/buses");
         const busData = await busResponse.json();
 
-        const dispatchResponse = await fetch("http://localhost:3000/dispatch");
+        const dispatchResponse = await fetch("/dispatch");
         const dispatches = await dispatchResponse.json();
 
         // Clear existing content before adding new bus cards
@@ -263,7 +263,7 @@ async function loadBusCards() {
 async function updateBusCapacities() {
     try {
         console.log("updating..");
-        const capacityResponse = await fetch("http://localhost:3000/capacity");
+        const capacityResponse = await fetch("/capacity");
         const capacities = await capacityResponse.json();
 
         const latestCapacities = capacities.reduce((acc, entry) => {
@@ -332,7 +332,7 @@ legend.onAdd = function (map) {
 
 legend.addTo(map);
 function updateBusLocations() {
-    fetch("http://localhost:8000/api/get_locations") // API for bus locations
+    fetch("/api/get_locations") // API for bus locations
         .then(response => response.json())
         .then(async (data) => {
             for (const bus_id of Object.keys(data)) {
@@ -345,7 +345,7 @@ function updateBusLocations() {
                 // 🚌 Fetch dispatch data to determine direction
                 let direction = 1; // Default southbound
                 try {
-                    const dispatchRes = await fetch(`http://localhost:3000/dispatch/${numericBusID}`);
+                    const dispatchRes = await fetch(`/dispatch/${numericBusID}`);
                     if (dispatchRes.ok) {
                         const dispatchData = await dispatchRes.json();
                         direction = dispatchData.direction;
@@ -420,7 +420,7 @@ async function calculateETA(busCoords, userCoords, busID) {
 
     let direction = null;
 try {
-    const dispatchResponse = await fetch(`http://localhost:3000/dispatch`);
+    const dispatchResponse = await fetch(`/dispatch`);
     const dispatches = await dispatchResponse.json();
     const numericBusID = parseInt(busID.replace("bus", ""), 10);
     const dispatch = dispatches.find(d => d.busID === numericBusID);
@@ -461,7 +461,7 @@ try {
 
     let plateNumber = "Unknown Plate";
     try {
-    const busResponse = await fetch(`http://localhost:3000/buses`);
+    const busResponse = await fetch(`/buses`);
     const busData = await busResponse.json();
 
     // Log all bus IDs and plate numbers retrieved
@@ -746,7 +746,7 @@ function updateMapBuses(mapId, busId, busData, locElementId) {
     // 🧭 Default to southbound if direction fetch fails
     let direction = 1;
 
-    fetch(`http://localhost:3000/dispatch/${numericBusID}`)
+    fetch(`/dispatch/${numericBusID}`)
         .then(res => {
             if (!res.ok) throw new Error(`No dispatch for bus ${numericBusID}`);
             return res.json();
