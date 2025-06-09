@@ -307,6 +307,7 @@ body {
   flex-direction: column;
   box-shadow: 2px 0 8px rgba(0,0,0,0.05);
   z-index: 1000;
+  display: none; /* Hidden by default */
 }
 
 #channels-container {
@@ -511,4 +512,10 @@ body {
     font-size: 14px;
     padding: 10px;
   }
+}
+@media (max-width: 768px) {
+      #content {
+        margin-left: 0px;
+      }
+      
 }
