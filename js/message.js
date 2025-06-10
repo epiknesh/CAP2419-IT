@@ -106,15 +106,16 @@ console.log("Fetched channels:", channels); // Log the channels
 }
 
 function renderChannels(channels) {
-  const channelsContainer = document.getElementById('channels-container');
+  const desktopContainer = document.getElementById('channels-container');
+  const mobileContainer = document.getElementById('channels-container-small');
 
-  // Clear previous channels
-  channelsContainer.innerHTML = '';
+  // Clear both containers
+  desktopContainer.innerHTML = '';
+  mobileContainer.innerHTML = '';
 
   const roleChannels = ['Admins', 'Drivers', 'Controllers', 'Dispatchers', 'Maintenance', 'Cashiers'];
   const roleChannelsLower = roleChannels.map(r => r.toLowerCase());
 
-  // Sort channels
   const sortedChannels = [...channels].sort((a, b) => {
     const nameA = a.name.toLowerCase();
     const nameB = b.name.toLowerCase();
@@ -130,64 +131,62 @@ function renderChannels(channels) {
 
     if (isRoleA && !isRoleB) return -1;
     if (!isRoleA && isRoleB) return 1;
-
     if (isBusA && !isBusB) return 1;
     if (!isBusA && isBusB) return -1;
 
-    return a.name.localeCompare(b.name); // fallback alphabetical
+    return a.name.localeCompare(b.name);
   });
 
-  // Render sorted channels
   sortedChannels.forEach(channel => {
-    const a = document.createElement('a');
-    a.href = "#";
-    a.classList.add('channel-button');
-    a.dataset.channel = channel.name;
+    const channelElements = [desktopContainer, mobileContainer].map(container => {
+      const a = document.createElement('a');
+      a.href = "#";
+      a.classList.add('channel-button', 'd-block', 'mb-2');
+      a.dataset.channel = channel.name;
 
-    let iconClass = 'bx bx-chat';
-    const channelNameLower = channel.name.toLowerCase();
+      let iconClass = 'bx bx-chat';
+      const channelNameLower = channel.name.toLowerCase();
 
-    if (channelNameLower === 'jst kidlat' || channelNameLower === 'general') {
-      iconClass = 'bx bx-chat';
-    } else if (roleChannelsLower.includes(channelNameLower)) {
-      iconClass = 'bx bx-group';
-    } else if (/^bus \d+$/i.test(channel.name)) {
-      iconClass = 'bx bx-bus';
-    }
-
-    a.innerHTML = `<i class='${iconClass}'></i> ${channel.name}`;
-
-    const badge = document.createElement('span');
-    badge.classList.add('mention-badge');
-    badge.style.display = 'none';
-    badge.id = `mention-badge-${channel.name.replace(/\s+/g, '-').toLowerCase()}`;
-
-    a.appendChild(badge);
-
-    if (channelNameLower === 'jst kidlat') {
-      a.classList.add('active');
-      const channelTitle = document.getElementById('channel-title');
-      if (channelTitle) {
-        channelTitle.textContent = channel.name;
+      if (channelNameLower === 'jst kidlat' || channelNameLower === 'general') {
+        iconClass = 'bx bx-chat';
+      } else if (roleChannelsLower.includes(channelNameLower)) {
+        iconClass = 'bx bx-group';
+      } else if (/^bus \d+$/i.test(channel.name)) {
+        iconClass = 'bx bx-bus';
       }
-    }
 
-    a.addEventListener('click', () => {
-      document.querySelectorAll('#channels-container .channel-button').forEach(el => {
-        el.classList.remove('active');
+      a.innerHTML = `<i class='${iconClass}'></i> ${channel.name}`;
+
+      const badge = document.createElement('span');
+      badge.classList.add('mention-badge');
+      badge.style.display = 'none';
+      badge.id = `mention-badge-${channel.name.replace(/\s+/g, '-').toLowerCase()}`;
+
+      a.appendChild(badge);
+
+      a.addEventListener('click', () => {
+        document.querySelectorAll('.channel-button').forEach(el => el.classList.remove('active'));
+        a.classList.add('active');
+
+        const channelTitle = document.getElementById('channel-title');
+        if (channelTitle) channelTitle.textContent = channel.name;
+
+        switchChannel(channel.name);
+
+        // Close mobile offcanvas if it's open
+        const offcanvasEl = document.getElementById('offcanvasSidebar');
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (bsOffcanvas) bsOffcanvas.hide();
       });
 
-      a.classList.add('active');
-
-      const channelTitle = document.getElementById('channel-title');
-      if (channelTitle) {
-        channelTitle.textContent = channel.name;
-      }
-
-      switchChannel(channel.name);
+      container.appendChild(a);
+      return a;
     });
 
-    channelsContainer.appendChild(a);
+    // Optionally set 'active' state for JST Kidlat on load
+    if (channel.name.toLowerCase() === 'jst kidlat') {
+      channelElements.forEach(el => el.classList.add('active'));
+    }
   });
 }
 

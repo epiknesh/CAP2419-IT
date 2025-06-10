@@ -14,38 +14,86 @@
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav id="sidebar">
-  <a href="main_dashboard.html" id="home-link"><i class='bx bx-home'></i> Back to Home</a> 
-
-  <!-- Scrollable container for channel links -->
-  <div id="channels-container"></div>
-</nav>
+  <!-- Toggle button only visible on small screens -->
 
 
-  <!-- CONTENT -->
-  <section id="content">
-    <!-- MAIN -->
+</div>
+  <!-- Offcanvas sidebar for small screens -->
+  <div
+    class="offcanvas offcanvas-start d-md-none"
+    tabindex="-1"
+    id="offcanvasSidebar"
+    aria-labelledby="offcanvasSidebarLabel"
+  >
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Channels</h5>
+      <button
+        type="button"
+        class="btn-close text-reset"
+        data-bs-dismiss="offcanvas"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div class="offcanvas-body">
+      <a href="main_dashboard.html" id="home-link-small" class="d-block mb-3"
+        ><i class="bx bx-home"></i> Back to Home</a
+      >
+      <div id="channels-container-small"></div>
+    </div>
+  </div>
+
+  <!-- Fixed sidebar for md+ screens -->
+  <nav id="sidebar" class="d-none d-md-flex">
+    <a href="main_dashboard.html" id="home-link" class="mb-3"
+      ><i class="bx bx-home"></i> Back to Home</a
+    >
+    <div id="channels-container"></div>
+  </nav>
+
+  <!-- Main content -->
+  <section id="content" class="">
     <main>
-      <div class="head-title d-flex justify-content-between">
-        
-        <div class="title text-center">
-          <h1 id="channel-title">JST Kidlat</h1>
+      <div class="head-title d-flex align-items-center px-3">
+  <!-- Menu Button -->
+  <button
+    class="btn btn-primary d-md-none me-2"
+    type="button"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasSidebar"
+    aria-controls="offcanvasSidebar"
+    id="menuButton"
+  >
+    ☰
+  </button>
+
+  <!-- Channel Title -->
+  <h1 id="channel-title" class="mb-0 fs-2 text-truncate">JST Kidlat</h1>
+</div>
+
+      <div class="chatbox card">
+        <div class="card-body chatbox__messages"></div>
+
+        <div class="card-footer chatbox__input d-flex position-relative">
+          <button id="recordButton" class="btn btn-secondary">
+            <i class="bx bx-microphone"></i>
+          </button>
+          <input
+            type="text"
+            class="form-control me-2"
+            placeholder="Type a message..."
+            id="textMessage"
+          />
+          <div
+            class="mention-suggestions list-group position-absolute"
+            id="mentionSuggestions"
+            style="display: none"
+          ></div>
+          <button id="sendButton" class="btn btn-primary">
+            <i class="bx bx-send"></i>
+          </button>
         </div>
       </div>
-
-<div class="chatbox card">
-  <div class="card-body chatbox__messages"></div>
-
-  <div class="card-footer chatbox__input d-flex position-relative">
-    <button id="recordButton" class="btn btn-secondary"><i class="bx bx-microphone"></i></button>
-    <input type="text" class="form-control me-2" placeholder="Type a message..." id="textMessage">
-    <div class="mention-suggestions list-group position-absolute" id="mentionSuggestions" style="display: none;"></div>
-    <button id="sendButton" class="btn btn-primary"><i class="bx bx-send"></i></button>
-  </div>
-</div>
     </main>
-    <!-- End of MAIN -->
   </section>
   <!-- End of CONTENT -->
 
