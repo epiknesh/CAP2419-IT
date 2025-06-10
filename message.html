@@ -15,16 +15,9 @@
 <body>
 
   <!-- Toggle button only visible on small screens -->
-  <button
-    class="btn btn-primary m-2 d-md-none"
-    type="button"
-    data-bs-toggle="offcanvas"
-    data-bs-target="#offcanvasSidebar"
-    aria-controls="offcanvasSidebar"
-  >
-    ☰ Menu
-  </button>
 
+
+</div>
   <!-- Offcanvas sidebar for small screens -->
   <div
     class="offcanvas offcanvas-start d-md-none"
@@ -59,12 +52,23 @@
 
   <!-- Main content -->
   <section id="content" class="">
-    <main">
-      <div class="head-title d-flex justify-content-between">
-        <div class="title text-center">
-          <h1 id="channel-title">JST Kidlat</h1>
-        </div>
-      </div>
+    <main>
+      <div class="head-title d-flex align-items-center px-3">
+  <!-- Menu Button -->
+  <button
+    class="btn btn-primary d-md-none me-2"
+    type="button"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasSidebar"
+    aria-controls="offcanvasSidebar"
+    id="menuButton"
+  >
+    ☰
+  </button>
+
+  <!-- Channel Title -->
+  <h1 id="channel-title" class="mb-0 fs-2 text-truncate">JST Kidlat</h1>
+</div>
 
       <div class="chatbox card">
         <div class="card-body chatbox__messages"></div>
