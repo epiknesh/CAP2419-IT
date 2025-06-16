@@ -294,7 +294,7 @@ async function getBusDirection(numericBusID) {
 async function updateBusLocations() {
     try {
         console.log("📡 Fetching bus locations...");
-        const response = await fetch("http://localhost:8000/api/get_locations");
+        const response = await fetch("/api/get_locations");
         const data = await response.json();
 
         // 🔹 Clear all existing markers before recreating
