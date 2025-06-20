@@ -176,9 +176,10 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
 
                                         <td>${formatTime(dispatch.nextDispatch)}</td>
                                         <td>${formatTime(dispatch.lastDispatch)}</td>
-                                        <td>
+                                        <td class="location-cell">
   <span id="location-${dispatch.busID}" class="location-text" title="Loading...">Loading...</span>
 </td>
+
                                     </tr>
                                 </tbody>
                             </table>
