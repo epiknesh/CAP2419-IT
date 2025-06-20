@@ -668,11 +668,12 @@ ul {
 }
 
 .location-text {
-  cursor: help;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
-  display: inline-block;
-  vertical-align: top;
+  display: inline;            /* inline element, no box */
+  white-space: nowrap;        /* no wrapping */
+  overflow: hidden;           /* hide overflow */
+  text-overflow: ellipsis;    /* add "…" at the end */
+  max-width: 180px;           /* adjust to fit within table cell */
+  vertical-align: middle;     /* align nicely in table row */
+  cursor: help;               /* cursor indicates there's a tooltip */
 }
+
