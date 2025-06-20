@@ -666,3 +666,13 @@ ul {
 		min-width: 420px;
 	}
 }
+
+.location-text {
+  cursor: help;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  display: inline-block;
+  vertical-align: top;
+}

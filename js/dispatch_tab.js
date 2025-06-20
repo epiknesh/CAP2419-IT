@@ -176,7 +176,9 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
 
                                         <td>${formatTime(dispatch.nextDispatch)}</td>
                                         <td>${formatTime(dispatch.lastDispatch)}</td>
-                                        <td>[${dispatch.coordinates.coordinates[1]}, ${dispatch.coordinates.coordinates[0]}]</td>
+                                        <td>
+  <span id="location-${dispatch.busID}" class="location-text" title="Loading...">Loading...</span>
+</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -186,6 +188,14 @@ operativeDispatches.sort((a, b) => a.busID - b.busID);
                 dispatchContent += `</div>`;
             }
     
+
+operativeDispatches.forEach((dispatch) => {
+    const lat = dispatch.coordinates.coordinates[1];
+    const lon = dispatch.coordinates.coordinates[0];
+    const elementId = `location-${dispatch.busID}`;
+    reverseGeocodeAndInsert(lat, lon, elementId);
+});
+
             // Fleet Personnel Table
             dispatchContent += `
                 <div class="table-data">
@@ -246,6 +256,31 @@ editFleetBtn.addEventListener("click", (e) => {
             document.querySelector('#content main').innerHTML = `<p>Error loading dispatch data.</p>`;
         }
     }
+
+    function reverseGeocodeAndInsert(latitude, longitude, locElementId) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        .then(response => response.json())
+        .then(locationData => {
+            let locationName = "Unknown Location";
+            if (locationData.address) {
+                const { road, suburb, city, state, country } = locationData.address;
+                locationName = [road, suburb, city, state, country].filter(Boolean).join(", ");
+            }
+
+            const locElement = document.getElementById(locElementId);
+            if (locElement) {
+                const shortened = locationName.length > 20 ? locationName.slice(0, 20) + '…' : locationName;
+                locElement.textContent = shortened;
+                locElement.title = locationName; // full name on hover
+            } else {
+                console.warn(`⚠️ Location element not found for ${locElementId}`);
+            }
+        })
+        .catch(error => {
+            console.error(`🌐 Error fetching location for ${locElementId}:`, error);
+        });
+}
+
 
 
    // Function to show the Fleet Personnel form || Edit Assignment Button
@@ -561,7 +596,7 @@ async function declareBusArrived(busID) {
 
         const dispatchData = await dispatchResponse.json();
 
-        const locationResponse = await fetch(`http://localhost:8000/api/get_locations`);
+        const locationResponse = await fetch(`/api/get_locations`);
         if (!locationResponse.ok) {
             throw new Error(`Location API error: ${locationResponse.status}`);
         }
