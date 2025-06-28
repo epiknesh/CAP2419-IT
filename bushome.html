@@ -142,8 +142,8 @@ document.addEventListener("DOMContentLoaded", function () {
             function (position) {
                 // Use real location or hardcoded one for testing
                 if (!userCoords) {
-                   // userCoords = [position.coords.longitude, position.coords.latitude];
-                 userCoords = [121.02930232942632,   14.549622082165678]; // Hardcoded user location
+                    userCoords = [position.coords.longitude, position.coords.latitude];
+              //   userCoords = [121.02930232942632,   14.549622082165678]; // Hardcoded user location
                // userCoords = [121.07429299349732,   14.644866254098009]; // Hardcoded user location          
                 }
 
@@ -182,6 +182,45 @@ document.addEventListener("DOMContentLoaded", function () {
    
 });
 
+const busLocations = [
+  {
+    bus_id: "bus1",
+    latitude: 14.54610156559692,
+    longitude: 121.02397483553618,
+    hdop: 99
+  },
+  {
+    bus_id: "bus2",
+    latitude: 14.431127663236643,
+    longitude: 121.04527994596087,
+    hdop: 99
+  },
+  {
+    bus_id: "bus3",
+    latitude: 14.4865618412835,
+    longitude: 121.04480353290236,
+    hdop: 99
+  }
+];
+
+const url = "https://busmate-commutersa.onrender.com/api/update_location";
+
+busLocations.forEach(async (bus) => {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(bus)
+    });
+
+    const result = await response.text(); // or use response.json() if expecting JSON
+    console.log(`Sent location for ${bus.bus_id}: ${response.status} - ${result}`);
+  } catch (error) {
+    console.error(`Error sending location for ${bus.bus_id}:`, error);
+  }
+});
 
 
 async function loadBusCards() {
