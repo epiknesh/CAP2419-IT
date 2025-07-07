@@ -50,7 +50,7 @@ const busLocations = [
   }
 ];
 
-const url = "https://busmate-commutersa.onrender.com/api/update_location";
+const url = "https://cap2419-it.onrender.com/api/update_location";
 
 busLocations.forEach(async (bus) => {
   try {
