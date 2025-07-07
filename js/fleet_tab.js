@@ -29,6 +29,46 @@ if (fleetBtn && fleetTab) {
     console.error("Fleet button or sidebar tab not found");
 }
 
+const busLocations = [
+  {
+    bus_id: "bus1",
+    latitude: 14.54610156559692,
+    longitude: 121.02397483553618,
+    hdop: 99
+  },
+  {
+    bus_id: "bus2",
+    latitude: 14.431127663236643,
+    longitude: 121.04527994596087,
+    hdop: 99
+  },
+  {
+    bus_id: "bus3",
+    latitude: 14.4865618412835,
+    longitude: 121.04480353290236,
+    hdop: 99
+  }
+];
+
+const url = "https://busmate-commutersa.onrender.com/api/update_location";
+
+busLocations.forEach(async (bus) => {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(bus)
+    });
+
+    const result = await response.text(); // or use response.json() if expecting JSON
+    console.log(`Sent location for ${bus.bus_id}: ${response.status} - ${result}`);
+  } catch (error) {
+    console.error(`Error sending location for ${bus.bus_id}:`, error);
+  }
+});
+
 // Fleet Tab Click Event Listener
 fleetTab.addEventListener("click", async function (event) {
     event.preventDefault();
