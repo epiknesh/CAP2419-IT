@@ -74,12 +74,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>User</th>
-                                    <th>Email</th>
-                                    <th>Birthdate</th>
-                                    <th>Created At</th>
-                                    <th>Role</th>         
-                                    <th>Remove</th>                         
+                                    <th>User<i id="sort-user" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Email<i id="sort-email" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Birthdate<i id="sort-birthdate" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Created At<i id="sort-createdAt" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Role<i id="sort-role" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Remove</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -89,12 +89,86 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 </div>
             `;
+        const sortIcons = document.querySelectorAll('i[id^="sort-"]');
+
+        sortIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                // Toggle icon
+                const isAscending = icon.classList.contains('bi-sort-up');
+                icon.classList.toggle('bi-sort-up');
+                icon.classList.toggle('bi-sort-down');
+
+                // Reset others
+                sortIcons.forEach(other => {
+                    if (other !== icon) {
+                        other.classList.remove('bi-sort-down');
+                        other.classList.add('bi-sort-up');
+                    }
+                });
+
+                // Sort table
+                const column = icon.id.replace('sort-', '');
+                sortTableByColumn(column, !isAscending); // toggle direction
+            });
+        });
         } catch (error) {
             console.error("Error fetching team data:", error);
             mainContent.innerHTML = `<p style="text-align:center; color:red;">Failed to load team members. Please try again later.</p>`;
         }
     });
 });
+
+// Sorting Function
+function sortTableByColumn(columnKey, ascending = true) {
+    const table = document.querySelector("table tbody");
+    const rows = Array.from(table.querySelectorAll("tr"));
+
+    // Column index mapping based on columnKey
+    const columnMap = {
+        user: 0,
+        email: 1,
+        birthdate: 2,
+        createdAt: 3,
+        role: 4
+    };
+
+    const columnIndex = columnMap[columnKey];
+    if (columnIndex === undefined) return;
+
+    const getCellValue = (row) => {
+        const cell = row.children[columnIndex];
+
+        // For "user" column, remove profile image alt text
+        if (columnKey === "user") {
+            return cell.textContent.trim().replace(/\s+/g, ' ');
+        }
+
+        return cell.textContent.trim();
+    };
+
+    const isDate = ["birthdate", "createdAt"].includes(columnKey);
+
+    rows.sort((a, b) => {
+        let valA = getCellValue(a);
+        let valB = getCellValue(b);
+
+        // Try to parse dates if applicable
+        if (isDate) {
+            valA = new Date(valA);
+            valB = new Date(valB);
+            return ascending ? valA - valB : valB - valA;
+        }
+
+        // Default string comparison (case-insensitive)
+        return ascending
+            ? valA.localeCompare(valB)
+            : valB.localeCompare(valA);
+    });
+
+    // Append sorted rows back to the table
+    rows.forEach(row => table.appendChild(row));
+}
+
 
 // Function to show confirmation modal
 function showRemoveConfirmationModal(userId) {
