@@ -78,6 +78,7 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
       <th>Bus ID</th>
       <th>Income Today</th>
       <th>Date</th>
+      <th>Last Logged By</th>
       <th>Action</th> <!-- New Action column -->
     </tr>
   </thead>
@@ -103,78 +104,84 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
 });
 
 function fetchIncomeData() {
-  fetch('http://localhost:3000/income')
-    .then(response => response.json())
-    .then(data => {
-      const busIncomeTable = document.getElementById("busIncomeTable");
-      const dailyIncomeTable = document.getElementById("dailyIncomeTable");
+  Promise.all([
+    fetch('http://localhost:3000/income').then(res => res.json()),
+    fetch('http://localhost:3000/accounts').then(res => res.json())
+  ])
+  .then(([incomeData, accounts]) => {
+    const busIncomeTable = document.getElementById("busIncomeTable");
+    const dailyIncomeTable = document.getElementById("dailyIncomeTable");
 
-      busIncomeTable.innerHTML = "";
-      dailyIncomeTable.innerHTML = "";
+    busIncomeTable.innerHTML = "";
+    dailyIncomeTable.innerHTML = "";
 
-      if (data.length === 0) {
-        busIncomeTable.innerHTML = "<tr><td colspan='5'>No income data available</td></tr>";
-        dailyIncomeTable.innerHTML = "<tr><td colspan='5'>No daily income data available</td></tr>";
-      }
+    if (incomeData.length === 0) {
+      busIncomeTable.innerHTML = "<tr><td colspan='5'>No income data available</td></tr>";
+      dailyIncomeTable.innerHTML = "<tr><td colspan='5'>No daily income data available</td></tr>";
+    }
 
-      data.sort((a, b) => a.busID - b.busID);
+    incomeData.sort((a, b) => a.busID - b.busID);
 
-      // Populate Bus Income Table
-      data.forEach(item => {
-        const row = `
+    // Populate Bus Income Table
+    incomeData.forEach(item => {
+      const row = `
+        <tr>
+          <td>${item.busID}</td>
+          <td>₱${item.incomeWeek.toFixed(2)}</td>
+          <td>₱${item.incomeMonth.toFixed(2)}</td>
+          <td>₱${item.totalIncome.toFixed(2)}</td>
+        </tr>
+      `;
+      busIncomeTable.innerHTML += row;
+    });
+
+    // Populate Daily Income Table
+    incomeData.forEach(item => {
+      if (item.incomeToday >= 0) {
+        const updatedDate = item.updatedAt
+          ? new Date(item.updatedAt).toISOString().split('T')[0]
+          : "N/A";
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const actionButton = (updatedDate === today)
+          ? `<a href="#" class="btn btn-success mb-2 edit-income-btn" data-busid="${item.busID}" data-bs-toggle="modal" data-bs-target="#incomeModal">
+                <i class='bx bx-edit'></i> Edit
+             </a>`
+          : "";
+
+        // Match cashier using item.cashierID
+        const cashier = accounts.find(acc => acc.accountID === item.cashierID);
+        const cashierName = cashier ? `${cashier.firstName} ${cashier.lastName}` : "N/A";
+
+        const dailyRow = `
           <tr>
             <td>${item.busID}</td>
-            <td>₱${item.incomeWeek.toFixed(2)}</td>
-            <td>₱${item.incomeMonth.toFixed(2)}</td>
-            <td>₱${item.totalIncome.toFixed(2)}</td>
+            <td>₱${item.incomeToday.toFixed(2)}</td>
+            <td>${updatedDate}</td>
+            <td>${cashierName}</td>
+            <td>${actionButton}</td>
           </tr>
         `;
-        busIncomeTable.innerHTML += row;
-      });
-
-      // Populate Daily Income Table
-      data.forEach(item => {
-        if (item.incomeToday >= 0) {
-          const updatedDate = item.updatedAt
-            ? new Date(item.updatedAt).toISOString().split('T')[0]
-            : "N/A";
-
-          const today = new Date().toISOString().split('T')[0];
-
-          const actionButton = (updatedDate === today)
-            ? `<a href="#" class="btn btn-success mb-2 edit-income-btn" data-busid="${item.busID}" data-bs-toggle="modal" data-bs-target="#incomeModal">
-                  <i class='bx bx-edit'></i> Edit
-               </a>`
-            : "";
-
-          const dailyRow = `
-            <tr>
-              <td>${item.busID}</td>
-              <td>₱${item.incomeToday.toFixed(2)}</td>
-              <td>${updatedDate}</td>
-              <td>${actionButton}</td>
-            </tr>
-          `;
-          dailyIncomeTable.innerHTML += dailyRow;
-        }
-      });
-
-      // ✅ Attach event listener to all edit buttons after table is rendered
-      document.querySelectorAll('.edit-income-btn').forEach(button => {
-        button.addEventListener('click', function (e) {
-          e.preventDefault();
-          const busID = this.getAttribute('data-busid');
-          const currentIncome = this.closest('tr').children[1].innerText.replace(/[₱,]/g, '');
-          showEditIncomeForm(busID, parseFloat(currentIncome));
-        });
-      });
-
-    })
-    .catch(error => {
-      console.error("Error fetching income data:", error);
-      document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
-      document.getElementById("dailyIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
+        dailyIncomeTable.innerHTML += dailyRow;
+      }
     });
+
+    // ✅ Attach event listener to all edit buttons after table is rendered
+    document.querySelectorAll('.edit-income-btn').forEach(button => {
+      button.addEventListener('click', function (e) {
+        e.preventDefault();
+        const busID = this.getAttribute('data-busid');
+        const currentIncome = this.closest('tr').children[1].innerText.replace(/[₱,]/g, '');
+        showEditIncomeForm(busID, parseFloat(currentIncome));
+      });
+    });
+  })
+  .catch(error => {
+    console.error("Error fetching income or accounts data:", error);
+    document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
+    document.getElementById("dailyIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
+  });
 }
 
 function showIncomeForm() {
@@ -225,23 +232,30 @@ function showIncomeForm() {
               const income = document.getElementById('income').value;
               
               if (busId && income) {
-                  fetch('http://localhost:3000/update-income', {
-                      method: 'POST',
-                      headers: {
-                          'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({ busID: Number(busId), incomeToday: Number(income) })
-                  })
-                  .then(response => response.json())
-                  .then(data => {
-                      showAlert(data.message, 'success');
-                      incomeModal.hide();
-                      document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click();
-                  })
-                  .catch(error => console.error('Error updating income:', error));
-              } else {
-                  showAlert('Please fill in all fields.', 'warning');
-              }
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    fetch('http://localhost:3000/update-income', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            busID: Number(busId),
+            incomeToday: Number(income),
+            cashierID: user.accountid 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showAlert(data.message, 'success');
+        incomeModal.hide();
+        document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click();
+    })
+    .catch(error => console.error('Error updating income:', error));
+} else {
+    showAlert('Please fill in all fields.', 'warning');
+}
+
           });
 
           const modalElement = document.getElementById('incomeModal');
@@ -303,7 +317,7 @@ function showEditIncomeForm(busID, currentIncome) {
       fetch('http://localhost:3000/update-income', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ busID: Number(busID), incomeToday: incomeDiff })
+        body: JSON.stringify({ busID: Number(busID), incomeToday: incomeDiff, cashierID: user.accountid})
       })
       .then(res => res.json())
       .then(data => {

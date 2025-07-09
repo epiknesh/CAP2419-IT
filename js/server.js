@@ -491,7 +491,7 @@ app.get('/income', async (req, res) => {
 
 app.post('/update-income', async (req, res) => {
     try {
-        const { busID, incomeToday } = req.body;
+        const { busID, incomeToday, cashierID } = req.body; // Include cashierID
         const incomeRecord = await Income.findOne({ busID });
 
         if (!incomeRecord) {
@@ -503,20 +503,17 @@ app.post('/update-income', async (req, res) => {
             ? new Date(incomeRecord.updatedAt).toISOString().split('T')[0]
             : null;
 
-      
-
         if (lastUpdated === today) {
-            // If the record is from today, ADD to the current incomeToday
             incomeRecord.incomeToday += incomeToday;
         } else {
-            // If the record is from a previous day, REPLACE incomeToday
             incomeRecord.incomeToday = incomeToday;
         }
 
-        
         incomeRecord.incomeWeek += incomeToday;
         incomeRecord.incomeMonth += incomeToday;
         incomeRecord.totalIncome += incomeToday;
+
+        incomeRecord.cashierID = cashierID; // Update cashierID here
 
         await incomeRecord.save();
 
@@ -526,6 +523,7 @@ app.post('/update-income', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 const Accounts = require('./models/Accounts'); 
 
