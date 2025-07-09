@@ -32,7 +32,7 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
         }
 
     mainContent.innerHTML = `
-      <div class="head-title">
+<div class="head-title">
         <div class="left">
           <h1>Income</h1>
           <ul class="breadcrumb">
@@ -43,6 +43,25 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
         </div>
       </div>
   
+
+
+      <div class="table-data">
+  <div class="order position-relative" id="incomeChartContainer">
+    <div class="head d-flex justify-content-between align-items-center">
+      <h3>Income Chart</h3>
+      <select id="chartTypeSelect" class="form-select w-auto">
+        <option value="incomeToday">Daily Income</option>
+        <option value="incomeWeek">Weekly Income</option>
+        <option value="incomeMonth">Monthly Income</option>
+        <option value="totalIncome">Total Income</option>
+      </select>
+    </div>
+    <canvas id="incomeChart" height="100"></canvas>
+  </div>
+</div>
+
+
+      
       <div class="table-data">
         <div class="order position-relative" id="incomeContent">
           <div class="head">
@@ -120,10 +139,93 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
       showIncomeForm();
     });
 
+
+document.getElementById('chartTypeSelect').addEventListener('change', function () {
+  const selected = this.value;
+  fetch('http://localhost:3000/income')
+    .then(res => res.json())
+    .then(data => renderIncomeChart(data, selected));
+});
+
+
+let incomeChart; // Declare this early, before any function that uses it
+
     fetchIncomeData(); // Fetch and display data
     fetchIncomeAuditData();
+    
+
   });
 });
+
+function getLocalDateString(date) {
+  const local = new Date(date);
+  local.setMinutes(local.getMinutes() - local.getTimezoneOffset());
+  return local.toISOString().split('T')[0];
+}
+
+function renderIncomeChart(data, type = 'incomeToday') {
+  const canvas = document.getElementById('incomeChart');
+  if (!canvas) {
+    console.warn("incomeChart canvas not found in DOM");
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+
+  // ✅ Filter only today's records if type is incomeToday
+  let filteredData = data;
+  if (type === 'incomeToday') {
+    const todayStr = getLocalDateString(new Date());
+    filteredData = data.filter(item => {
+      const updatedDate = item.updatedAt ? getLocalDateString(item.updatedAt) : null;
+      return updatedDate === todayStr;
+    });
+  }
+
+  const labels = filteredData.map(item => `Bus ${item.busID}`);
+  const values = filteredData.map(item => item[type]);
+
+  // ✅ Clean label names
+  const incomeLabels = {
+    incomeToday: 'Daily Income',
+    incomeWeek: 'Weekly Income',
+    incomeMonth: 'Monthly Income',
+    totalIncome: 'Total Income'
+  };
+  const label = incomeLabels[type] || 'Income';
+
+  // ✅ Destroy previous chart safely
+  if (incomeChart instanceof Chart) {
+    incomeChart.destroy();
+  }
+
+  incomeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: label,
+        data: values,
+        backgroundColor: 'rgba(61, 145, 230, 0.6)',
+        borderColor: 'rgba(61, 145, 230, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => '₱' + value.toLocaleString()
+          }
+        }
+      }
+    }
+  });
+}
+
+
 
 function fetchIncomeData() {
   Promise.all([
@@ -189,6 +291,8 @@ function fetchIncomeData() {
       }
     });
 
+        renderIncomeChart(incomeData, 'incomeToday'); // default chart
+
     // ✅ Attach event listener to all edit buttons after table is rendered
     document.querySelectorAll('.edit-income-btn').forEach(button => {
       button.addEventListener('click', function (e) {
@@ -198,7 +302,13 @@ function fetchIncomeData() {
         showEditIncomeForm(busID, parseFloat(currentIncome));
       });
     });
+
+
   })
+
+  
+
+  
   .catch(error => {
     console.error("Error fetching income or accounts data:", error);
     document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
