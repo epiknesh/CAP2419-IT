@@ -89,6 +89,27 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
 
       </div>
 
+        <div class="table-data">
+    <div class="order position-relative" id="auditIncome">
+      <div class="head">
+        <h3>Income Audit Trail</h3>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Bus ID</th>
+            <th>Income Logged</th>
+            <th>Logged By</th>
+            <th>Date & Time Logged</th>
+          </tr>
+        </thead>
+        <tbody id="auditTableBody">
+          <tr><td colspan="4">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 			 <div id="alertContainer"></div>
     `;
 
@@ -100,6 +121,7 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
     });
 
     fetchIncomeData(); // Fetch and display data
+    fetchIncomeAuditData();
   });
 });
 
@@ -183,6 +205,44 @@ function fetchIncomeData() {
     document.getElementById("dailyIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
   });
 }
+
+function fetchIncomeAuditData() {
+  Promise.all([
+    fetch('http://localhost:3000/income-audit').then(res => res.json()),
+    fetch('http://localhost:3000/accounts').then(res => res.json())
+  ])
+  .then(([audits, accounts]) => {
+    const auditTableBody = document.getElementById('auditTableBody');
+    auditTableBody.innerHTML = "";
+
+    if (audits.length === 0) {
+      auditTableBody.innerHTML = "<tr><td colspan='4'>No audit records found.</td></tr>";
+      return;
+    }
+
+    audits.reverse().forEach(entry => {
+      const cashier = accounts.find(acc => acc.accountID === entry.cashierID);
+      const cashierName = cashier ? `${cashier.firstName} ${cashier.lastName}` : "N/A";
+
+      const dateLogged = new Date(entry.createdAt).toLocaleString();
+
+      const row = `
+        <tr>
+          <td>${entry.busID}</td>
+          <td>₱${entry.incomeToday.toFixed(2)}</td>
+          <td>${cashierName}</td>
+          <td>${dateLogged}</td>
+        </tr>
+      `;
+      auditTableBody.innerHTML += row;
+    });
+  })
+  .catch(error => {
+    console.error("Error fetching audit data:", error);
+    document.getElementById("auditTableBody").innerHTML = "<tr><td colspan='4'>Failed to load audit logs.</td></tr>";
+  });
+}
+
 
 function showIncomeForm() {
   fetch('http://localhost:3000/income')
