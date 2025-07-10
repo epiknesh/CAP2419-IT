@@ -731,8 +731,8 @@ async function dispatchBus(busID) {
 const capacityResponse = await fetch(`/capacity`);
 const capacityData = await capacityResponse.json();
 
-// ✅ Find the capacity for THIS bus ID
-const busCapacity = capacityData.find(cap => cap.busID === busID);
+const numericBusID = Number(busID);
+const busCapacity = capacityData.find(cap => cap.busID === numericBusID);
 
 if (busCapacity) {
   const estimatedIncome = busCapacity.capacity * 60;
