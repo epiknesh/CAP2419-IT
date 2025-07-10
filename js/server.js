@@ -494,9 +494,23 @@ app.get('/income', async (req, res) => {
     }
 });
 
+
+const IncomeAudit = require('./models/IncomeAudit'); 
+
+app.get('/income-audit', async (req, res) => {
+    try {
+        const incomeAudit = await IncomeAudit.find(); 
+        res.status(200).json(incomeAudit);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
 app.post('/update-income', async (req, res) => {
     try {
-        const { busID, incomeToday } = req.body;
+        const { busID, incomeToday, cashierID } = req.body;
         const incomeRecord = await Income.findOne({ busID });
 
         if (!incomeRecord) {
@@ -508,29 +522,32 @@ app.post('/update-income', async (req, res) => {
             ? new Date(incomeRecord.updatedAt).toISOString().split('T')[0]
             : null;
 
-      
-
         if (lastUpdated === today) {
-            // If the record is from today, ADD to the current incomeToday
             incomeRecord.incomeToday += incomeToday;
         } else {
-            // If the record is from a previous day, REPLACE incomeToday
             incomeRecord.incomeToday = incomeToday;
         }
 
-        
         incomeRecord.incomeWeek += incomeToday;
         incomeRecord.incomeMonth += incomeToday;
         incomeRecord.totalIncome += incomeToday;
+        incomeRecord.cashierID = cashierID;
 
         await incomeRecord.save();
 
-        res.status(200).json({ message: 'Income updated successfully' });
+        await IncomeAudit.create({
+            busID,
+            cashierID,
+            incomeToday
+        });
+
+        res.status(200).json({ message: 'Income updated and audit logged successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 const Accounts = require('./models/Accounts'); 
 
