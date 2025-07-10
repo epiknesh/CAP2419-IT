@@ -548,6 +548,21 @@ app.post('/update-income', async (req, res) => {
     }
 });
 
+app.put('/estimatedincome/:busID', async (req, res) => {
+  try {
+    const { estimatedIncome, estimatedIncomeDate } = req.body;
+    const busID = parseInt(req.params.busID);
+    const income = await Income.findOneAndUpdate(
+      { busID },
+      { estimatedIncome, estimatedIncomeDate },
+      { new: true }
+    );
+    res.json(income);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 const Accounts = require('./models/Accounts'); 
 

@@ -644,100 +644,126 @@ async function declareBusArrived(busID) {
 
 
 async function dispatchBus(busID) {
-    try {
-        // Fetch the current dispatch data
-        const dispatchResponse = await fetch(`/dispatch/${busID}`);
-        if (!dispatchResponse.ok) {
-            throw new Error(`Server responded with ${dispatchResponse.status}`);
-        }
-
-        const dispatchData = await dispatchResponse.json();
-
-        // Use stored coordinates from the dispatch data
-        const [longitude, latitude] = dispatchData.coordinates.coordinates;
-
-        // Reference coordinates
-        const southRef = { lat: 14.55021898231055, lng: 121.02789195667842 };
-        const northRef = { lat: 14.416473794324464, lng: 121.04621052990954 };
-
-        // Function to calculate distance using Haversine formula
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const toRad = deg => (deg * Math.PI) / 180;
-            const R = 6371; // Radius of Earth in km
-            const dLat = toRad(lat2 - lat1);
-            const dLon = toRad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) ** 2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) ** 2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        }
-
-        // Calculate distances
-        const distToSouth = getDistance(latitude, longitude, southRef.lat, southRef.lng);
-        const distToNorth = getDistance(latitude, longitude, northRef.lat, northRef.lng);
-
-        // Determine direction
-        const direction = distToSouth < distToNorth ? 1 : 2;
-
-        // Schedule the next dispatch
-        const nextDispatchTime = new Date();
-        nextDispatchTime.setHours(nextDispatchTime.getHours());
-
-        const updatedData = {
-            status: 1,
-            lastDispatch: dispatchData.nextDispatch,
-            nextDispatch: nextDispatchTime.toISOString(),
-            direction: direction,
-            coordinates: {
-                type: "Point",
-                coordinates: [parseFloat(longitude.toFixed(4)), parseFloat(latitude.toFixed(4))]
-            }
-        };
-
-        // Send update request
-        const updateResponse = await fetch(`/dispatch/${busID}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedData)
-        });
-
-        if (!updateResponse.ok) {
-            throw new Error(`Update failed with status ${updateResponse.status}`);
-        }
-
-        console.log(`Bus ${busID} dispatched successfully with updated direction.`);
-
-        // Notification check
-        const settingsResponse = await fetch(`/settings/${accountID}`);
-        const settings = await settingsResponse.json();
-
-        if (settings.dispatch_notif) {
-            const localDispatchTime = new Date();
-            const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "numeric",
-                hour12: true
-            });
-
-            const templateParams = {
-                to_email: loggedEmail,
-                subject: `Bus ${busID} Dispatched`,
-                message: `Bus ${busID} has been dispatched at ${formattedTime}.`
-            };
-
-            emailjs.send(service_id, template_id, templateParams)
-                .then(() => console.log(`Email sent for Bus ${busID}.`))
-                .catch((error) => console.error("Email send failed", error));
-        }
-
-        await loadDispatchData();
-        showAlert(`Bus ${busID} has been successfully dispatched!`, "success");
-
-    } catch (error) {
-        console.error(`Error dispatching bus ${busID}:`, error);
-        showAlert(`Error dispatching bus ${busID}: ${error.message}`, "danger");
+  try {
+    // 1️⃣ Get current dispatch data
+    const dispatchResponse = await fetch(`/dispatch/${busID}`);
+    if (!dispatchResponse.ok) {
+      throw new Error(`Server responded with ${dispatchResponse.status}`);
     }
+    const dispatchData = await dispatchResponse.json();
+
+    // 2️⃣ Use stored coordinates
+    const [longitude, latitude] = dispatchData.coordinates.coordinates;
+
+    // Reference coordinates
+    const southRef = { lat: 14.55021898231055, lng: 121.02789195667842 };
+    const northRef = { lat: 14.416473794324464, lng: 121.04621052990954 };
+
+    // Haversine
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const toRad = deg => (deg * Math.PI) / 180;
+      const R = 6371; 
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // Calculate distances
+    const distToSouth = getDistance(latitude, longitude, southRef.lat, southRef.lng);
+    const distToNorth = getDistance(latitude, longitude, northRef.lat, northRef.lng);
+
+    const direction = distToSouth < distToNorth ? 1 : 2;
+
+    const nextDispatchTime = new Date();
+    nextDispatchTime.setHours(nextDispatchTime.getHours());
+
+    const updatedData = {
+      status: 1,
+      lastDispatch: dispatchData.nextDispatch,
+      nextDispatch: nextDispatchTime.toISOString(),
+      direction: direction,
+      coordinates: {
+        type: "Point",
+        coordinates: [parseFloat(longitude.toFixed(4)), parseFloat(latitude.toFixed(4))]
+      }
+    };
+
+    const updateResponse = await fetch(`/dispatch/${busID}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!updateResponse.ok) {
+      throw new Error(`Update failed with status ${updateResponse.status}`);
+    }
+
+    console.log(`Bus ${busID} dispatched successfully.`);
+
+    // 3️⃣ OPTIONAL: send notification email
+    const settingsResponse = await fetch(`/settings/${accountID}`);
+    const settings = await settingsResponse.json();
+
+    if (settings.dispatch_notif) {
+      const localDispatchTime = new Date();
+      const formattedTime = localDispatchTime.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true
+      });
+
+      const templateParams = {
+        to_email: loggedEmail,
+        subject: `Bus ${busID} Dispatched`,
+        message: `Bus ${busID} has been dispatched at ${formattedTime}.`
+      };
+
+      emailjs.send(service_id, template_id, templateParams)
+        .then(() => console.log(`Email sent for Bus ${busID}.`))
+        .catch((error) => console.error("Email send failed", error));
+    }
+
+    // ✅ 4️⃣ Fetch the bus capacity
+    const capacityResponse = await fetch(`/capacity`);
+    const capacityData = await capacityResponse.json();
+
+    // Filter capacity for this bus ID, and get the latest (assuming by date)
+    const busCapacities = capacityData.filter(cap => cap.busID === busID);
+
+    if (busCapacities.length > 0) {
+      // Get the latest capacity entry by comparing timestamps
+      busCapacities.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const latestCapacity = busCapacities[0];
+
+      const estimatedIncome = latestCapacity.capacity * 60;
+      const estimatedIncomeDate = new Date().toISOString();
+
+      console.log(`Updating estimated income for bus ${busID} to ₱${estimatedIncome}`);
+
+   
+      await fetch(`/estimatedincome/${busID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          estimatedIncome: estimatedIncome,
+          estimatedIncomeDate: estimatedIncomeDate
+        })
+      });
+    } else {
+      console.warn(`No capacity record found for Bus ${busID}`);
+    }
+
+    await loadDispatchData();
+    showAlert(`Bus ${busID} has been successfully dispatched!`, "success");
+
+  } catch (error) {
+    console.error(`Error dispatching bus ${busID}:`, error);
+    showAlert(`Error dispatching bus ${busID}: ${error.message}`, "danger");
+  }
 }
 
 
