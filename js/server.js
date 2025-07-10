@@ -548,7 +548,7 @@ app.post('/update-income', async (req, res) => {
     }
 });
 
-app.put('/estimatedincome/:busID', async (req, res) => {
+app.put('/income/:busID', async (req, res) => {
   try {
     const { estimatedIncome, estimatedIncomeDate } = req.body;
     const busID = parseInt(req.params.busID);

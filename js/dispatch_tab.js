@@ -727,35 +727,33 @@ async function dispatchBus(busID) {
         .catch((error) => console.error("Email send failed", error));
     }
 
-    // ✅ 4️⃣ Fetch the bus capacity
-    const capacityResponse = await fetch(`/capacity`);
-    const capacityData = await capacityResponse.json();
+// ✅ 4️⃣ Fetch ALL capacity data
+const capacityResponse = await fetch(`/capacity`);
+const capacityData = await capacityResponse.json();
 
-    // Filter capacity for this bus ID, and get the latest (assuming by date)
-    const busCapacities = capacityData.filter(cap => cap.busID === busID);
+// ✅ Find the capacity for THIS bus ID
+const busCapacity = capacityData.find(cap => cap.busID === busID);
 
-    if (busCapacities.length > 0) {
-      // Get the latest capacity entry by comparing timestamps
-      busCapacities.sort((a, b) => new Date(b.date) - new Date(a.date));
-      const latestCapacity = busCapacities[0];
+if (busCapacity) {
+  const estimatedIncome = busCapacity.capacity * 60;
+  const estimatedIncomeDate = new Date().toISOString();
 
-      const estimatedIncome = latestCapacity.capacity * 60;
-      const estimatedIncomeDate = new Date().toISOString();
+  console.log(`Updating estimated income for Bus ${busID} to ₱${estimatedIncome}`);
 
-      console.log(`Updating estimated income for bus ${busID} to ₱${estimatedIncome}`);
+  // ✅ Update the Income record for this bus
+  await fetch(`/income/${busID}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      estimatedIncome: estimatedIncome,
+      estimatedIncomeDate: estimatedIncomeDate
+    })
+  });
 
-   
-      await fetch(`/estimatedincome/${busID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          estimatedIncome: estimatedIncome,
-          estimatedIncomeDate: estimatedIncomeDate
-        })
-      });
-    } else {
-      console.warn(`No capacity record found for Bus ${busID}`);
-    }
+} else {
+  console.warn(`No capacity record found for Bus ${busID}.`);
+}
+
 
     await loadDispatchData();
     showAlert(`Bus ${busID} has been successfully dispatched!`, "success");
