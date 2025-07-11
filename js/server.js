@@ -507,46 +507,49 @@ app.get('/income-audit', async (req, res) => {
     }
 });
 
-
 app.post('/update-income', async (req, res) => {
-    try {
-        const { busID, incomeToday, cashierID } = req.body;
-        const incomeRecord = await Income.findOne({ busID });
+  try {
+    const { busID, incomeToday, cashierID } = req.body;
+    const incomeRecord = await Income.findOne({ busID });
 
-        if (!incomeRecord) {
-            return res.status(404).json({ message: 'Bus ID not found' });
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        const lastUpdated = incomeRecord.updatedAt
-            ? new Date(incomeRecord.updatedAt).toISOString().split('T')[0]
-            : null;
-
-        if (lastUpdated === today) {
-            incomeRecord.incomeToday += incomeToday;
-        } else {
-            incomeRecord.incomeToday = incomeToday;
-        }
-
-        incomeRecord.incomeWeek += incomeToday;
-        incomeRecord.incomeMonth += incomeToday;
-        incomeRecord.totalIncome += incomeToday;
-        incomeRecord.cashierID = cashierID;
-
-        await incomeRecord.save();
-
-        await IncomeAudit.create({
-            busID,
-            cashierID,
-            incomeToday
-        });
-
-        res.status(200).json({ message: 'Income updated and audit logged successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+    if (!incomeRecord) {
+      return res.status(404).json({ message: 'Bus ID not found' });
     }
+
+    const today = new Date().toISOString().split('T')[0];
+    const lastLoggedDate = incomeRecord.incomeTodayDate
+      ? new Date(incomeRecord.incomeTodayDate).toISOString().split('T')[0]
+      : null;
+
+    if (lastLoggedDate === today) {
+      incomeRecord.incomeToday += incomeToday;  // add to same-day log
+    } else {
+      incomeRecord.incomeToday = incomeToday;   // reset for new day
+    }
+
+    // ✅ Make sure you set the daily income date!
+    incomeRecord.incomeTodayDate = new Date();
+
+    incomeRecord.incomeWeek += incomeToday;
+    incomeRecord.incomeMonth += incomeToday;
+    incomeRecord.totalIncome += incomeToday;
+    incomeRecord.cashierID = cashierID;
+
+    await incomeRecord.save();
+
+    await IncomeAudit.create({
+      busID,
+      cashierID,
+      incomeToday
+    });
+
+    res.status(200).json({ message: 'Income updated and audit logged successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
+
 
 app.put('/income/:busID', async (req, res) => {
   try {

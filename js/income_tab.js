@@ -96,15 +96,18 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
     <tr>
       <th>Bus ID</th>
       <th>Income Today</th>
-      <th>Date</th>
+      <th>Estimated Income Today 
+        <span title="This is only a rough estimate based on passenger load">[?]</span>
+      </th>
       <th>Last Logged By</th>
-      <th>Action</th> <!-- New Action column -->
+      <th>Action</th>
     </tr>
   </thead>
   <tbody id="dailyIncomeTable">
     <tr><td colspan="5">Loading...</td></tr>
   </tbody>
 </table>
+
 
       </div>
 
@@ -245,7 +248,7 @@ function fetchIncomeData() {
 
     incomeData.sort((a, b) => a.busID - b.busID);
 
-    // Populate Bus Income Table
+    // ✅ Bus Income Table
     incomeData.forEach(item => {
       const row = `
         <tr>
@@ -258,41 +261,56 @@ function fetchIncomeData() {
       busIncomeTable.innerHTML += row;
     });
 
-    // Populate Daily Income Table
+    // ✅ Daily Income Table with new logic
+    const today = new Date().toISOString().split('T')[0];
+
     incomeData.forEach(item => {
-      if (item.incomeToday >= 0) {
-        const updatedDate = item.updatedAt
-          ? new Date(item.updatedAt).toISOString().split('T')[0]
-          : "N/A";
+      const incomeDate = item.incomeTodayDate
+        ? new Date(item.incomeTodayDate).toISOString().split('T')[0]
+        : null;
 
-        const today = new Date().toISOString().split('T')[0];
+      let incomeTodayDisplay = "N/A";
+      let actionButton = "";
+      let cashierName = "N/A";
 
-        const actionButton = (updatedDate === today)
-          ? `<a href="#" class="btn btn-success mb-2 edit-income-btn" data-busid="${item.busID}" data-bs-toggle="modal" data-bs-target="#incomeModal">
-                <i class='bx bx-edit'></i> Edit
-             </a>`
-          : "";
-
-        // Match cashier using item.cashierID
-        const cashier = accounts.find(acc => acc.accountID === item.cashierID);
-        const cashierName = cashier ? `${cashier.firstName} ${cashier.lastName}` : "N/A";
-
-        const dailyRow = `
-          <tr>
-            <td>${item.busID}</td>
-            <td>₱${item.incomeToday.toFixed(2)}</td>
-            <td>${updatedDate}</td>
-            <td>${cashierName}</td>
-            <td>${actionButton}</td>
-          </tr>
+      if (incomeDate === today) {
+        incomeTodayDisplay = `₱${item.incomeToday.toFixed(2)}`;
+        actionButton = `
+          <a href="#" class="btn btn-success mb-2 edit-income-btn" 
+            data-busid="${item.busID}" data-bs-toggle="modal" data-bs-target="#incomeModal">
+            <i class='bx bx-edit'></i> Edit
+          </a>
         `;
-        dailyIncomeTable.innerHTML += dailyRow;
       }
+
+      // Find cashier name
+      const cashier = accounts.find(acc => acc.accountID === item.cashierID);
+      if (cashier) {
+        cashierName = `${cashier.firstName} ${cashier.lastName}`;
+      }
+
+      // Show estimated income in "Estimated Income Today" column with hover
+      const estimatedIncomeDisplay = `
+        <span title="Rough estimate based on passenger load">
+          ₱${(item.estimatedIncome || 0).toFixed(2)}
+        </span>
+      `;
+
+      const dailyRow = `
+        <tr>
+          <td>${item.busID}</td>
+          <td>${incomeTodayDisplay}</td>
+          <td>${estimatedIncomeDisplay}</td>
+          <td>${cashierName}</td>
+          <td>${actionButton}</td>
+        </tr>
+      `;
+
+      dailyIncomeTable.innerHTML += dailyRow;
     });
 
-        renderIncomeChart(incomeData, 'incomeToday'); // default chart
+    renderIncomeChart(incomeData, 'incomeToday');
 
-    // ✅ Attach event listener to all edit buttons after table is rendered
     document.querySelectorAll('.edit-income-btn').forEach(button => {
       button.addEventListener('click', function (e) {
         e.preventDefault();
@@ -302,18 +320,14 @@ function fetchIncomeData() {
       });
     });
 
-
   })
-
-  
-
-  
   .catch(error => {
     console.error("Error fetching income or accounts data:", error);
     document.getElementById("busIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
     document.getElementById("dailyIncomeTable").innerHTML = "<tr><td colspan='5'>Failed to load data</td></tr>";
   });
 }
+
 
 function fetchIncomeAuditData() {
   Promise.all([
