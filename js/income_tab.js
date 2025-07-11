@@ -355,160 +355,197 @@ function fetchIncomeAuditData() {
 
 function showIncomeForm() {
   fetch('/income')
-      .then(response => response.json())
-      .then(data => {
-        const busOptions = data
-            .sort((a, b) => a.busID - b.busID) // Ensure sorting in the frontend
-            .map(income => `<option value="${income.busID}">${income.busID}</option>`)
-            .join('');
-
-
-          const formHtml = `
-              <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-md modal-dialog-centered">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="incomeModalLabel">Add Daily Income</h5>
-                      <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <form id="incomeForm">
-                         <div class="mb-3">
-                          <label for="busId" class="form-label">Bus ID:</label>
-                          <select class="form-select" id="busId" name="busId" required>
-                            <option value="" selected disabled>Select Bus</option>
-                            ${busOptions}
-                          </select>
-                        </div>
-                        <div class="mb-3">
-                          <label for="income" class="form-label">Today's Income:</label>
-                          <input type="number" class="form-control" id="income" name="income" required>
-                        </div>
-                      </form>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="button" class="btn btn-success" id="submitIncome">Submit</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-          `;
-
-          document.body.insertAdjacentHTML('beforeend', formHtml);
-          document.getElementById('submitIncome').addEventListener('click', function () {
-              const busId = document.getElementById('busId').value;
-              const income = document.getElementById('income').value;
-              
-              if (busId && income) {
-    const user = JSON.parse(localStorage.getItem('user'));
-
-    fetch('/update-income', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            busID: Number(busId),
-            incomeToday: Number(income),
-            cashierID: user.accountid 
-        })
-    })
     .then(response => response.json())
     .then(data => {
-        showAlert(data.message, 'success');
-        incomeModal.hide();
-        document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click();
-    })
-    .catch(error => console.error('Error updating income:', error));
-} else {
-    showAlert('Please fill in all fields.', 'warning');
-}
+      const busOptions = data
+        .sort((a, b) => a.busID - b.busID)
+        .map(income => `<option value="${income.busID}">${income.busID}</option>`)
+        .join('');
 
-          });
-
-          const modalElement = document.getElementById('incomeModal');
-          const incomeModal = new bootstrap.Modal(modalElement);
-          incomeModal.show();
-
-          modalElement.addEventListener('hidden.bs.modal', function () {
-              modalElement.remove();
-              document.querySelector('.modal-backdrop').remove();
-              document.body.classList.remove('modal-open');
-              document.body.style = '';
-          });
-      })
-      .catch(error => console.error('Error fetching bus IDs:', error));
-}
-
-function showEditIncomeForm(busID, currentIncome) {
-  const formHtml = `
-    <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="incomeModalLabel">Edit Daily Income</h5>
-            <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="incomeEditForm">
-              <div class="mb-3">
-                <label class="form-label">Bus ID:</label>
-                <input type="text" class="form-control" value="${busID}" readonly>
+      const formHtml = `
+        <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="incomeModalLabel">Add Daily Income</h5>
+                <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <div class="mb-3">
-                <label for="income" class="form-label">New Daily Income:</label>
-                <input type="number" class="form-control" id="newIncome" name="income" value="${currentIncome}" required>
+              <div class="modal-body">
+                <form id="incomeForm">
+                  <div class="mb-3">
+                    <label for="busId" class="form-label">Bus ID:</label>
+                    <select class="form-select" id="busId" name="busId" required>
+                      <option value="" selected disabled>Select Bus</option>
+                      ${busOptions}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="income" class="form-label">Today's Income:</label>
+                    <input type="number" class="form-control" id="income" name="income" required>
+                    <div id="estimateDisplay" style="font-size: 0.875em; color: #6c757d; margin-top: 5px;">
+                      <!-- Estimate will appear here -->
+                    </div>
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" id="submitEditIncome">Update</button>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="submitIncome">Submit</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  `;
+      `;
 
-  document.body.insertAdjacentHTML('beforeend', formHtml);
+      document.body.insertAdjacentHTML('beforeend', formHtml);
 
-  const modalElement = document.getElementById('incomeModal');
-  const incomeModal = new bootstrap.Modal(modalElement);
-  incomeModal.show();
+      const busIdSelect = document.getElementById('busId');
+      const estimateDisplay = document.getElementById('estimateDisplay');
 
-  document.getElementById('submitEditIncome').addEventListener('click', function () {
-    const newIncome = parseFloat(document.getElementById('newIncome').value);
-
-    if (!isNaN(newIncome)) {
-      const incomeDiff = newIncome - currentIncome;
-
-      fetch('/update-income', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ busID: Number(busID), incomeToday: incomeDiff, cashierID: user.accountid})
-      })
-      .then(res => res.json())
-      .then(data => {
-        showAlert(data.message, 'success');
-        incomeModal.hide();
-        document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click(); // Refresh income page
-      })
-      .catch(err => {
-        console.error('Error updating income:', err);
-        showAlert('Update failed.', 'danger');
+      busIdSelect.addEventListener('change', function () {
+        const selectedBusId = Number(this.value);
+        const busIncome = data.find(b => b.busID === selectedBusId);
+        if (busIncome) {
+          const estimated = busIncome.estimatedIncome?.toFixed(2) || "0.00";
+          estimateDisplay.innerHTML = `Estimated Income: ₱${estimated} <br><small>(Rough estimate based on passenger count)</small>`;
+        } else {
+          estimateDisplay.innerHTML = '';
+        }
       });
-    } else {
-      showAlert('Please enter a valid number.', 'warning');
-    }
-  });
 
-  modalElement.addEventListener('hidden.bs.modal', function () {
-    modalElement.remove();
-    document.querySelector('.modal-backdrop').remove();
-    document.body.classList.remove('modal-open');
-    document.body.style = '';
-  });
+      document.getElementById('submitIncome').addEventListener('click', function () {
+        const busId = busIdSelect.value;
+        const income = document.getElementById('income').value;
+
+        if (busId && income) {
+          const user = JSON.parse(localStorage.getItem('user'));
+
+          fetch('/update-income', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              busID: Number(busId),
+              incomeToday: Number(income),
+              cashierID: user.accountid
+            })
+          })
+            .then(response => response.json())
+            .then(data => {
+              showAlert(data.message, 'success');
+              incomeModal.hide();
+              document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click();
+            })
+            .catch(error => console.error('Error updating income:', error));
+        } else {
+          showAlert('Please fill in all fields.', 'warning');
+        }
+      });
+
+      const modalElement = document.getElementById('incomeModal');
+      const incomeModal = new bootstrap.Modal(modalElement);
+      incomeModal.show();
+
+      modalElement.addEventListener('hidden.bs.modal', function () {
+        modalElement.remove();
+        document.querySelector('.modal-backdrop').remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+      });
+    })
+    .catch(error => console.error('Error fetching bus IDs:', error));
+}
+
+
+function showEditIncomeForm(busID, currentIncome) {
+  // Fetch the estimated income for this bus first
+  fetch('/income')
+    .then(response => response.json())
+    .then(data => {
+      const busIncome = data.find(b => b.busID === Number(busID));
+      const estimated = busIncome?.estimatedIncome ? busIncome.estimatedIncome.toFixed(2) : "0.00";
+
+      const formHtml = `
+        <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="incomeModalLabel">Edit Daily Income</h5>
+                <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="incomeEditForm">
+                  <div class="mb-3">
+                    <label class="form-label">Bus ID:</label>
+                    <input type="text" class="form-control" value="${busID}" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label for="income" class="form-label">New Daily Income:</label>
+                    <input type="number" class="form-control" id="newIncome" name="income" value="${currentIncome}" required>
+                    <div id="estimateDisplay" style="font-size: 0.875em; color: #6c757d; margin-top: 5px;">
+                      Estimated Income: ₱${estimated} <br><small>(Rough estimate based on passenger count)</small>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="submitEditIncome">Update</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', formHtml);
+
+      const modalElement = document.getElementById('incomeModal');
+      const incomeModal = new bootstrap.Modal(modalElement);
+      incomeModal.show();
+
+      document.getElementById('submitEditIncome').addEventListener('click', function () {
+        const newIncome = parseFloat(document.getElementById('newIncome').value);
+
+        if (!isNaN(newIncome)) {
+          const incomeDiff = newIncome - currentIncome;
+
+          const user = JSON.parse(localStorage.getItem('user'));
+
+          fetch('/update-income', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              busID: Number(busID),
+              incomeToday: incomeDiff,
+              cashierID: user.accountid
+            })
+          })
+            .then(res => res.json())
+            .then(data => {
+              showAlert(data.message, 'success');
+              incomeModal.hide();
+              document.querySelector('#sidebar .side-menu.top li:nth-child(7) a').click(); // Refresh income page
+            })
+            .catch(err => {
+              console.error('Error updating income:', err);
+              showAlert('Update failed.', 'danger');
+            });
+        } else {
+          showAlert('Please enter a valid number.', 'warning');
+        }
+      });
+
+      modalElement.addEventListener('hidden.bs.modal', function () {
+        modalElement.remove();
+        document.querySelector('.modal-backdrop').remove();
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+      });
+
+    })
+    .catch(error => {
+      console.error('Error fetching estimated income:', error);
+      showAlert('Failed to load estimated income.', 'warning');
+    });
 }
 
 

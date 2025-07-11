@@ -552,13 +552,38 @@ app.put('/income/:busID', async (req, res) => {
   try {
     const { estimatedIncome, estimatedIncomeDate } = req.body;
     const busID = parseInt(req.params.busID);
-    const income = await Income.findOneAndUpdate(
-      { busID },
-      { estimatedIncome, estimatedIncomeDate },
-      { new: true }
-    );
-    res.json(income);
+
+    const incomeDoc = await Income.findOne({ busID });
+
+    if (!incomeDoc) {
+      return res.status(404).json({ message: `No income record found for busID ${busID}` });
+    }
+
+    // Get just the date part for today and stored date
+    const today = new Date().toISOString().split('T')[0];
+    const existingDate = incomeDoc.estimatedIncomeDate
+      ? new Date(incomeDoc.estimatedIncomeDate).toISOString().split('T')[0]
+      : null;
+
+    let newEstimatedIncome;
+
+    if (existingDate === today) {
+      // If same day, ADD to existing
+      newEstimatedIncome = incomeDoc.estimatedIncome + estimatedIncome;
+    } else {
+      // Else, REPLACE with new value
+      newEstimatedIncome = estimatedIncome;
+    }
+
+    incomeDoc.estimatedIncome = newEstimatedIncome;
+    incomeDoc.estimatedIncomeDate = estimatedIncomeDate;
+
+    await incomeDoc.save();
+
+    res.json(incomeDoc);
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });

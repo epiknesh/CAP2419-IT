@@ -735,7 +735,7 @@ const numericBusID = Number(busID);
 const busCapacity = capacityData.find(cap => cap.busID === numericBusID);
 
 if (busCapacity) {
-  const estimatedIncome = busCapacity.capacity * 60;
+  const estimatedIncome = busCapacity.capacity * 50;
   const estimatedIncomeDate = new Date().toISOString();
 
   console.log(`Updating estimated income for Bus ${busID} to ₱${estimatedIncome}`);
