@@ -559,34 +559,44 @@ app.put('/income/:busID', async (req, res) => {
       return res.status(404).json({ message: `No income record found for busID ${busID}` });
     }
 
-    // Get just the date part for today and stored date
+    // Get today's date only
     const today = new Date().toISOString().split('T')[0];
     const existingDate = incomeDoc.estimatedIncomeDate
       ? new Date(incomeDoc.estimatedIncomeDate).toISOString().split('T')[0]
       : null;
 
+    // Make sure the current value is always a number
+    const currentEstimatedIncome = Number(incomeDoc.estimatedIncome) || 0;
+    const newIncomeAmount = Number(estimatedIncome) || 0;
+
     let newEstimatedIncome;
 
     if (existingDate === today) {
-      // If same day, ADD to existing
-      newEstimatedIncome = incomeDoc.estimatedIncome + estimatedIncome;
+      // Same day: add to existing
+      newEstimatedIncome = currentEstimatedIncome + newIncomeAmount;
     } else {
-      // Else, REPLACE with new value
-      newEstimatedIncome = estimatedIncome;
+      // Different day or no date: overwrite
+      newEstimatedIncome = newIncomeAmount;
     }
 
+    // Update fields
     incomeDoc.estimatedIncome = newEstimatedIncome;
-    incomeDoc.estimatedIncomeDate = estimatedIncomeDate;
+    incomeDoc.estimatedIncomeDate = new Date(estimatedIncomeDate);
 
     await incomeDoc.save();
 
-    res.json(incomeDoc);
+    res.json({
+      message: `Estimated income updated for busID ${busID}`,
+      estimatedIncome: incomeDoc.estimatedIncome,
+      estimatedIncomeDate: incomeDoc.estimatedIncomeDate
+    });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 
 const Accounts = require('./models/Accounts'); 
