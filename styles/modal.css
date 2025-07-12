@@ -33,6 +33,44 @@
   animation: slideIn 0.3s ease-out;
 }
 
+.img-thumbnail {
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-zoom {
+  animation: zoomIn 0.3s ease-in-out;
+  transition: transform 0.3s;
+}
+
+#photoModal .modal-content {
+  background-color: rgba(0, 0, 0, 0.75);
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  border-radius: 12px;
+}
+
+
+#maintenanceImage {
+  border: 2px dashed #bbb;
+  padding: 10px;
+  background-color: #f9f9f9;
+  transition: 0.3s ease-in-out;
+}
+#maintenanceImage:hover {
+  background-color: #f0f0f0;
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);

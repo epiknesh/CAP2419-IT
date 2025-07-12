@@ -111,6 +111,18 @@ fleetMaintenanceRows += `
         <td>${bus.assignedStaff || 'Unassigned'}</td>
         <td><span class="status ${conditionClass}">${conditionText}</span></td>
         <td>
+            ${
+                bus.image 
+                ? `<i class='bx bx-image' 
+                    style='color:#8ea096; font-size:24px; cursor:pointer;'
+                    data-bs-toggle="modal" 
+                    data-bs-target="#photoModal"
+                    data-full="${bus.image}">
+                </i>`
+                : `<i class='bx bxs-note' style='color:#8ea096; font-size:24px;'></i>`
+            }
+        </td>
+        <td>
             <i class='bx bxs-note' style='color:#8ea096; font-size:24px; cursor:pointer;'
             data-bs-toggle="modal" 
             data-bs-target="#moreReportModal"
@@ -181,6 +193,7 @@ fleetMaintenanceRows += `
                                         <th>Scheduled Maintenance</th>
                                         <th>Assigned Staff</th>
                                         <th>Issue Severity</th>
+                                        <th>Photo Proof</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -190,7 +203,17 @@ fleetMaintenanceRows += `
                             </table>
                         </div>
                     </div>
-
+                    <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-xl">
+                        <div class="modal-content bg-transparent border-0">
+                        <div class="modal-body d-flex justify-content-center align-items-center p-0">
+                            <img id="modalImage" src="" alt="Proof Image"
+                                class="img-fluid shadow-lg animate-zoom rounded"
+                                style="max-height: 85vh; border: 5px solid white;">
+                        </div>
+                        </div>
+                    </div>
+                    </div>
                      <div id="alertContainer"></div>
 
                 `;
@@ -198,6 +221,17 @@ fleetMaintenanceRows += `
                 console.error('Error fetching maintenance data:', error);
             }
             
+            document.querySelectorAll('[data-bs-target="#photoModal"]').forEach(icon => {
+                icon.addEventListener('click', () => {
+                  const fullImage = icon.getAttribute('data-full');
+                  const modalImage = document.getElementById('modalImage');
+                  modalImage.src = fullImage;
+                  modalImage.classList.remove('animate-zoom');
+                  void modalImage.offsetWidth; // force reflow
+                  modalImage.classList.add('animate-zoom');
+                });
+              });
+              
             // Add event listener for the "Edit Report" button
             const editMaintenanceBtn = document.getElementById('editMaintenanceBtn');
             editMaintenanceBtn.addEventListener('click', function (event) {
@@ -451,6 +485,20 @@ async function showFleetMaintenanceReportForm() {
                                         <option value="1">Minor</option>
                                     </select>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Upload or Capture Photo of Issue:</label>
+                                    <div class="d-flex gap-2 mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnTakePhotoMaintenance">
+                                            <i class="bx bx-camera"></i> Take Live Photo
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnUploadPhotoMaintenance">
+                                            <i class="bx bx-upload"></i> Upload from Device
+                                        </button>
+                                    </div>
+                                    <input class="form-control" type="file" id="maintenanceImage" accept="image/*" style="display: none;">
+                                    <img id="maintenancePreviewImage" src="" alt="Preview" style="margin-top: 10px; display: none; max-width: 100%; border-radius: 8px;">
+                                    <div class="form-text">Allowed: .jpg, .png | Max: 5MB</div>
+                                </div>
                             </form>
                         </div>
                         <div class="modal-footer">
@@ -463,6 +511,29 @@ async function showFleetMaintenanceReportForm() {
         `;
 
         document.body.insertAdjacentHTML('beforeend', formHtml);
+
+        const maintenanceImage = document.getElementById("maintenanceImage");
+        const maintenancePreview = document.getElementById("maintenancePreviewImage");
+
+        document.getElementById("btnTakePhotoMaintenance").addEventListener("click", () => {
+            maintenanceImage.setAttribute("capture", "environment"); // Use rear camera on mobile
+            maintenanceImage.click();
+        });
+
+        document.getElementById("btnUploadPhotoMaintenance").addEventListener("click", () => {
+            maintenanceImage.removeAttribute("capture"); // Allow file picker
+            maintenanceImage.click();
+        });
+
+        maintenanceImage.addEventListener("change", () => {
+            const file = maintenanceImage.files[0];
+            if (file) {
+                maintenancePreview.src = URL.createObjectURL(file);
+                maintenancePreview.style.display = "block";
+            } else {
+                maintenancePreview.style.display = "none";
+            }
+        });
 
         // Map bus data by busID
         const busDataMap = {};
@@ -497,17 +568,42 @@ async function showFleetMaintenanceReportForm() {
             const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
             const assignedMaintainee = document.getElementById('assignedMaintainee').value;
             const vehicleCondition = document.getElementById('vehicleCondition').value;
+            const fileInput = document.getElementById("maintenanceImage");
+
 
             if (!busId || !issue || !vehicleCondition) {
                 showAlert('Please fill in all required fields.', 'warning');
                 return;
             }
 
+            let imageUrl = "";
+
+            if (fileInput && fileInput.files.length > 0) {
+                try {
+                    const formData = new FormData();
+                    formData.append("maintenanceImage", fileInput.files[0]);
+
+                    const uploadRes = await fetch("http://localhost:3000/upload-maintenance-image", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const uploadData = await uploadRes.json();
+                    if (!uploadRes.ok) throw new Error("Upload failed");
+
+                    imageUrl = uploadData.imageUrl; // ✅ correct assignment here
+                } catch (err) {
+                    showAlert("Failed to upload image. Please try again.", "danger");
+                    return;
+                }
+            }
+
             const updateData = {
                 issue,
                 schedule: scheduleMaintenance || null,
                 assignedStaff: assignedMaintainee || null,
-                vehicle_condition: parseInt(vehicleCondition)
+                vehicle_condition: parseInt(vehicleCondition),
+                image: imageUrl || null
             };
 
             try {
@@ -557,30 +653,30 @@ function showFleetReadinessForm() {
     fetch('http://localhost:3000/maintenance')
         .then(response => response.json())
         .then(buses => {
-            buses.sort((a, b) => a.busID - b.busID); // Sort bus IDs numerically
+            buses.sort((a, b) => a.busID - b.busID);
             const busOptions = buses.map(bus => `<option value="${bus.busID}">${bus.busID}</option>`).join('');
-            
+
             const formHtml = `
                 <div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="editStatusModalLabel">Edit Fleet Readiness</h5>
-                                <button type="button" class="btn-close white-text" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <form id="fleetReadinessForm">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label for="busId" class="form-label">Bus ID:</label>
-                                            <select class="form-select" id="busId" name="busId" required>
+                                            <label for="readinessBusId" class="form-label">Bus ID:</label>
+                                            <select class="form-select" id="readinessBusId" required>
                                                 <option value="">Select Bus</option>
                                                 ${busOptions}
                                             </select>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label for="busStatus" class="form-label">Status:</label>
-                                            <select class="form-select" id="busStatus" name="busStatus" required>
+                                            <label for="readinessBusStatus" class="form-label">Status:</label>
+                                            <select class="form-select" id="readinessBusStatus" required>
                                                 <option value="">Select Status</option>
                                                 <option value="1">Operating</option>
                                                 <option value="2">Under Maintenance</option>
@@ -588,28 +684,45 @@ function showFleetReadinessForm() {
                                             </select>
                                         </div>
                                     </div>
-                                    
-                                    <div id="additionalFields" style="display: none;">
+
+                                    <div id="readinessAdditionalFields" style="display: none;">
                                         <div class="mb-3">
-                                            <label for="issue" class="form-label">Issue:</label>
-                                            <textarea class="form-control" id="issue" name="issue" rows="2" placeholder="Describe the vehicle's current issue" style="resize: none;"></textarea>
+                                            <label for="readinessIssue" class="form-label">Issue:</label>
+                                            <textarea class="form-control" id="readinessIssue" rows="2" placeholder="Describe the issue" style="resize: none;"></textarea>
                                         </div>
+
+                                        <div class="mb-3">
+                                        <label class="form-label">Upload or Capture Photo of Issue:</label>
+                                        <div class="d-flex gap-2 mb-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnTakePhoto">
+                                            <i class="bx bx-camera"></i> Take Live Photo
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnUploadPhoto">
+                                            <i class="bx bx-upload"></i> Upload from Device
+                                            </button>
+                                        </div>
+                                        <input class="form-control" type="file" id="readinessImage" accept="image/*" style="display:none;">
+                                        <img id="previewImage" src="" alt="Preview" style="margin-top: 10px; display: none; max-width: 100%; border-radius: 8px;">
+                                        <div class="form-text">Allowed: .jpg, .png | Max: 5MB</div>
+                                        </div>
+
+
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="scheduleMaintenance" class="form-label">Schedule Maintenance:</label>
-                                                <input type="date" class="form-control" id="scheduleMaintenance" name="scheduleMaintenance">
+                                                <label for="readinessSchedule" class="form-label">Schedule Maintenance:</label>
+                                                <input type="date" class="form-control" id="readinessSchedule">
                                             </div>
-                                            <div class="col-md-6 mb-3" id="assignedMaintaineeContainer">
-                                                <label for="assignedMaintainee" class="form-label">Assigned Maintenance:</label>
-                                                <select class="form-select" id="assignedMaintainee" name="assignedMaintainee">
-    <option value="">Select Technician</option>
-</select>
-
+                                            <div class="col-md-6 mb-3">
+                                                <label for="readinessAssignee" class="form-label">Assigned Maintenance:</label>
+                                                <select class="form-select" id="readinessAssignee">
+                                                    <option value="">Select Technician</option>
+                                                </select>
                                             </div>
                                         </div>
+
                                         <div class="mb-3">
-                                            <label for="vehicleCondition" class="form-label">Vehicle Condition:</label>
-                                            <select class="form-select" id="vehicleCondition" name="vehicleCondition" required>
+                                            <label for="readinessCondition" class="form-label">Vehicle Condition:</label>
+                                            <select class="form-select" id="readinessCondition" required>
                                                 <option value="">Select Condition</option>
                                                 <option value="3">Major</option>
                                                 <option value="2">Moderate</option>
@@ -621,68 +734,101 @@ function showFleetReadinessForm() {
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-success" id="submitStatus">Submit</button>
+                                <button type="button" class="btn btn-success" id="submitReadiness">Submit</button>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // Fetch all accounts and filter for role 5 (maintenance users)
-fetch('http://localhost:3000/accounts')
-    .then(response => response.json())
-    .then(accounts => {
-        const maintenanceUsers = accounts.filter(user => user.role === "5");
-        const maintaineeSelect = document.getElementById('assignedMaintainee');
-
-        maintenanceUsers.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.accountID;
-            option.textContent = `${user.firstName} ${user.lastName}`;
-            maintaineeSelect.appendChild(option);
-        });
-    })
-    .catch(error => {
-        console.error('Failed to load maintenance accounts:', error);
-        showAlert('Could not load maintenance user list.', 'warning');
-    });
-
-
-            
             document.body.insertAdjacentHTML('beforeend', formHtml);
-            
-            const busStatus = document.getElementById('busStatus');
-            const additionalFields = document.getElementById('additionalFields');
-            
-            busStatus.addEventListener('change', function () {
-                if (busStatus.value === "2") {
-                    additionalFields.style.display = 'block';
-                } else {
-                    additionalFields.style.display = 'none';
-                }
+
+            const readinessImage = document.getElementById("readinessImage");
+            const previewImage = document.getElementById("previewImage");
+
+            document.getElementById("btnTakePhoto").addEventListener("click", () => {
+            readinessImage.setAttribute("capture", "environment"); // forces rear camera
+            readinessImage.click();
             });
-            
-            document.getElementById('submitStatus').addEventListener('click', async function () {
-                const busId = document.getElementById('busId').value;
-                const busStatus = document.getElementById('busStatus').value;
-                const issue = document.getElementById('issue').value;
-                const vehicleCondition = document.getElementById('vehicleCondition').value;
-                const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
-                const assignedMaintaineeSelect = document.getElementById('assignedMaintainee');
-const assignedMaintainee = assignedMaintaineeSelect.options[assignedMaintaineeSelect.selectedIndex].text;
+
+            document.getElementById("btnUploadPhoto").addEventListener("click", () => {
+            readinessImage.removeAttribute("capture"); // allows full gallery
+            readinessImage.click();
+            });
+
+            readinessImage.addEventListener("change", () => {
+            const file = readinessImage.files[0];
+            if (file) {
+                previewImage.src = URL.createObjectURL(file);
+                previewImage.style.display = "block";
+            } else {
+                previewImage.style.display = "none";
+            }
+            });
+
+
+            const statusSelect = document.getElementById('readinessBusStatus');
+            const extraFields = document.getElementById('readinessAdditionalFields');
+
+            statusSelect.addEventListener('change', () => {
+                extraFields.style.display = statusSelect.value === "2" ? 'block' : 'none';
+            });
+
+            fetch('http://localhost:3000/accounts')
+                .then(res => res.json())
+                .then(accounts => {
+                    const technicianOptions = accounts
+                        .filter(user => user.role === "5")
+                        .map(user => `<option value="${user.accountID}">${user.firstName} ${user.lastName}</option>`)
+                        .join('');
+                    document.getElementById('readinessAssignee').innerHTML += technicianOptions;
+                });
+
+            document.getElementById('submitReadiness').addEventListener('click', async () => {
+                const busId = document.getElementById('readinessBusId').value;
+                const busStatus = document.getElementById('readinessBusStatus').value;
+                const issue = document.getElementById('readinessIssue').value;
+                const condition = document.getElementById('readinessCondition').value;
+                const schedule = document.getElementById('readinessSchedule').value;
+                const assigneeSelect = document.getElementById('readinessAssignee');
+                const assigned = assigneeSelect.options[assigneeSelect.selectedIndex]?.text || null;
+                const imageInput = document.getElementById('readinessImage');
+               
+                let imageUrl = "";
+
+                if (imageInput.files.length > 0) {
+                    try {
+                        const formData = new FormData();
+                        formData.append("maintenanceImage", imageInput.files[0]);
+
+                        const uploadRes = await fetch("http://localhost:3000/upload-maintenance-image", {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const uploadData = await uploadRes.json();
+                        if (!uploadRes.ok) throw new Error("Upload failed");
+
+                        imageUrl = uploadData.imageUrl; // ✅ Save to outer variable
+                    } catch (err) {
+                        showAlert("Image upload failed. Please try again.", "danger");
+                        return;
+                    }
+                }
 
 
                 if (!busId || !busStatus) {
-                    showAlert('Please fill in all required fields.', 'warning');
+                    showAlert('Please complete required fields.', 'warning');
                     return;
                 }
-                
+
                 const updateData = {
                     status: parseInt(busStatus),
-                    issue: issue || '',
-                    vehicle_condition: parseInt(vehicleCondition) || null,
-                    schedule: scheduleMaintenance || null,
-                    assignedStaff: assignedMaintainee || null
+                    issue: issue || "",
+                    vehicle_condition: parseInt(condition) || null,
+                    schedule: schedule || null,
+                    assignedStaff: assigned || null,
+                    image: imageUrl || null
                 };
 
                 try {
@@ -693,34 +839,30 @@ const assignedMaintainee = assignedMaintaineeSelect.options[assignedMaintaineeSe
                     });
 
                     if (response.ok) {
-
-                        
-                        const editStatusModal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
-                        editStatusModal.hide(); // Hide the modal
-                        document.querySelector('#sidebar .side-menu.top li:nth-child(6) a').click(); // Refresh the tab content
-                        
+                        bootstrap.Modal.getInstance(document.getElementById('editStatusModal')).hide();
+                        document.querySelector('#sidebar .side-menu.top li:nth-child(6) a').click(); // reload
                     } else {
-                        showAlert('Error updating status.', 'danger');
+                        showAlert('Update failed.', 'danger');
                     }
                 } catch (error) {
                     console.error(error);
                     showAlert('Server error.', 'danger');
                 }
             });
-            
+
             const modalElement = document.getElementById('editStatusModal');
-            const editStatusModal = new bootstrap.Modal(modalElement);
-            editStatusModal.show();
-            
-            modalElement.addEventListener('hidden.bs.modal', function () {
+            const modalInstance = new bootstrap.Modal(modalElement);
+            modalInstance.show();
+
+            modalElement.addEventListener('hidden.bs.modal', () => {
                 modalElement.remove();
-                document.querySelector('.modal-backdrop').remove();
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
                 document.body.classList.remove('modal-open');
                 document.body.style = '';
             });
         });
 }
-
 
 // Function to Show Alert
 function showAlert(message, type) {
@@ -742,6 +884,24 @@ function showAlert(message, type) {
       }
     }, 5000);
   }
+
+async function uploadImageToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "your_upload_preset"); // replace
+    formData.append("folder", "maintenance_pictures");
+
+    const res = await fetch("https://api.cloudinary.com/v1_1/doecgbux4/image/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    if (!res.ok) throw new Error("Image upload failed.");
+    const data = await res.json();
+    return data.secure_url;
+}
+
+
   
 
 
