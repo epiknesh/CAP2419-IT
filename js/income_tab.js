@@ -172,20 +172,24 @@ function renderIncomeChart(data, type = 'incomeToday') {
 
   const ctx = canvas.getContext('2d');
 
-  // ✅ Filter only today's records if type is incomeToday
   let filteredData = data;
+  const todayStr = getLocalDateString(new Date());
+
   if (type === 'incomeToday') {
-    const todayStr = getLocalDateString(new Date());
+    //  Filter by actual incomeTodayDate field
     filteredData = data.filter(item => {
-      const updatedDate = item.updatedAt ? getLocalDateString(item.updatedAt) : null;
-      return updatedDate === todayStr;
+      if (!item.incomeTodayDate) return false;
+      const incomeDate = getLocalDateString(item.incomeTodayDate);
+      return incomeDate === todayStr;
     });
   }
+
+  //  Sort Bus IDs numerically left to right
+  filteredData.sort((a, b) => a.busID - b.busID);
 
   const labels = filteredData.map(item => `Bus ${item.busID}`);
   const values = filteredData.map(item => item[type]);
 
-  // ✅ Clean label names
   const incomeLabels = {
     incomeToday: 'Daily Income',
     incomeWeek: 'Weekly Income',
@@ -194,7 +198,6 @@ function renderIncomeChart(data, type = 'incomeToday') {
   };
   const label = incomeLabels[type] || 'Income';
 
-  // ✅ Destroy previous chart safely
   if (incomeChart instanceof Chart) {
     incomeChart.destroy();
   }
@@ -224,6 +227,7 @@ function renderIncomeChart(data, type = 'incomeToday') {
     }
   });
 }
+
 
 
 
@@ -259,53 +263,58 @@ function fetchIncomeData() {
       busIncomeTable.innerHTML += row;
     });
 
-    // ✅ Daily Income Table with new logic
-    const today = new Date().toISOString().split('T')[0];
-
     incomeData.forEach(item => {
-      const incomeDate = item.incomeTodayDate
-        ? new Date(item.incomeTodayDate).toISOString().split('T')[0]
-        : null;
+  const incomeTodayDate = item.incomeTodayDate
+    ? new Date(item.incomeTodayDate).toISOString().split('T')[0]
+    : null;
 
-      let incomeTodayDisplay = "N/A";
-      let actionButton = "";
-      let cashierName = "N/A";
+  const estimatedIncomeDate = item.estimatedIncomeDate
+    ? new Date(item.estimatedIncomeDate).toISOString().split('T')[0]
+    : null;
 
-      if (incomeDate === today) {
-        incomeTodayDisplay = `₱${item.incomeToday.toFixed(2)}`;
-        actionButton = `
-          <a href="#" class="btn btn-success mb-2 edit-income-btn" 
-            data-busid="${item.busID}" data-bs-toggle="modal" data-bs-target="#incomeModal">
-            <i class='bx bx-edit'></i> Edit
-          </a>
-        `;
-      }
+  const today = new Date().toISOString().split('T')[0];
 
-      // Find cashier name
-      const cashier = accounts.find(acc => acc.accountID === item.cashierID);
-      if (cashier) {
-        cashierName = `${cashier.firstName} ${cashier.lastName}`;
-      }
+  // Show Income Today only if date matches
+  let incomeTodayDisplay = "N/A";
+  if (incomeTodayDate === today) {
+    incomeTodayDisplay = `₱${item.incomeToday.toFixed(2)}`;
+  }
 
-      // Show estimated income in "Estimated Income Today" column with hover
-      const estimatedIncomeDisplay = `
-        <span title="Rough estimate based on passenger load">
-          ₱${(item.estimatedIncome || 0).toFixed(2)}
-        </span>
-      `;
+  // Show Estimated Income Today only if date matches
+  let estimatedIncomeDisplay = "N/A";
+  if (estimatedIncomeDate === today) {
+    estimatedIncomeDisplay = `
+      <span title="Rough estimate based on passenger load" style="color: #6c757d;">
+        ₱${item.estimatedIncome.toFixed(2)}
+      </span>
+    `;
+  }
 
-      const dailyRow = `
-        <tr>
-          <td>${item.busID}</td>
-          <td>${incomeTodayDisplay}</td>
-          <td>${estimatedIncomeDisplay}</td>
-          <td>${cashierName}</td>
-          <td>${actionButton}</td>
-        </tr>
-      `;
+  // Action only if incomeToday date matches
+  const actionButton = incomeTodayDate === today
+    ? `<a href="#" class="btn btn-success mb-2 edit-income-btn"
+          data-busid="${item.busID}" data-bs-toggle="modal" data-bs-target="#incomeModal">
+          <i class='bx bx-edit'></i> Edit
+       </a>`
+    : "";
 
-      dailyIncomeTable.innerHTML += dailyRow;
-    });
+  // Cashier name
+  const cashier = accounts.find(acc => acc.accountID === item.cashierID);
+  const cashierName = cashier ? `${cashier.firstName} ${cashier.lastName}` : "N/A";
+
+  // Add row
+  const dailyRow = `
+    <tr>
+      <td>${item.busID}</td>
+      <td>${incomeTodayDisplay}</td>
+      <td>${estimatedIncomeDisplay}</td>
+      <td>${cashierName}</td>
+      <td>${actionButton}</td>
+    </tr>
+  `;
+  dailyIncomeTable.innerHTML += dailyRow;
+});
+
 
     renderIncomeChart(incomeData, 'incomeToday');
 
