@@ -119,9 +119,9 @@ fleetTab.addEventListener("click", async function (event) {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Bus ID</th>
-                                        <th>Date</th>
-                                        <th>Percentage</th>
+                                        <th>Bus ID <i id="sort-busID-fleetCapacity" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Date <i id="sort-date-fleetCapacity" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Percentage <i id="sort-percentage-fleetCapacity" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                         <th>Capacity</th>
                                     </tr>
                                 </thead>
@@ -150,9 +150,9 @@ fleetTab.addEventListener("click", async function (event) {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Bus ID</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
+                                        <th>Bus ID <i id="sort-busID-fleetReadiness" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Date <i id="sort-date-fleetReadiness" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Status <i id="sort-status-fleetReadiness" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -166,8 +166,8 @@ fleetTab.addEventListener("click", async function (event) {
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Bus ID</th>
-                                        <th>Issue</th>
+                                        <th>Bus ID <i id="sort-busID-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Issue <i id="sort-issue-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -186,9 +186,9 @@ fleetTab.addEventListener("click", async function (event) {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Bus ID</th>
-                                        <th>Controller</th>
-                                        <th>Driver</th>
+                                        <th>Bus ID <i id="sort-busID-fleetPersonnel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Controller <i id="sort-controller-fleetPersonnel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Driver <i id="sort-driver-fleetPersonnel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody id="fleetPersonnelTable"></tbody>
@@ -206,33 +206,21 @@ fleetTab.addEventListener("click", async function (event) {
                             </div>
                             <table>
                                 <thead>
-    <tr>
-        <th>Bus ID</th>
-        <th>Fuel Refilled (Liters)</th>
-        <th>Last Fuel Refill</th>
-        <th>
-            <div>
-                Remaining Fuel Level
-            </div>
-            <div class="text-secondary"> 
-                <small>Estimated Remaining Fuel Level after the last trip</small>
-            </div>
-        </th>
-    </tr>
-</thead>
-                                <tbody>
                                     <tr>
-                                        <td>1</td>
-                                        <td>2021-09-01</td>
-                                        <td>
-                                           <div class="progress">
-                                                <div class="progress-bar bg-success" role="progressbar" id="fuelProgress" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <th>Bus ID <i id="sort-busID-fleetFuel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Fuel Refilled (Liters) <i id="sort-fuelRefilled-fleetFuel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Last Fuel Refill <i id="sort-lastRefill-fleetFuel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>
+                                            <div>
+                                                Remaining Fuel Level <i id="sort-remainingFuel-fleetFuel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i>
                                             </div>
-                                            <span id="fuelPercentage1">50%</span>
-                                        </td>
+                                            <div class="text-secondary"> 
+                                                <small>Estimated Remaining Fuel Level after the last trip</small>
+                                            </div>
+                                        </th>
                                     </tr>
-                                </tbody>
-                                <tbody id="fleetPersonnelTable"></tbody>
+                                </thead>
+                                <tbody id="fleetFuelTable"></tbody>
                             </table>
                         </div>
                     </div>
@@ -428,6 +416,7 @@ async function fetchFleetCapacity() {
                 notifiedBuses.add(entry.busID); // Mark as notified
             }
         }
+        attachFleetDOMSortListeners();
     } catch (error) {
         console.error("Error fetching fleet capacity data:", error);
     }
@@ -484,6 +473,7 @@ async function fetchFleetStatus() {
         
         fleetStatusTable.innerHTML = "";
         fleetMaintenanceTable.innerHTML = "";
+        buses.sort((a, b) => a.status - b.status);
 
         buses.forEach(bus => {
             let statusText = bus.status === 1 ? "Operating" : bus.status === 2 ? "Under Maintenance" : "Pending";
@@ -506,7 +496,8 @@ async function fetchFleetStatus() {
                 `;
             }
         });
-
+        attachFleetReadinessSortListeners();
+        attachFleetMaintenanceSortListeners();
     } catch (error) {
         console.error("Error fetching fleet status:", error);
     }
@@ -535,7 +526,7 @@ async function fetchFleetPersonnel() {
                 </tr>
             `;
         });
-
+        attachFleetPersonnelSortListeners();
     } catch (error) {
         console.error("Error loading fleet personnel:", error);
     }
@@ -932,7 +923,7 @@ async function fetchFleetFuel() {
                 </tr>
             `;
         }
-
+        attachFleetFuelSortListeners();
     } catch (error) {
         console.error("Error fetching fleet fuel data:", error);
     }
@@ -1163,6 +1154,283 @@ async function renderPassengerChart() {
   }
 }
 
+// Function to sort the Fleet Capacity table
+function sortFleetCapacityTable(columnIndex, type = "string", ascending = true) {
+    const table = document.querySelector("#fleetCapacity table");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    rows.sort((a, b) => {
+        let valA = a.children[columnIndex].innerText.trim();
+        let valB = b.children[columnIndex].innerText.trim();
+
+        if (type === "number") {
+            valA = parseFloat(valA.replace("%", ""));
+            valB = parseFloat(valB.replace("%", ""));
+        } else if (type === "date") {
+            valA = new Date(valA);
+            valB = new Date(valB);
+        }
+
+        return ascending ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+let lastSortedColumn = "sort-date-fleetCapacity";
+let lastSortAscending = false; // default: descending
+
+// Function to attach sort listeners to Fleet Capacity table headers
+function attachFleetDOMSortListeners() {
+    const sortConfig = {
+        "sort-busID-fleetCapacity": { index: 0, type: "string" },
+        "sort-date-fleetCapacity": { index: 1, type: "date" },
+        "sort-percentage-fleetCapacity": { index: 2, type: "number" },
+    };
+
+    const icons = document.querySelectorAll('i[id$="-fleetCapacity"]');
+
+    icons.forEach(icon => {
+        icon.addEventListener("click", () => {
+            const { index, type } = sortConfig[icon.id];
+            const isAscending = icon.classList.contains("bi-sort-up");
+
+            // Toggle this icon
+            icon.classList.toggle("bi-sort-up");
+            icon.classList.toggle("bi-sort-down");
+
+            // Reset other icons
+            icons.forEach(other => {
+                if (other !== icon) {
+                    other.classList.remove("bi-sort-down");
+                    other.classList.add("bi-sort-up");
+                }
+            });
+
+            lastSortedColumn = icon.id;
+            lastSortAscending = !isAscending;
+
+            sortFleetCapacityTable(index, type, !isAscending);
+        });
+    });
+
+    // Automatically apply last sort (e.g. on load or after fetch)
+    if (sortConfig[lastSortedColumn]) {
+        const { index, type } = sortConfig[lastSortedColumn];
+        sortFleetCapacityTable(index, type, lastSortAscending);
+
+        // Update icon direction
+        const icon = document.getElementById(lastSortedColumn);
+        if (icon) {
+            if (lastSortAscending) {
+                icon.classList.add("bi-sort-up");
+                icon.classList.remove("bi-sort-down");
+            } else {
+                icon.classList.add("bi-sort-down");
+                icon.classList.remove("bi-sort-up");
+            }
+        }
+    }
+}
+
+// Function to attach sort listeners to Fleet Readiness table headers
+function attachFleetReadinessSortListeners() {
+    const sortConfig = {
+        "sort-busID-fleetReadiness": { index: 0, type: "string" },
+        "sort-date-fleetReadiness": { index: 1, type: "date" },
+        "sort-status-fleetReadiness": { index: 2, type: "string" }
+    };
+
+    const table = document.querySelector("#fleetStatus table tbody");
+    const sortState = {};
+
+    Object.keys(sortConfig).forEach(id => {
+        const config = sortConfig[id];
+        const icon = document.getElementById(id);
+
+        icon.addEventListener("click", () => {
+            const rows = Array.from(table.querySelectorAll("tr"));
+            const index = config.index;
+            const type = config.type;
+
+            // Toggle sort direction
+            sortState[id] = !sortState[id];
+            const direction = sortState[id] ? 1 : -1;
+
+            // Sort rows
+            rows.sort((rowA, rowB) => {
+                let cellA = rowA.children[index].textContent.trim();
+                let cellB = rowB.children[index].textContent.trim();
+
+                if (type === "date") {
+                    cellA = new Date(cellA);
+                    cellB = new Date(cellB);
+                } else if (type === "string") {
+                    cellA = cellA.toLowerCase();
+                    cellB = cellB.toLowerCase();
+                }
+
+                if (cellA < cellB) return -1 * direction;
+                if (cellA > cellB) return 1 * direction;
+                return 0;
+            });
+
+            // Re-append sorted rows
+            table.innerHTML = "";
+            rows.forEach(row => table.appendChild(row));
+
+            // Update icon
+            icon.classList.toggle("bi-sort-up", sortState[id]);
+            icon.classList.toggle("bi-sort-down", !sortState[id]);
+        });
+    });
+}
+// Function to attach sort listeners to Fleet Maintenance table headers
+function attachFleetMaintenanceSortListeners() {
+    const sortConfig = {
+        "sort-busID-fleetMaintenance": { index: 0, type: "string" },
+        "sort-issue-fleetMaintenance": { index: 1, type: "string" }
+    };
+
+    const table = document.querySelector("#fleetMaintenance tbody");
+    const sortState = {};
+
+    Object.keys(sortConfig).forEach(id => {
+        const config = sortConfig[id];
+        const icon = document.getElementById(id);
+
+        icon.addEventListener("click", () => {
+            const rows = Array.from(table.querySelectorAll("tr"));
+            const index = config.index;
+            const type = config.type;
+
+            // Toggle sort direction
+            sortState[id] = !sortState[id];
+            const direction = sortState[id] ? 1 : -1;
+
+            // Sort rows
+            rows.sort((rowA, rowB) => {
+                let cellA = rowA.children[index].textContent.trim();
+                let cellB = rowB.children[index].textContent.trim();
+
+                if (type === "string") {
+                    cellA = cellA.toLowerCase();
+                    cellB = cellB.toLowerCase();
+                }
+
+                if (cellA < cellB) return -1 * direction;
+                if (cellA > cellB) return 1 * direction;
+                return 0;
+            });
+
+            // Re-render sorted rows
+            table.innerHTML = "";
+            rows.forEach(row => table.appendChild(row));
+
+            // Toggle icon direction
+            icon.classList.toggle("bi-sort-up", sortState[id]);
+            icon.classList.toggle("bi-sort-down", !sortState[id]);
+        });
+    });
+}
+
+// Function to attach sort listeners to Fleet Personnel table headers
+function attachFleetPersonnelSortListeners() {
+    const sortConfig = {
+        "sort-busID-fleetPersonnel": { index: 0, type: "string" },
+        "sort-controller-fleetPersonnel": { index: 1, type: "string" },
+        "sort-driver-fleetPersonnel": { index: 2, type: "string" }
+    };
+
+    const table = document.getElementById("fleetPersonnelTable"); // ✅ Correct ID
+    const sortState = {};
+
+    Object.keys(sortConfig).forEach(id => {
+        const config = sortConfig[id];
+        const icon = document.getElementById(id);
+
+        if (!icon || !table) return; // safety check
+
+        icon.addEventListener("click", () => {
+            const rows = Array.from(table.querySelectorAll("tr"));
+            const index = config.index;
+            const type = config.type;
+
+            sortState[id] = !sortState[id];
+            const direction = sortState[id] ? 1 : -1;
+
+            rows.sort((a, b) => {
+                let valA = a.children[index].textContent.trim().toLowerCase();
+                let valB = b.children[index].textContent.trim().toLowerCase();
+
+                return valA < valB ? -1 * direction : valA > valB ? 1 * direction : 0;
+            });
+
+            table.innerHTML = "";
+            rows.forEach(row => table.appendChild(row));
+
+            // Toggle sort icon direction
+            icon.classList.toggle("bi-sort-up", sortState[id]);
+            icon.classList.toggle("bi-sort-down", !sortState[id]);
+        });
+    });
+}
+function attachFleetFuelSortListeners() {
+    const sortConfig = {
+        "sort-busID-fleetFuel": { index: 0, type: "string" },
+        "sort-fuelRefilled-fleetFuel": { index: 1, type: "number" },
+        "sort-lastRefill-fleetFuel": { index: 2, type: "date" },
+        "sort-remainingFuel-fleetFuel": { index: 3, type: "percentage" }
+    };
+
+    const table = document.getElementById("fleetFuelTable");
+    const sortState = {};
+
+    Object.keys(sortConfig).forEach(id => {
+        const config = sortConfig[id];
+        const icon = document.getElementById(id);
+
+        if (!icon || !table) return;
+
+        icon.addEventListener("click", () => {
+            const rows = Array.from(table.querySelectorAll("tr"));
+            const index = config.index;
+            const type = config.type;
+
+            sortState[id] = !sortState[id];
+            const direction = sortState[id] ? 1 : -1;
+
+            rows.sort((a, b) => {
+                let valA = a.children[index].textContent.trim();
+                let valB = b.children[index].textContent.trim();
+
+                if (type === "number") {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                } else if (type === "date") {
+                    valA = new Date(valA);
+                    valB = new Date(valB);
+                } else if (type === "percentage") {
+                    valA = parseFloat(valA.replace('%', ''));
+                    valB = parseFloat(valB.replace('%', ''));
+                } else {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                return valA < valB ? -1 * direction : valA > valB ? 1 * direction : 0;
+            });
+
+            table.innerHTML = "";
+            rows.forEach(row => table.appendChild(row));
+
+            // Toggle sort icons
+            icon.classList.toggle("bi-sort-up", sortState[id]);
+            icon.classList.toggle("bi-sort-down", !sortState[id]);
+        });
+    });
+}
 
 // Function to Show Alert
 function showAlert(message, type) {
