@@ -535,6 +535,20 @@ function showFleetReadinessStatusForm() {
                                         <label for="issue" class="form-label">Issue:</label>
                                         <textarea class="form-control" id="issue" name="issue" rows="2" placeholder="Describe the vehicle's current issue" style="resize: none;"></textarea>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Upload or Capture Photo of Issue:</label>
+                                        <div class="d-flex gap-2 mb-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnTakePhoto">
+                                            <i class="bx bx-camera"></i> Take Live Photo
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnUploadPhoto">
+                                            <i class="bx bx-upload"></i> Upload from Device
+                                            </button>
+                                        </div>
+                                        <input class="form-control" type="file" id="readinessImage" accept="image/*" style="display:none;">
+                                        <img id="previewImage" src="" alt="Preview" style="margin-top: 10px; display: none; max-width: 100%; border-radius: 8px;">
+                                        <div class="form-text">Allowed: .jpg, .png | Max: 5MB</div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="scheduleMaintenance" class="form-label">Schedule Maintenance:</label>
@@ -567,6 +581,29 @@ function showFleetReadinessStatusForm() {
         `;
         
         document.body.insertAdjacentHTML('beforeend', formHtml);
+
+        const readinessImage = document.getElementById("readinessImage");
+            const previewImage = document.getElementById("previewImage");
+
+            document.getElementById("btnTakePhoto").addEventListener("click", () => {
+            readinessImage.setAttribute("capture", "environment"); // forces rear camera
+            readinessImage.click();
+            });
+
+            document.getElementById("btnUploadPhoto").addEventListener("click", () => {
+            readinessImage.removeAttribute("capture"); // allows full gallery
+            readinessImage.click();
+            });
+
+            readinessImage.addEventListener("change", () => {
+            const file = readinessImage.files[0];
+            if (file) {
+                previewImage.src = URL.createObjectURL(file);
+                previewImage.style.display = "block";
+            } else {
+                previewImage.style.display = "none";
+            }
+            });
         
         const busStatus = document.getElementById('busStatus');
         const additionalFields = document.getElementById('additionalFields');
@@ -586,6 +623,30 @@ function showFleetReadinessStatusForm() {
             const vehicleCondition = document.getElementById('vehicleCondition').value;
             const scheduleMaintenance = document.getElementById('scheduleMaintenance').value;
             const assignedMaintainee = document.getElementById('assignedMaintainee').value;
+            const imageInput = document.getElementById('readinessImage');
+
+            let imageUrl = "";
+
+                if (imageInput.files.length > 0) {
+                    try {
+                        const formData = new FormData();
+                        formData.append("maintenanceImage", imageInput.files[0]);
+
+                        const uploadRes = await fetch("http://localhost:3000/upload-maintenance-image", {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const uploadData = await uploadRes.json();
+                        if (!uploadRes.ok) throw new Error("Upload failed");
+
+                        imageUrl = uploadData.imageUrl; // ✅ Save to outer variable
+                    } catch (err) {
+                        showAlert("Image upload failed. Please try again.", "danger");
+                        return;
+                    }
+                }
+
 
             if (!busId || !busStatus) {
                 showAlert('Please fill in all required fields.', 'warning');
@@ -597,7 +658,8 @@ function showFleetReadinessStatusForm() {
                 issue: issue || '',
                 vehicle_condition: parseInt(vehicleCondition) || null,
                 schedule: scheduleMaintenance || null,
-                assignedStaff: assignedMaintainee || null
+                assignedStaff: assignedMaintainee || null,
+                image: imageUrl || null
             };
 
             try {

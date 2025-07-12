@@ -690,7 +690,6 @@ function showFleetReadinessForm() {
                                             <label for="readinessIssue" class="form-label">Issue:</label>
                                             <textarea class="form-control" id="readinessIssue" rows="2" placeholder="Describe the issue" style="resize: none;"></textarea>
                                         </div>
-
                                         <div class="mb-3">
                                         <label class="form-label">Upload or Capture Photo of Issue:</label>
                                         <div class="d-flex gap-2 mb-2">
