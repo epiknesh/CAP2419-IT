@@ -70,10 +70,10 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
           <table>
             <thead>
               <tr>
-                <th>Bus ID</th>
-                <th>Income This Week</th>
-                <th>Income This Month</th>
-                <th>Total Income</th>
+                <th>Bus ID <i id="sort-busID-incomeReport" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                <th>Income This Week <i id="sort-incomeThisWeek-incomeReport" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                <th>Income This Month <i id="sort-incomeThisMonth-incomeReport" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                <th>Total Income <i id="sort-totalIncome-incomeReport" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
               </tr>
             </thead>
             <tbody id="busIncomeTable">
@@ -92,42 +92,41 @@ const endCoords = [121.0434251, 14.41683]; // [Longitude, Latitude]
             </a>
           </div>
          <table>
-  <thead>
-    <tr>
-      <th>Bus ID</th>
-      <th>Income Today</th>
-      <th>Date</th>
-      <th>Last Logged By</th>
-      <th>Action</th> <!-- New Action column -->
-    </tr>
-  </thead>
-  <tbody id="dailyIncomeTable">
-    <tr><td colspan="5">Loading...</td></tr>
-  </tbody>
-</table>
-
+          <thead>
+            <tr>
+              <th>Bus ID  <i id="sort-busID-dailyIncome" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+              <th>Income Today <i id="sort-incomeToday-dailyIncome" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+              <th>Date <i id="sort-date-dailyIncome" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+              <th>Last Logged By <i id="sort-lastLoggedBy-dailyIncome" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+              <th>Action</th> <!-- New Action column -->
+            </tr>
+          </thead>
+          <tbody id="dailyIncomeTable">
+            <tr><td colspan="5">Loading...</td></tr>
+          </tbody>
+        </table>
       </div>
 
         <div class="table-data">
-    <div class="order position-relative" id="auditIncome">
-      <div class="head">
-        <h3>Income Audit Trail</h3>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Bus ID</th>
-            <th>Income Logged</th>
-            <th>Logged By</th>
-            <th>Date & Time Logged</th>
-          </tr>
-        </thead>
-        <tbody id="auditTableBody">
-          <tr><td colspan="4">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+          <div class="order position-relative" id="auditIncome">
+            <div class="head">
+              <h3>Income Audit Trail</h3>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Bus ID <i id="sort-busID-auditTrail" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                  <th>Income Logged <i id="sort-incomeLogged-auditTrail" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                  <th>Logged By <i id="sort-loggedBy-auditTrail" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                  <th>Date & Time Logged <i id="sort-dateTimeLogged-auditTrail" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <tr><td colspan="4">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
 			 <div id="alertContainer"></div>
     `;
@@ -302,12 +301,9 @@ function fetchIncomeData() {
         showEditIncomeForm(busID, parseFloat(currentIncome));
       });
     });
-
-
+    attachIncomeSortListeners();
+    attachDailyIncomeSortListeners();
   })
-
-  
-
   
   .catch(error => {
     console.error("Error fetching income or accounts data:", error);
@@ -346,6 +342,7 @@ function fetchIncomeAuditData() {
       `;
       auditTableBody.innerHTML += row;
     });
+    attachAuditTrailSortListeners();
   })
   .catch(error => {
     console.error("Error fetching audit data:", error);
@@ -580,8 +577,181 @@ async function calculateETA(startCoords, endCoords) {
   }
 }
 
+// Attach sort listeners to income report table
+function attachIncomeSortListeners() {
+    const sortConfig = {
+        "sort-busID-incomeReport": { index: 0, type: "string" },
+        "sort-incomeThisWeek-incomeReport": { index: 1, type: "number" },
+        "sort-incomeThisMonth-incomeReport": { index: 2, type: "number" },
+        "sort-totalIncome-incomeReport": { index: 3, type: "number" }
+    };
+
+    const table = document.getElementById("busIncomeTable");
+    const sortState = {};
+
+    Object.keys(sortConfig).forEach(id => {
+        const config = sortConfig[id];
+        const icon = document.getElementById(id);
+
+        if (!icon || !table) return;
+
+        icon.addEventListener("click", () => {
+            const rows = Array.from(table.querySelectorAll("tr"));
+
+            const index = config.index;
+            const type = config.type;
+            sortState[id] = !sortState[id];
+            const direction = sortState[id] ? 1 : -1;
+
+            rows.sort((a, b) => {
+                let valA = a.children[index].textContent.trim();
+                let valB = b.children[index].textContent.trim();
+
+                if (type === "number") {
+                    valA = parseFloat(valA.replace(/[^0-9.-]+/g, '')) || 0; // handles ₱, commas, etc.
+                    valB = parseFloat(valB.replace(/[^0-9.-]+/g, '')) || 0;
+                } else {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                return valA < valB ? -1 * direction : valA > valB ? 1 * direction : 0;
+            });
+
+            // Replace table content
+            table.innerHTML = "";
+            rows.forEach(row => table.appendChild(row));
+
+            // Toggle icon direction
+            icon.classList.toggle("bi-sort-up", sortState[id]);
+            icon.classList.toggle("bi-sort-down", !sortState[id]);
+        });
+    });
+}
+
+// Attach sort listeners to daily income table
+function attachDailyIncomeSortListeners() {
+  const tableBody = document.getElementById("dailyIncomeTable");
+  let currentSort = { column: null, ascending: true };
+
+  const sortIcons = {
+    0: document.getElementById("sort-busID-dailyIncome"),
+    1: document.getElementById("sort-incomeToday-dailyIncome"),
+    2: document.getElementById("sort-date-dailyIncome"),
+    3: document.getElementById("sort-lastLoggedBy-dailyIncome")
+  };
+
+  const getCellValue = (row, columnIndex) => {
+    const cell = row.children[columnIndex];
+    if (!cell) return "";
+    const text = cell.textContent.trim();
+
+    if (text === "N/A" || text === "") return null;
+
+    if (columnIndex === 1) return parseFloat(text.replace(/[₱,]/g, "")) || 0; // Income Today
+    if (columnIndex === 2) return new Date(text); // Date
+    return text.toLowerCase(); // Bus ID, Last Logged By
+  };
+
+  const sortTable = (columnIndex) => {
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+    const ascending = currentSort.column === columnIndex ? !currentSort.ascending : true;
+    currentSort = { column: columnIndex, ascending };
+
+    
+     // Toggle icons
+    Object.entries(sortIcons).forEach(([col, icon]) => {
+      icon.classList.remove("bi-sort-up", "bi-sort-down");
+      icon.classList.add(
+        parseInt(col) === columnIndex
+          ? (ascending ? "bi-sort-up" : "bi-sort-down")
+          : "bi-sort-up"
+      );
+    });
+
+    rows.sort((a, b) => {
+      const valA = getCellValue(a, columnIndex);
+      const valB = getCellValue(b, columnIndex);
+
+      if (valA === null && valB === null) return 0;
+      if (valA === null) return 1; // push N/A to bottom
+      if (valB === null) return -1;
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    tableBody.innerHTML = "";
+    rows.forEach(row => tableBody.appendChild(row));
+  };
+
+  document.getElementById("sort-busID-dailyIncome").addEventListener("click", () => sortTable(0));
+  document.getElementById("sort-incomeToday-dailyIncome").addEventListener("click", () => sortTable(1));
+  document.getElementById("sort-date-dailyIncome").addEventListener("click", () => sortTable(2));
+  document.getElementById("sort-lastLoggedBy-dailyIncome").addEventListener("click", () => sortTable(3));
+}
+
+function attachAuditTrailSortListeners() {
+  const tableBody = document.getElementById("auditTableBody");
+  let currentSort = { column: null, ascending: true };
+
+  const sortIcons = {
+    0: document.getElementById("sort-busID-auditTrail"),
+    1: document.getElementById("sort-incomeLogged-auditTrail"),
+    2: document.getElementById("sort-loggedBy-auditTrail"),
+    3: document.getElementById("sort-dateTimeLogged-auditTrail")
+  };
+
+  const getCellValue = (row, columnIndex) => {
+    const cell = row.children[columnIndex];
+    if (!cell) return "";
+    const text = cell.textContent.trim();
+
+    if (text === "N/A" || text === "") return null;
+
+    if (columnIndex === 1) return parseFloat(text.replace(/[₱,]/g, "")) || 0; // Income Logged
+    if (columnIndex === 3) return new Date(text); // Date & Time Logged
+    return text.toLowerCase(); // Bus ID, Logged By
+  };
+
+  const sortTable = (columnIndex) => {
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+    const ascending = currentSort.column === columnIndex ? !currentSort.ascending : true;
+    currentSort = { column: columnIndex, ascending };
+
+     // Toggle icon classes
+    Object.entries(sortIcons).forEach(([col, icon]) => {
+      if (parseInt(col) === columnIndex) {
+        icon.classList.remove("bi-sort-up", "bi-sort-down");
+        icon.classList.add(ascending ? "bi-sort-up" : "bi-sort-down");
+      } else {
+        icon.classList.remove("bi-sort-down");
+        icon.classList.add("bi-sort-up");
+      }
+    });
 
 
+    rows.sort((a, b) => {
+      const valA = getCellValue(a, columnIndex);
+      const valB = getCellValue(b, columnIndex);
 
-// Call function with start and end coordinates
+      if (valA === null && valB === null) return 0;
+      if (valA === null) return 1;
+      if (valB === null) return -1;
 
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    tableBody.innerHTML = "";
+    rows.forEach(row => tableBody.appendChild(row));
+  };
+
+  // Attach click events
+  document.getElementById("sort-busID-auditTrail").addEventListener("click", () => sortTable(0));
+  document.getElementById("sort-incomeLogged-auditTrail").addEventListener("click", () => sortTable(1));
+  document.getElementById("sort-loggedBy-auditTrail").addEventListener("click", () => sortTable(2));
+  document.getElementById("sort-dateTimeLogged-auditTrail").addEventListener("click", () => sortTable(3));
+}
