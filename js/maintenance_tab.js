@@ -41,98 +41,83 @@
                 const response = await fetch('http://localhost:3000/maintenance'); // API call to server
                 const maintenanceData = await response.json();
 
-                maintenanceData.sort((a, b) => a.busID - b.busID);
+               maintenanceData.sort((a, b) => {
+                      // Operating (1) first, then Under Maintenance (2), then Pending (3)
+                    if (a.status !== b.status) return a.status - b.status;
+                    return a.busID - b.busID; // secondary sort by bus ID
+                });
 
                 // Generate table rows dynamically
                 let fleetStatusRows = '';
                 let fleetMaintenanceRows = '';
 
+             // Fleet Readiness Table: sort by status first (Operating → Maintenance → Pending), then by Bus ID
+                maintenanceData.sort((a, b) => {
+                if (a.status !== b.status) return a.status - b.status;
+                return a.busID - b.busID;
+                });
+
+                // Fleet Readiness Rows
                 maintenanceData.forEach(bus => {
-                    // Convert schedule date to readable format
-                    const scheduleDate = bus.schedule ? new Date(bus.schedule).toLocaleDateString('en-US') : 'N/A';
+                const scheduleDate = bus.schedule ? new Date(bus.schedule).toLocaleDateString('en-US') : 'N/A';
 
-                    // Map status numbers to readable text and CSS classes
-                    let statusText, statusClass;
-                    switch (bus.status) {
-                        case 1:
-                            statusText = "Operating";
-                            statusClass = "operating";
-                            break;
-                        case 2:
-                            statusText = "Under Maintenance";
-                            statusClass = "maintenance";
-                            break;
-                        case 3:
-                            statusText = "Pending";
-                            statusClass = "pending";
-                            break;
-                        default:
-                            statusText = "Unknown";
-                            statusClass = "unknown";
-                    }
+                let statusText, statusClass;
+                switch (bus.status) {
+                    case 1: statusText = "Operating"; statusClass = "operating"; break;
+                    case 2: statusText = "Under Maintenance"; statusClass = "maintenance"; break;
+                    case 3: statusText = "Pending"; statusClass = "pending"; break;
+                    default: statusText = "Unknown"; statusClass = "unknown";
+                }
 
-                    // Append to Fleet Readiness table
-                    fleetStatusRows += `
-                        <tr>
-                            <td>${bus.busID}</td>
-                            <td>${scheduleDate}</td>
-                            <td><span class="status ${statusClass}">${statusText}</span></td>
-                        </tr>
-                    `;
+                fleetStatusRows += `
+                    <tr>
+                    <td>${bus.busID}</td>
+                    <td>${scheduleDate}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+                });
+                const maintenanceOnly = maintenanceData.filter(bus => bus.status === 2);
 
-                    // Append to Fleet Maintenance Report table (only for non-operating buses)
-if (bus.status === 2) { // Only include buses that are Under Maintenance or Pending
-    // Determine vehicle condition text
-let conditionText;
-switch (bus.vehicle_condition) {
-    case 1:
-        conditionText = "Minor";
-        conditionClass = "maintenance-minor";
-        break;
-    case 2:
-        conditionText = "Moderate";
-        conditionClass = "maintenance-moderate";
-        break;
-    case 3:
-        conditionText = "Major";
-        conditionClass = "maintenance-major";
-        break;
-    default:
-        conditionText = "Unknown";
-        conditionClass = "maintenance-unknown";
-}
+                maintenanceOnly.sort((a, b) => {
+                const severityA = a.vehicle_condition || 0;
+                const severityB = b.vehicle_condition || 0;
+                return severityB - severityA;
+                });
 
-fleetMaintenanceRows += `
-    <tr>
-        <td>${bus.busID}</td>
-        <td>${bus.issue}</td>
-        <td>${scheduleDate}</td>
-        <td>${bus.schedule ? new Date(bus.schedule).toLocaleDateString('en-US') : 'N/A'}</td>
-        <td>${bus.assignedStaff || 'Unassigned'}</td>
-        <td><span class="status ${conditionClass}">${conditionText}</span></td>
-        <td>
-            ${
-                bus.image 
-                ? `<i class='bx bx-image' 
-                    style='color:#8ea096; font-size:24px; cursor:pointer;'
-                    data-bs-toggle="modal" 
-                    data-bs-target="#photoModal"
-                    data-full="${bus.image}">
-                </i>`
-                : `<i class='bx bxs-note' style='color:#8ea096; font-size:24px;'></i>`
-            }
-        </td>
-        <td>
-            <i class='bx bxs-note' style='color:#8ea096; font-size:24px; cursor:pointer;'
-            data-bs-toggle="modal" 
-            data-bs-target="#moreReportModal"
-            data-bs-id="${bus.busID}">
-            </i>
-        </td>
-    </tr>
-`;
+                maintenanceOnly.forEach(bus => {
+                const scheduleDate = bus.schedule ? new Date(bus.schedule).toLocaleDateString('en-US') : 'N/A';
 
-}
+                let conditionText, conditionClass;
+                switch (bus.vehicle_condition) {
+                    case 1: conditionText = "Minor"; conditionClass = "maintenance-minor"; break;
+                    case 2: conditionText = "Moderate"; conditionClass = "maintenance-moderate"; break;
+                    case 3: conditionText = "Major"; conditionClass = "maintenance-major"; break;
+                    default: conditionText = "Unknown"; conditionClass = "maintenance-unknown";
+                }
+
+                fleetMaintenanceRows += `
+                    <tr>
+                    <td>${bus.busID}</td>
+                    <td>${bus.issue}</td>
+                    <td>${bus.createdAt ? new Date(bus.createdAt).toLocaleDateString('en-US') : 'N/A'}</td>
+                    <td>${scheduleDate}</td>
+                    <td>${bus.assignedStaff || 'Unassigned'}</td>
+                    <td><span class="status ${conditionClass}">${conditionText}</span></td>
+                    <td>
+                        ${
+                        bus.image
+                            ? `<i class='bx bx-image' style='color:#8ea096; font-size:24px; cursor:pointer;' data-bs-toggle="modal" data-bs-target="#photoModal" data-full="${bus.image}"></i>`
+                            : `<i class='bx bxs-note' style='color:#8ea096; font-size:24px;'></i>`
+                        }
+                    </td>
+                    <td>
+                        <i class='bx bxs-note' style='color:#8ea096; font-size:24px; cursor:pointer;'
+                        data-bs-toggle="modal" data-bs-target="#moreReportModal" data-bs-id="${bus.busID}">
+                        </i>
+                    </td>
+                    </tr>
+                `;
                 });
 
                 // Inject the HTML into the main content
@@ -162,9 +147,9 @@ fleetMaintenanceRows += `
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Bus ID</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
+                                        <th>Bus ID <i id="sort-busID-fleetReadiness" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Date <i id="sort-date-fleetReadiness" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Status <i id="sort-status-fleetReadiness" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -187,12 +172,12 @@ fleetMaintenanceRows += `
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Bus ID</th>
-                                        <th>Issue</th>
-                                        <th>Date Reported</th>
-                                        <th>Scheduled Maintenance</th>
-                                        <th>Assigned Staff</th>
-                                        <th>Issue Severity</th>
+                                        <th>Bus ID <i id="sort-busID-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Issue <i id="sort-issue-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Date Reported <i id="sort-dateReported-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Scheduled Maintenance <i id="sort-scheduledMaintenance-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Assigned Staff <i id="sort-assignedStaff-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                        <th>Issue Severity <i id="sort-issueSeverity-fleetMaintenance" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                         <th>Photo Proof</th>
                                         <th></th>
                                     </tr>
@@ -217,6 +202,8 @@ fleetMaintenanceRows += `
                      <div id="alertContainer"></div>
 
                 `;
+                attachFleetReadinessSortListeners();
+                attachFleetMaintenanceSortListeners();
             } catch (error) {
                 console.error('Error fetching maintenance data:', error);
             }
@@ -862,6 +849,143 @@ function showFleetReadinessForm() {
             });
         });
 }
+
+// Function to attach sort listeners to Fleet Readiness table
+function attachFleetReadinessSortListeners() {
+  const tableBody = document.querySelector("#fleetStatus tbody");
+  let currentSort = { column: null, ascending: true };
+
+  const sortIcons = {
+    0: document.getElementById("sort-busID-fleetReadiness"),
+    1: document.getElementById("sort-date-fleetReadiness"),
+    2: document.getElementById("sort-status-fleetReadiness")
+  };
+
+  const getCellValue = (row, columnIndex) => {
+    const text = row.children[columnIndex].textContent.trim();
+
+    if (text === "N/A" || text === "") return null;
+
+    if (columnIndex === 1) return new Date(text); // Date column
+    return text.toLowerCase(); // Bus ID and Status
+  };
+
+  const sortTable = (columnIndex) => {
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+    const ascending = currentSort.column === columnIndex ? !currentSort.ascending : true;
+    currentSort = { column: columnIndex, ascending };
+
+    // Toggle icons
+    Object.entries(sortIcons).forEach(([col, icon]) => {
+      icon.classList.remove("bi-sort-up", "bi-sort-down");
+      icon.classList.add(
+        parseInt(col) === columnIndex
+          ? (ascending ? "bi-sort-up" : "bi-sort-down")
+          : "bi-sort-up"
+      );
+    });
+
+    rows.sort((a, b) => {
+      const valA = getCellValue(a, columnIndex);
+      const valB = getCellValue(b, columnIndex);
+
+      if (valA === null && valB === null) return 0;
+      if (valA === null) return 1;
+      if (valB === null) return -1;
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    tableBody.innerHTML = "";
+    rows.forEach(row => tableBody.appendChild(row));
+  };
+
+  // Add event listeners
+  sortIcons[0].addEventListener("click", () => sortTable(0)); // Bus ID
+  sortIcons[1].addEventListener("click", () => sortTable(1)); // Date
+  sortIcons[2].addEventListener("click", () => sortTable(2)); // Status
+}
+
+// Function to attach sort listeners to Fleet Maintenance table
+function attachFleetMaintenanceSortListeners() {
+  const tableBody = document.querySelector("#fleetMaintenance table tbody");
+  const sortState = {};
+  
+  const columns = {
+    "sort-busID-fleetMaintenance": { index: 0, type: "string" },
+    "sort-issue-fleetMaintenance": { index: 1, type: "string" },
+    "sort-dateReported-fleetMaintenance": { index: 2, type: "date" },
+    "sort-scheduledMaintenance-fleetMaintenance": { index: 3, type: "date" },
+    "sort-assignedStaff-fleetMaintenance": { index: 4, type: "string" },
+    "sort-issueSeverity-fleetMaintenance": { index: 5, type: "severity" }
+  };
+
+  const severityOrder = {
+    "minor": 1,
+    "moderate": 2,
+    "major": 3,
+    "unknown": 4
+  };
+
+  const getCellValue = (row, index, type) => {
+    const cell = row.children[index];
+    if (!cell) return null;
+    const text = cell.textContent.trim().toLowerCase();
+
+    if (text === "n/a" || text === "") return null;
+
+    switch (type) {
+      case "number":
+        return parseFloat(text.replace(/[^0-9.-]+/g, "")) || 0;
+      case "date":
+        return new Date(text);
+      case "severity":
+        return severityOrder[text] || 99;
+      default:
+        return text;
+    }
+  };
+
+  const updateSortIcons = (clickedId, ascending) => {
+    Object.keys(columns).forEach(id => {
+      const icon = document.getElementById(id);
+      icon.classList.remove("bi-sort-up", "bi-sort-down");
+      icon.classList.add(id === clickedId ? (ascending ? "bi-sort-up" : "bi-sort-down") : "bi-sort-up");
+    });
+  };
+
+  Object.entries(columns).forEach(([id, { index, type }]) => {
+    const icon = document.getElementById(id);
+    if (!icon) return;
+
+    icon.addEventListener("click", () => {
+      const rows = Array.from(tableBody.querySelectorAll("tr"));
+      sortState[id] = !sortState[id]; // toggle direction
+      const ascending = sortState[id];
+
+      rows.sort((a, b) => {
+        const valA = getCellValue(a, index, type);
+        const valB = getCellValue(b, index, type);
+
+        if (valA === null && valB === null) return 0;
+        if (valA === null) return 1;
+        if (valB === null) return -1;
+
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+
+      tableBody.innerHTML = "";
+      rows.forEach(row => tableBody.appendChild(row));
+
+      updateSortIcons(id, ascending);
+    });
+  });
+}
+
 
 // Function to Show Alert
 function showAlert(message, type) {
