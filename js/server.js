@@ -166,6 +166,32 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// Setup storage for maintenance pictures
+const maintenanceStorage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: 'maintenance_pictures',
+        format: async () => 'jpg',
+        public_id: (req, file) => Date.now() + '-' + file.originalname.replace(/\s+/g, '_')
+    },
+});
+const uploadMaintenanceImage = multer({ storage: maintenanceStorage });
+
+// POST route to handle maintenance image uploads
+app.post('/upload-maintenance-image', uploadMaintenanceImage.single('maintenanceImage'), async (req, res) => {
+    try {
+        if (!req.file || !req.file.path) {
+            return res.status(400).json({ message: "No image uploaded" });
+        }
+
+        return res.status(200).json({ imageUrl: req.file.path }); // Cloudinary image URL
+    } catch (err) {
+        console.error("Image upload error:", err);
+        return res.status(500).json({ message: "Failed to upload image" });
+    }
+});
+
+
 const Maintenance = require('./models/Maintenance'); // Import Bus model
 
 app.get('/maintenance', async (req, res) => {
@@ -224,7 +250,7 @@ const MaintenanceHistory = require('./models/MaintenanceHistory'); // Import Bus
 app.put('/maintenance/:busID', async (req, res) => {
     try {
         const { busID } = req.params;
-        const { status, issue, schedule, assignedStaff, vehicle_condition } = req.body;
+        const { status, issue, schedule, assignedStaff, vehicle_condition, image } = req.body;
 
         // Fetch the current maintenance record
         const currentMaintenance = await Maintenance.findOne({ busID });
@@ -256,9 +282,10 @@ app.put('/maintenance/:busID', async (req, res) => {
         // Update the current maintenance record
         const updatedMaintenance = await Maintenance.findOneAndUpdate(
             { busID },
-            { status, issue, schedule, assignedStaff, vehicle_condition },
+            { status, issue, schedule, assignedStaff, vehicle_condition, image }, // ← include this
             { new: true }
         );
+        
 
         if (!updatedMaintenance) {
             return res.status(404).json({ message: 'Maintenance record not found' });
@@ -277,12 +304,13 @@ app.put('/maintenance/:busID', async (req, res) => {
             updatedMaintenance
         });
 
+        console.log("Received data:", req.body);
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
-
 // Get maintenance history for a specific busID
 app.get('/maintenance/history/:busID', async (req, res) => {
     try {
