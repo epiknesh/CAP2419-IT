@@ -32,6 +32,12 @@ document.addEventListener("DOMContentLoaded", function () {
             let incomeContentHTML = "";
             let totalWeeklyIncome = 0;
 
+            // Sort statuses: Operating → Under Maintenance → Pending
+            buses.sort((a, b) => {
+            const statusOrder = { 1: 0, 2: 1, 3: 2 };
+            return statusOrder[a.status] - statusOrder[b.status];
+            });
+
             buses.forEach(bus => {
                 let statusText = "";
                 let statusClass = "";
@@ -143,15 +149,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="table-data">
                     <div class="order position-relative" id="fleetContent">
                         <div class="head">
-                            <h3>Fleet</h3>
+                            <h3>Fleet Readiness</h3>
                             <a class="position-absolute top-0 end-0 btn btn-primary mt-3 m-2" id="fleetBtn">Go To Fleet</a>
                         </div>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Bus ID</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
+                                    <th>Bus ID <i id="sort-busID-fleetReadiness-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Date <i id="sort-date-fleetReadiness-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Status <i id="sort-status-fleetReadiness-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -167,8 +173,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Bus ID</th>
-                                    <th>Issue</th>
+                                    <th>Bus ID <i id="sort-busID-fleetMaintenance-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Issue <i id="sort-issue-fleetMaintenance-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -186,9 +192,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Bus ID</th>
-                                    <th>Status</th>
-                                    <th>Next Dispatch</th>
+                                    <th>Bus ID <i id="sort-busID-fleetDispatch-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Status <i id="sort-status-fleetDispatch-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Next Dispatch <i id="sort-nextDispatch-fleetDispatch-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                 </tr>
                             </thead>
                             <tbody class="table">
@@ -204,9 +210,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Bus ID</th>
-                                    <th>Income Today</th>
-                                    <th>Income This Week</th>
+                                    <th>Bus ID <i id="sort-busID-fleetIncome-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Income Today <i id="sort-incomeToday-fleetIncome-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Income This Week <i id="sort-incomeWeek-fleetIncome-dynamic" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                 </tr>
                             </thead>
                             <tbody class="table" id="incomeTableBody">
@@ -253,7 +259,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 }
             }, 100); // Slight delay to ensure the button exists before binding
-
+            attachFleetReadinessSortListeners();
+            attachFleetMaintenanceSortListeners();
+            attachFleetDispatchSortListeners();
+            attachFleetIncomeSortListeners();
         } catch (error) {
             console.error("Error fetching data:", error);
         }

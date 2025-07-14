@@ -177,9 +177,9 @@
 				<table>
 					<thead>
 						<tr>
-							<th>Bus ID</th>
-							<th>Date</th>
-							<th>Status</th>
+							<th>Bus ID <i id="sort-busID-fleetReadiness-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+							<th>Date <i id="sort-date-fleetReadiness-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+							<th>Status <i id="sort-status-fleetReadiness-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -211,8 +211,8 @@
 				<table class="table table-striped">
 					<thead>
 						<tr>
-							<th>Bus ID</th>
-							<th>Issue</th>
+							<th>Bus ID <i id="sort-busID-fleetMaintenance-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+							<th>Issue <i id="sort-issue-fleetMaintenance-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -243,9 +243,9 @@
 				<table>
 					<thead>
 						<tr>
-							<th>Bus ID</th>
-							<th>Status</th>
-							<th>Next Dispatch</th>
+							<th>Bus ID <i id="sort-busID-fleetDispatch-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+							<th>Status <i id="sort-status-fleetDispatch-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+							<th>Next Dispatch <i id="sort-nextDispatch-fleetDispatch-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
 						</tr>
 					</thead>
 					<tbody class="table">
@@ -278,9 +278,9 @@
             <table>
               <thead>
                 <tr>
-                  <th>Bus ID</th>
-                  <th>Income Today</th>
-                  <th>Income This Week</th>
+                  <th>Bus ID <i id="sort-busID-fleetIncome-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                  <th>Income Today <i id="sort-incomeToday-fleetIncome-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                  <th>Income This Week <i id="sort-incomeWeek-fleetIncome-static" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                 </tr>
               </thead>
               <tbody class="table" id="incomeTableBody">
@@ -316,7 +316,203 @@
 			  teamTab.click();
 			}
 		  }
+			attachFleetReadinessSortListeners();
+			attachFleetMaintenanceSortListeners();
+			attachFleetDispatchSortListeners();
+			attachFleetIncomeSortListeners();
 		});
+
+		function attachFleetReadinessSortListeners() {
+			const table = document.querySelector("#fleetContent table tbody");
+			let currentSort = { column: null, ascending: true };
+
+			const getStatusValue = (statusText) => {
+				switch (statusText.toLowerCase()) {
+					case "operating": return 1;
+					case "under maintenance": return 2;
+					case "pending": return 3;
+					default: return 99;
+				}
+			};
+
+			const getCellValue = (row, colIndex) => {
+				const cell = row.children[colIndex];
+				if (!cell) return "";
+
+				const text = cell.textContent.trim();
+				if (colIndex === 1) return new Date(text); // Date
+				if (colIndex === 2) return getStatusValue(text); // Status
+				return parseInt(text); // Bus ID
+			};
+
+			const sortTable = (colIndex) => {
+				const rows = Array.from(table.querySelectorAll("tr"));
+				const ascending = currentSort.column === colIndex ? !currentSort.ascending : true;
+				currentSort = { column: colIndex, ascending };
+
+				rows.sort((a, b) => {
+					const valA = getCellValue(a, colIndex);
+					const valB = getCellValue(b, colIndex);
+					return (valA < valB ? -1 : valA > valB ? 1 : 0) * (ascending ? 1 : -1);
+				});
+
+				rows.forEach(row => table.appendChild(row));
+			};
+
+			// Attach to both static & dynamic IDs
+			[
+				["sort-busID-fleetReadiness-static", 0],
+				["sort-busID-fleetReadiness-dynamic", 0],
+				["sort-date-fleetReadiness-static", 1],
+				["sort-date-fleetReadiness-dynamic", 1],
+				["sort-status-fleetReadiness-static", 2],
+				["sort-status-fleetReadiness-dynamic", 2],
+			].forEach(([id, index]) => {
+				const icon = document.getElementById(id);
+				if (icon) {
+					icon.addEventListener("click", () => sortTable(index));
+				}
+			});
+		}
+
+		function attachFleetMaintenanceSortListeners() {
+			const table = document.querySelector("#maintenanceContent table tbody");
+			let currentSort = { column: null, ascending: true };
+
+			const getCellValue = (row, colIndex) => {
+				const cell = row.children[colIndex];
+				if (!cell) return "";
+				const text = cell.textContent.trim();
+				return colIndex === 0 ? parseInt(text) : text.toLowerCase(); // Bus ID or Issue
+			};
+
+			const sortTable = (colIndex) => {
+				const rows = Array.from(table.querySelectorAll("tr"));
+				const ascending = currentSort.column === colIndex ? !currentSort.ascending : true;
+				currentSort = { column: colIndex, ascending };
+
+				rows.sort((a, b) => {
+					const valA = getCellValue(a, colIndex);
+					const valB = getCellValue(b, colIndex);
+					return (valA < valB ? -1 : valA > valB ? 1 : 0) * (ascending ? 1 : -1);
+				});
+
+				rows.forEach(row => table.appendChild(row));
+			};
+
+			[
+				["sort-busID-fleetMaintenance-static", 0],
+				["sort-busID-fleetMaintenance-dynamic", 0],
+				["sort-issue-fleetMaintenance-static", 1],
+				["sort-issue-fleetMaintenance-dynamic", 1]
+			].forEach(([id, index]) => {
+				const icon = document.getElementById(id);
+				if (icon) {
+					icon.addEventListener("click", () => sortTable(index));
+				}
+			});
+		}
+
+		function attachFleetDispatchSortListeners() {
+			const table = document.querySelector("#dispatchContent table tbody");
+			let currentSort = { column: null, ascending: true };
+
+			const getTimeValue = (timeStr) => {
+				if (timeStr.toLowerCase() === "n/a") return Infinity;
+				const [hourMin, period] = timeStr.split(" ");
+				let [hour, minute] = hourMin.split(":").map(Number);
+				if (period === "PM" && hour !== 12) hour += 12;
+				if (period === "AM" && hour === 12) hour = 0;
+				return hour * 60 + minute;
+			};
+
+			const getCellValue = (row, colIndex) => {
+				const cell = row.children[colIndex];
+				if (!cell) return "";
+
+				const text = cell.textContent.trim();
+				if (colIndex === 0) return parseInt(text); // Bus ID
+				if (colIndex === 1) return text.toLowerCase(); // Status (e.g., In Terminal/In Transit)
+				if (colIndex === 2) return getTimeValue(text); // Time string to numeric minutes
+				return text;
+			};
+
+			const sortTable = (colIndex) => {
+				const rows = Array.from(table.querySelectorAll("tr"));
+				const ascending = currentSort.column === colIndex ? !currentSort.ascending : true;
+				currentSort = { column: colIndex, ascending };
+
+				rows.sort((a, b) => {
+					const valA = getCellValue(a, colIndex);
+					const valB = getCellValue(b, colIndex);
+					return (valA < valB ? -1 : valA > valB ? 1 : 0) * (ascending ? 1 : -1);
+				});
+
+				rows.forEach(row => table.appendChild(row));
+			};
+
+			[
+				["sort-busID-fleetDispatch-static", 0],
+				["sort-busID-fleetDispatch-dynamic", 0],
+				["sort-status-fleetDispatch-static", 1],
+				["sort-status-fleetDispatch-dynamic", 1],
+				["sort-nextDispatch-fleetDispatch-static", 2],
+				["sort-nextDispatch-fleetDispatch-dynamic", 2]
+			].forEach(([id, index]) => {
+				const icon = document.getElementById(id);
+				if (icon) {
+					icon.addEventListener("click", () => sortTable(index));
+				}
+			});
+		}
+
+		function attachFleetIncomeSortListeners() {
+			const table = document.querySelector("#incomeContent table tbody");
+			let currentSort = { column: null, ascending: true };
+
+			const cleanCurrency = (value) => {
+				if (value.toLowerCase() === "n/a") return -1;
+				return parseFloat(value.replace(/[₱,]/g, "")) || 0;
+			};
+
+			const getCellValue = (row, colIndex) => {
+				const cell = row.children[colIndex];
+				if (!cell) return "";
+				const text = cell.textContent.trim();
+
+				if (colIndex === 0) return parseInt(text); // Bus ID
+				if (colIndex === 1 || colIndex === 2) return cleanCurrency(text); // Income
+				return text;
+			};
+
+			const sortTable = (colIndex) => {
+				const rows = Array.from(table.querySelectorAll("tr"));
+				const ascending = currentSort.column === colIndex ? !currentSort.ascending : true;
+				currentSort = { column: colIndex, ascending };
+
+				rows.sort((a, b) => {
+					const valA = getCellValue(a, colIndex);
+					const valB = getCellValue(b, colIndex);
+					return (valA < valB ? -1 : valA > valB ? 1 : 0) * (ascending ? 1 : -1);
+				});
+
+				rows.forEach(row => table.appendChild(row));
+			};
+
+			[
+				["sort-busID-fleetIncome-static", 0],
+				["sort-busID-fleetIncome-dynamic", 0],
+				["sort-incomeToday-fleetIncome-static", 1],
+				["sort-incomeToday-fleetIncome-dynamic", 1],
+				["sort-incomeWeek-fleetIncome-static", 2],
+				["sort-incomeWeek-fleetIncome-dynamic", 2],
+			].forEach(([id, index]) => {
+				const icon = document.getElementById(id);
+				if (icon) {
+					icon.addEventListener("click", () => sortTable(index));
+				}
+			});
+		}
 	</script>
 </body>
 </html>
