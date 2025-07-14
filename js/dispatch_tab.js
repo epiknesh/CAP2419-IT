@@ -210,9 +210,9 @@ operativeDispatches.forEach((dispatch) => {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Bus ID</th>
-                                    <th>Controller</th>
-                                    <th>Driver</th>
+                                    <th>Bus ID <i id="sort-busID-fleetPersonnel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Controller <i id="sort-controller-fleetPersonnel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
+                                    <th>Driver <i id="sort-driver-fleetPersonnel" class="bi bi-sort-up fs-5 ms-2 text-secondary" style="cursor: pointer;"></i></th>
                                 </tr>
                             </thead>
                             <tbody id="fleetPersonnelTable">
@@ -232,6 +232,7 @@ operativeDispatches.forEach((dispatch) => {
             
 
             document.querySelector('#content main').innerHTML = dispatchContent;
+            attachFleetPersonnelSortListeners();
 
             document.querySelectorAll('.dispatch-btn').forEach(button => {
     button.addEventListener('click', async function () {
@@ -762,6 +763,60 @@ if (busCapacity) {
     console.error(`Error dispatching bus ${busID}:`, error);
     showAlert(`Error dispatching bus ${busID}: ${error.message}`, "danger");
   }
+}
+
+function attachFleetPersonnelSortListeners() {
+	const tableBody = document.querySelector("#fleetPersonnelTable");
+	const headers = [
+		{ id: "sort-busID-fleetPersonnel", index: 0 },
+		{ id: "sort-controller-fleetPersonnel", index: 1 },
+		{ id: "sort-driver-fleetPersonnel", index: 2 },
+	];
+	let currentSort = { column: null, ascending: true };
+
+	const getCellValue = (row, index) => {
+		const text = row.children[index]?.textContent.trim() || "";
+		return index === 0 ? parseInt(text) : text.toLowerCase();
+	};
+
+	const resetIcons = () => {
+		headers.forEach(({ id }) => {
+			const icon = document.getElementById(id);
+			if (icon) {
+				icon.classList.remove("bi-sort-down", "bi-sort-up");
+				icon.classList.add("bi-sort-up");
+			}
+		});
+	};
+
+	const sortTable = (colIndex, iconElement) => {
+		const rows = Array.from(tableBody.querySelectorAll("tr"));
+		const ascending = currentSort.column === colIndex ? !currentSort.ascending : true;
+		currentSort = { column: colIndex, ascending };
+
+		rows.sort((a, b) => {
+			const valA = getCellValue(a, colIndex);
+			const valB = getCellValue(b, colIndex);
+			return (valA < valB ? -1 : valA > valB ? 1 : 0) * (ascending ? 1 : -1);
+		});
+
+		rows.forEach(row => tableBody.appendChild(row));
+
+		// Update sort icon
+		resetIcons();
+		if (iconElement) {
+			iconElement.classList.remove("bi-sort-up", "bi-sort-down");
+			iconElement.classList.add(ascending ? "bi-sort-up" : "bi-sort-down");
+		}
+	};
+
+	headers.forEach(({ id, index }) => {
+		const icon = document.getElementById(id);
+		if (icon) {
+			icon.style.cursor = "pointer";
+			icon.addEventListener("click", () => sortTable(index, icon));
+		}
+	});
 }
 
 
