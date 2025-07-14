@@ -114,7 +114,8 @@ console.log(user);
 	   const maintenanceResponse = await fetch("http://localhost:3000/maintenance");
 	   const buses = await maintenanceResponse.json();
 
-       buses.sort((a, b) => a.busID - b.busID);
+     // Sort by status: Operating → Maintenance → Pending
+	  buses.sort((a, b) => a.status - b.status);
 
 	   let operatingBuses = new Set(); // Store operating bus IDs
 	   let operatingCount = 0;
